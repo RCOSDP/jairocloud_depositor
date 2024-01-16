@@ -2,7 +2,7 @@
 import random
 import string
 from flask import Flask, render_template, redirect, url_for, request, flash, session ,current_app
-from flask_login import login_user, LoginManager
+from flask_login import login_user, LoginManager, current_user
 from flask_security import LoginForm, url_for_security
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField ,PasswordField
@@ -11,11 +11,15 @@ from models import User as _User
 from models import Affiliation_Id as _Affiliation_Id
 from api import User
 from api import Affiliation_Id
+from db_setting import db
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = "secret"
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS']=False
+app.config['SQLALCHEMY_DATABASE_URI']='postgresql://invenio:dbpass123@192.168.56.111:25401/invenio'
 login_manager = LoginManager()
 login_manager.init_app(app)
-app.config['SECRET_KEY'] = "secret"
+db.init_app(app)
 
 class LoginForm(FlaskForm):
     email = StringField('メールアドレス')
@@ -31,23 +35,42 @@ def index_login():
     csrf_random = generate_random_str(length=64)
     session['csrf_random'] = csrf_random
     login_user_form = LoginForm()
+    app.logger.info("あああああああああああああ")
     return render_template("login_index.html", login_user_form = login_user_form)
+
+@login_manager.user_loader
+def load_user(user_id):
+    return _User.get(user_id)
 
 @app.route("/login", methods=['POST'])
 def login():
     form=LoginForm()
     if form.validate_on_submit():
-        shib_data = MOCK_SHIB_DATA.get(form.email.data)
-        if shib_data and form.password.data == "testpass":
-            affiliation_idp_url = shib_data.get("affiliation_idp_url",None)
-            if not Affiliation_Id.get_affiliation_id_by_idp_url(affiliation_idp_url):
-                _affili_id = _Affiliation_Id()
-                Affiliation_Id.create_affiliation_id()
-            user = _User(
-                affiliation_id=
-            )
-            # login_user()
-            return form.email.data
+        # shibbolethで返ってくる値を固定値とする。パスワードはtestpass固定
+        if form.password.data == "testpass":
+            shib_data = MOCK_SHIB_DATA.get(form.email.data)
+            if shib_data :
+                affiliation_idp_url = shib_data.get("affiliation_idp_url",None)
+                affiliation_id_id = Affiliation_Id().get_affiliation_id_by_idp_url(affiliation_idp_url).id
+                if not affiliation_id_id:
+                    affiliation_name = shib_data.get("OrganizationName",None)
+                    _affili_id = Affiliation_Id().create_affiliation_id(affiliation_idp_url=affiliation_idp_url,
+                                                                      affiliation_name=affiliation_name)
+                    affiliation_id_id = _affili_id.id
+                user_id = shib_data.get("eduPersonPrincipalName",None)
+                user=User().get_user_by_user_id(user_id)
+                if not user :
+                    user_orcid = shib_data.get("eduPersonOrcid",None)
+                    role = shib_data.get("wekoSocietyAffiliation", None)
+                    user = _User(
+                        user_id = user_id,
+                        affiliation_id = affiliation_id_id,
+                        user_orcid = user_orcid,
+                        role = role
+                    )
+                    User().create_user(user)
+                login_user(user)
+                return current_user.user_id
     flash("Missing SHIB_ATTRs!", category='error')
     return index_login()
 

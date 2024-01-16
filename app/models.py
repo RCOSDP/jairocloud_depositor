@@ -30,6 +30,8 @@ class User(db.Model, UserMixin, Timestamp):
 
     id = db.Column(Integer, primary_key=True, nullable=False, unique=True, autoincrement=True, default=Sequence("user_id_seq"))
 
+    is_active = True 
+
     user_id = db.Column(String(80), nullable=False)
 
     affiliation_id = db.Column(Integer, nullable=False)
