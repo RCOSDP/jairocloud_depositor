@@ -45,7 +45,7 @@ class Affiliation_Repository(object):
 
     def get_aff_repository_by_affiliation_id(self, affiliation_id):
         with db.session.autoflush():
-            query = _Affiliation_Repository.query.filter(affiliation_id=affiliation_id)
+            query = _Affiliation_Repository.query.filter_by(affiliation_id=affiliation_id)
             return query.one_or_none()
 
 
@@ -59,7 +59,7 @@ class User(object):
         assert user
         try:
             with db.session.begin_nested():
-                db.session.execute(_User.__table__.insert(), user)
+                db.session.add(user)
             db.session.commit()
             return user
         except Exception as ex:
@@ -82,20 +82,14 @@ class User(object):
             db.session.rollback()
             return None
 
-    def get_user_by_user_id_and_affiliation_id(self, user_id, affiliation_id):
+    def get_user_by_user_id(self, user_id):
         with db.session.no_autoflush:
-            query = _User.query.filter(and_(_User.user_id == user_id,
-                                            _User.affiliation_id == affiliation_id))
+            query = _User.query.filter_by(user_id=user_id)
             return query.one_or_none()
-
-    def get_users_by_user_id(self, user_id):
-        with db.session.no_autoflush:
-            query = _User.query.filter(user_id=user_id)
-            return query.all()
 
     def get_users_by_affiliation_id(self, affiliation_id):
         with db.session.no_autoflush:
-            query = _User.query.filter(affiliation_id=affiliation_id)
+            query = _User.query.filter_by(affiliation_id=affiliation_id)
             return query.all()
         
     
@@ -103,6 +97,7 @@ class Affiliation_Id(object):
     """
     operated on the Affiliation ID
     """
+
     def create_affiliation_id(self, affiliation_idp_url, affiliation_name):
         """
         create new affiliation_id
@@ -114,7 +109,7 @@ class Affiliation_Id(object):
         affiliation_id = _Affiliation_Id(affiliation_idp_url=affiliation_idp_url, affiliation_name=affiliation_name)
         try:
             with db.session.begin_nested():
-                db.session.execute(_Affiliation_Id.__table__.insert(), affiliation_id)
+                db.session.add(affiliation_id)
             db.session.commit()
             return affiliation_id
         except Exception as ex:
@@ -137,12 +132,12 @@ class Affiliation_Id(object):
             return None
         
     def get_affiliation_id_by_id(self, affiliation_id):
-        with db.session.no_autoflush():
-            query = _Affiliation_Id.query.filter_by(id = affiliation_id)
-            return query.one_or_none()
+        # with db.session.no_autoflush():
+        query = _Affiliation_Id.query.filter_by(id = affiliation_id)
+        return query.one_or_none()
         
     def get_affiliation_id_by_idp_url(self, idp_url):
-        with db.session.no_autoflush():
-            query = _Affiliation_Id.query.filter_by(affiliation_idp_url = idp_url)
-            return query.one_or_none()
+        # with db.session.no_autoflush():
+        query = _Affiliation_Id.query.filter_by(affiliation_idp_url = idp_url)
+        return query.one_or_none()
     

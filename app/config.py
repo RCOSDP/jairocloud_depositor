@@ -35,7 +35,7 @@ MOCK_SHIB_DATA={"testuser1A@nii.ac.jp":{"affiliation_idp_url":"https://idp.auth.
                                         "OrganizationName":"beta",
                                         "wekoSocietyAffiliation":"図書館員",
                                         "eduPersonOrcid":""},
-                "testadmin@nii.ac.jp":{"affiliation_idp_url":"https://idp.auth.alphaalpha.ac.jp/idp/profile/SAML2/Redirect/SSO",,
+                "testadmin@nii.ac.jp":{"affiliation_idp_url":"https://idp.auth.alphaalpha.ac.jp/idp/profile/SAML2/Redirect/SSO",
                                        "eduPersonPrincipalName":"testuser4",
                                         "OrganizationName":"alpha",
                                         "wekoSocietyAffiliation":"管理者",

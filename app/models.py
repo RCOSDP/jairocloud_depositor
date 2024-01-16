@@ -2,7 +2,7 @@ from datetime import datetime
 
 from flask_security import RoleMixin, UserMixin
 from sqlalchemy.dialects import mysql, postgresql
-from sqlalchemy import Column, Integer, String, Float, DateTime
+from sqlalchemy import Column, Integer, String, Float, DateTime, Sequence
 from db_setting import Engine, Base, db
 
 class Timestamp(object):
@@ -23,12 +23,12 @@ class Timestamp(object):
         nullable=False
     )
 
-class User(UserMixin, Timestamp):
+class User(db.Model, UserMixin, Timestamp):
     """User data model."""
 
     __tablename__ = "user"
 
-    id = db.Column(Integer, primary_key=True, nullable=False, unique=True, autoincrement=True)
+    id = db.Column(Integer, primary_key=True, nullable=False, unique=True, autoincrement=True, default=Sequence("user_id_seq"))
 
     user_id = db.Column(String(80), nullable=False)
 
@@ -38,12 +38,12 @@ class User(UserMixin, Timestamp):
 
     role = db.Column(String(80))
 
-class Affiliation_Repository(Base, Timestamp):
+class Affiliation_Repository(db.Model, Timestamp):
     """Affiliationrepository data model"""
 
     __tablename__ = "affiliation_repository"
 
-    id = db.Column(Integer, primary_key=True, nullable=False, unique=True, autoincrement=True)
+    id = db.Column(Integer, primary_key=True, nullable=False, unique=True, autoincrement=True, default=Sequence("affiliation_repository_id_seq"))
 
     affiliation_id = db.Column(Integer, nullable=False)
 
@@ -51,13 +51,13 @@ class Affiliation_Repository(Base, Timestamp):
 
     access_token = db.Column(String(80), nullable=False)
 
-class Affiliation_Id(Base, Timestamp):
+class Affiliation_Id(db.Model, Timestamp):
     """Affiliation ID data model"""
 
     __tablename__ = "affiliation_id"
 
-    id = db.Column(Integer,  primary_key=True, nullable = False, unique=True, autoincrement=True)
+    id = db.Column(Integer,  primary_key=True, nullable = False, unique=True, autoincrement=True, default=Sequence("affiliation_id_id_seq"))
 
-    affiliaiton_idp_url = db.Column(String(80), nullable=False)
+    affiliation_idp_url = db.Column(String(80), nullable=False)
 
-    affiliaiton_name = db.Column(String(80), nullable=False)
+    affiliation_name = db.Column(String(80), nullable=False)
