@@ -1,6 +1,7 @@
 
 import random
 import string
+import logging
 from flask import Flask, render_template, redirect, url_for, request, flash, session ,current_app
 from flask_login import login_user, LoginManager, current_user
 from flask_security import LoginForm, url_for_security
@@ -17,6 +18,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = "secret"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS']=False
 app.config['SQLALCHEMY_DATABASE_URI']='postgresql://invenio:dbpass123@192.168.56.111:25401/invenio'
+app.logger.setLevel(logging.INFO)
 login_manager = LoginManager()
 login_manager.init_app(app)
 db.init_app(app)
@@ -35,12 +37,11 @@ def index_login():
     csrf_random = generate_random_str(length=64)
     session['csrf_random'] = csrf_random
     login_user_form = LoginForm()
-    app.logger.info("あああああああああああああ")
     return render_template("login_index.html", login_user_form = login_user_form)
 
 @login_manager.user_loader
 def load_user(user_id):
-    return _User.get(user_id)
+    return _User.user_id
 
 @app.route("/login", methods=['POST'])
 def login():
