@@ -81,6 +81,11 @@ class User(object):
         except Exception as ex:
             db.session.rollback()
             return None
+        
+    def get_user_by_id(self, id):
+        with db.session.no_autoflush:
+            query = _User.query.filter_by(id=id)
+            return query.one_or_none()
 
     def get_user_by_user_id(self, user_id):
         with db.session.no_autoflush:

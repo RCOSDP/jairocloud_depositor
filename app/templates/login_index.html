@@ -33,7 +33,7 @@
   </head>
   {%- block css %}
   <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css";; rel="stylesheet">
-  <link href={{url_for('static', filename='css/style.css')}} rel="stylesheet">
+  <link href={{url_for('static', filename='css/login/style.css')}} rel="stylesheet">
   {%- endblock css %}
   <div class="container">
     <body class="cover-page">
@@ -52,7 +52,7 @@
             {{ render_field(form.email, icon="fa fa-user", autofocus=True, errormsg=False) }}
             {{ render_field(form.password, icon="fa fa-lock", errormsg=False) }}
             <button type="submit" class="btn btn-default btn-lg btn-block">
-                <i class="fa fa-sign-in"></i> Shibboleth User</button>
+                <i class="fa fa-sign-in"></i> Shibboleth Login</button>
             {%- endwith %}
             {%- endblock form_outer %}
         </div>

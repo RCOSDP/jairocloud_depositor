@@ -3,7 +3,7 @@ import random
 import string
 import logging
 from flask import Flask, render_template, redirect, url_for, request, flash, session ,current_app
-from flask_login import login_user, LoginManager, current_user
+from flask_login import login_user, LoginManager, current_user, logout_user
 from flask_security import LoginForm, url_for_security
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField ,PasswordField
@@ -41,7 +41,8 @@ def index_login():
 
 @login_manager.user_loader
 def load_user(user_id):
-    return _User.user_id
+    user=User().get_user_by_id(user_id)
+    return user
 
 @app.route("/login", methods=['POST'])
 def login():
@@ -71,8 +72,15 @@ def login():
                     )
                     User().create_user(user)
                 login_user(user)
-                return current_user.user_id
+                app.logger.info("login id:",user.user_id)
+                return url_for("index_item")
     flash("Missing SHIB_ATTRs!", category='error')
+    return index_login()
+
+
+@app.route("/logout", methods=['GET'])
+def logout():
+    logout_user()
     return index_login()
 
 
@@ -87,9 +95,11 @@ def generate_random_str(length=128):
 
 @app.route("/affiliation_setting")
 def index_affili():
-    return render_template("affi_index.html")
+    form = FlaskForm(request.form)
+    return render_template("affi_index.html",form = form)
 
 @app.route("/item_register")
 def index_item():
-    return render_template("item_index.html")
+    form = FlaskForm(request.form)
+    return render_template("item_index.html",form = form)
     
