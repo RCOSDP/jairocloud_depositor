@@ -39,3 +39,5 @@ db = SQLAlchemy(metadata=metadata)
 Base = declarative_base()
 Base.query = session.query_property()
 
+def init_db(app):
+    db.init_app(app)

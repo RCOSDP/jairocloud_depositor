@@ -60,7 +60,7 @@
                 <input id="current_user_email" type="hidden" value="{{current_user.user_id}}">
                 {{current_user.user_id}}
               </a>
-              <a class="btn btn-default btn-primary bg-transparent" href="{{ url_for('logout') }}"> ログアウト</a>
+              <a class="btn btn-default btn-primary bg-transparent" href="{{ url_for('login.logout') }}"> ログアウト</a>
             </div>
           </div>
           <div class="navbar-form navbar-right navbar-form2">
@@ -84,7 +84,7 @@
               <div class="panel-body panel-body2" id="background-color-main-content">
                 <ul class="nav nav-tabs">
                   {%- block page_body_tabs %}
-                  {% from "_macros.html" import tabs_selector with context %}
+                  {% from "item_register/_macros.html" import tabs_selector with context %}
                   {{ tabs_selector('item_index') }}
                   {%- endblock page_body_tabs %}
                   <div class="row row-4" style="height: 100%">
@@ -116,7 +116,7 @@
                                           extra-params="{&quot;headers&quot;:{&quot;Content-Type&quot;: &quot;application/json&quot;}}">
                                           <invenio-records initialization="/api/deposits/items" files="[]"
                                             extra-params="{&quot;headers&quot;:{&quot;Content-Type&quot;: &quot;application/json&quot;}}"
-                                            form="/items/schemaform/15" record="{}" schema="/items/jsonschema/15">
+                                            form="/schemaform" record="{}" schema="/jsonschema">
                                             
                                             <invenio-records-alert
                                               template="/static/node_modules/invenio-records-js/dist/templates/alert.html"></invenio-records-alert>

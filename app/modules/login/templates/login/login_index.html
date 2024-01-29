@@ -37,7 +37,7 @@
   {%- endblock css %}
   <div class="container">
     <body class="cover-page">
-    {% from "_macros.html" import render_field, form_errors %}
+    {% from "login/_macros.html" import render_field, form_errors %}
     <div class="col-md-6 col-md-offset-3">
         <div class="panel panel-default">
         <div class="panel-body">
@@ -46,7 +46,7 @@
             {%- endblock form_header %}
             {%- block form_outer %}
             {%- with form = login_user_form %}
-            <form action="{{ url_for('login') }}" method="POST" name="login_user_form">
+            <form action="{{ url_for('login.login') }}" method="POST" name="login_user_form">
             {{form.hidden_tag()}}
             {{form_errors(form)}}
             {{ render_field(form.email, icon="fa fa-user", autofocus=True, errormsg=False) }}
