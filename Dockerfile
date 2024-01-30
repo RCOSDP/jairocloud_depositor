@@ -3,6 +3,7 @@ FROM python:3.6-slim-buster
 
 WORKDIR /usr/src/app
 ENV FLASK_APP=app
+ENV FLASK_DEBUG=1
 
 COPY /app/requirements.txt ./
 ENV INVENIO_WEB_HOST=127.0.0.1

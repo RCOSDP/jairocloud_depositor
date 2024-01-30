@@ -18,9 +18,9 @@ from modules.api import Affiliation_Id
 blueprint = Blueprint(
     "login",
     __name__,
-    url_prefix="/login",
+    url_prefix="/",
     template_folder="templates",
-    static_folder="/static")
+    static_folder="static")
 
 class LoginForm(FlaskForm):
     email = StringField('メールアドレス')
