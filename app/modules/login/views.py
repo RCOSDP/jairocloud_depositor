@@ -50,12 +50,12 @@ def login():
             shib_data = MOCK_SHIB_DATA.get(form.email.data)
             if shib_data :
                 affiliation_idp_url = shib_data.get("affiliation_idp_url",None)
-                affiliation_id_id = Affiliation_Id().get_affiliation_id_by_idp_url(affiliation_idp_url).id
-                if not affiliation_id_id:
+                affiliation_id = Affiliation_Id().get_affiliation_id_by_idp_url(affiliation_idp_url)
+                if not affiliation_id:
                     affiliation_name = shib_data.get("OrganizationName",None)
-                    _affili_id = Affiliation_Id().create_affiliation_id(affiliation_idp_url=affiliation_idp_url,
+                    affiliation_id = Affiliation_Id().create_affiliation_id(affiliation_idp_url=affiliation_idp_url,
                                                                       affiliation_name=affiliation_name)
-                    affiliation_id_id = _affili_id.id
+                affiliation_id_id = affiliation_id.id
                 user_id = shib_data.get("eduPersonPrincipalName",None)
                 user=User().get_user_by_user_id(user_id)
                 if not user :
