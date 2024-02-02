@@ -27,15 +27,21 @@ class LoginForm(FlaskForm):
     password = PasswordField('パスワード')
     submit = SubmitField('ログイン')
 
-@blueprint.route("/", methods=['GET'])
+@blueprint.route("", methods=['GET'])
+def top():
+    return index_login()
+
+@blueprint.route("/login", methods=['GET'])
 def index_login():
+    if not current_user.is_anonymous:
+        return redirect(url_for('item_register.index_item'))
     csrf_random = generate_random_str(length=64)
     session['csrf_random'] = csrf_random
     login_user_form = LoginForm()
     
     return render_template("login/login_index.html", login_user_form = login_user_form)
 
-@blueprint.route("/", methods=['POST'])
+@blueprint.route("/login", methods=['POST'])
 def login():
     form=LoginForm()
     if form.validate_on_submit():
@@ -71,7 +77,7 @@ def login():
 @blueprint.route("/logout", methods=['GET'])
 def logout():
     logout_user()
-    return index_login()
+    return redirect(url_for('login.top'))
 
 
 def generate_random_str(length=128):
