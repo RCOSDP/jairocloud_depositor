@@ -58,7 +58,7 @@ class Affiliation_Id(db.Model, Timestamp):
 
     __tablename__ = "affiliation_id"
 
-    id = db.Column(Integer,  primary_key=True, nullable = False, unique=True, autoincrement=True, default=Sequence("affiliation_id_id_seq"))
+    id = db.Column(Integer,  primary_key=True, nullable = False, unique=True, autoincrement=True, default=Sequence("affiliation_id_seq"))
 
     affiliation_idp_url = db.Column(String(80), nullable=False)
 

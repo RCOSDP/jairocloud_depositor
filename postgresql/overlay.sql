@@ -21,7 +21,7 @@ alter table public.affiliation_id add constraint "affiliation_idp_url_not_null" 
 alter table public.affiliation_id add constraint "affiliation_name_not_null" check (affiliation_name IS NOT NULL);
 
 -- シークエンス
-create sequence public.affiliation_id_id_seq
+create sequence public.affiliation_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
