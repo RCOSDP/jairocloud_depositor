@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<!-- saved from url=(0041)http://localhost:5001/affiliation_setting -->
+<html lang="ja" dir="ltr">
+
+<body itemscope="" itemtype="http://schema.org/WebPage" data-spy="scroll" data-target=".scrollspy-target">
+  <script type="application/javascript">
+    var klaroConfig = {
+      version: 2,
+      elementID: 'klaro',
+      styling: {
+        theme: ['dark', 'bottom', 'wide'],
+      },
+      noAutoLoad: false,
+      htmlTexts: true,
+      embedded: false,
+      groupByPurpose: true,
+      storageMethod: 'cookie',
+      cookieName: 'klaro',
+      cookieExpiresAfterDays: 365,
+      default: false,
+      mustConsent: false,
+      acceptAll: true,
+      hideDeclineAll: true,
+      hideLearnMore: false,
+      noticeAsModal: false,
+      poweredBy: 'https://github.com/RCOSDP/weko',
+    };
+  </script>
+  {{ form.csrf_token }}
+  <script src ="{{ url_for('static', filename='js/preview.js')}}"></script>
+  <link rel="stylesheet" href="https://cdn.kiprotect.com/klaro/v0.7.16/klaro.min.css">
+  <script type="text/javascript" src="https://cdn.kiprotect.com/klaro/v0.7.16/klaro.js"></script>
+  <div id="klaro"
+    style="--notice-bottom: 20px; --notice-top: auto; --notice-left: 20px; --notice-right: auto; --notice-max-width: calc(100vw - 60px); --notice-position: fixed;">
+    <div lang="ja" class="klaro">
+    </div>
+  </div>
+  <link href={{url_for('static', filename='css/deposit.css' )}} rel="stylesheet">
+  <link href={{url_for('static', filename='css/theme.css' )}} rel="stylesheet">
+  <link href={{url_for('static', filename='css/styles.css' )}} rel="stylesheet">
+  <link href={{url_for('static', filename='css/buttons.css' )}} rel="stylesheet">
+  <link href={{url_for('static', filename='css/widget.css' )}} rel="stylesheet">
+  <link href={{url_for('static', filename='css/admin.css' )}} rel="stylesheet">
+  <link href={{url_for('static', filename='css/style.css' )}} rel="stylesheet">
+  <!--[if lt IE 8]>
+      <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+    <![endif]-->
+  <div id="page_body" class="grid-stack" style="display: block;">
+    <div id="header">
+      <nav class="navbar-default navbar-static-top full-height">
+        <div class="container-fluid container-fluid2" id="fixed_header">
+          <div class="navbar-header">
+          </div>
+          <ul class="nav navbar-nav">
+          </ul>
+          <div class="navbar-form navbar-right navbar-form2">
+            <div class="btn-group">
+              <a class="btn btn-default btn-primary bg-transparent">
+                <input id="current_user_email" type="hidden" value="{{current_user.user_id}}">
+                {{current_user.user_id}}
+              </a>
+              <a class="btn btn-default btn-primary bg-transparent" href="{{ url_for('login.logout') }}"> ログアウト</a>
+            </div>
+          </div>
+          <div class="navbar-form navbar-right navbar-form2">
+          </div>
+          <!--     <input hidden id ="weko_show_index_for_authenticated_user" value="False"> -->
+        </div>
+      </nav>
+    </div>
+    <div id="main_contents">
+      <div class="container-fluid container-fluid2">
+        <div class="row row-4">
+          <div class="col-sm-12 col-md-12 col-md-12">
+            <div class="panel panel-default" id="panel-main-content">
+              <div class="panel-heading no-padding-side" id="panel-heading-main-contents">
+                <div class="pull-right">
+                </div>
+                <strong>
+                  <p id="title-main-content">WEKO3</p>
+                </strong>
+              </div>
+              <div class="panel-body panel-body2" id="background-color-main-content">
+                <ul class="nav nav-tabs">
+                  {%- block page_body_tabs %}
+                  {% from "admin_setting/_macros.html" import tabs_selector with context %}
+                  {{ tabs_selector('setting') }}
+                  {%- endblock page_body_tabs %}
+                  <div class="row row-4" style="height: 100%">
+                    <div class="col-sm-12 col-md-12" style="height: 100%">
+                      <div id="myTabContent" class="tab-content" style="height: 100%">
+                        <div class="panel panel-default hide" id="hide-res-check">0</div>
+                        <div class="panel panel-default">
+
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- /.modal -->
+      <div class="modal fade in" tabindex="-1" role="dialog" id="meta-search">
+        <div class="modal-dialog modal-lg" role="document">
+          <div class="modal-content">
+            <div class="modal-body">
+              <div id="meta-search-body"><div><div class="text-left"><h3>メタデータ自動入力</h3></div><br><form><div class="form-inline"><label class="input-group-text" for="autofill_id_type"></label>&nbsp;&nbsp;<select name="idType" id="autofill_id_type" class="form-control"><option value="Default">Select the ID</option><option value="CrossRef">CrossRef</option><option value="CiNii">CiNii</option><option value="WEKOID">WEKOID</option></select>&nbsp;&nbsp;<input name="itemId" type="text" id="autofill_item_id" class="form-control ng-untouched ng-pristine ng-valid" value="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="submit" id="autofill_item_button" class="btn btn-info" value="取得"></div><br><div id="auto-fill-error-div"><span id="autofill-error-message"></span></div></form></div></div>
+              </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default" id="meta-search-close" data-dismiss="modal">
+                     <span class="glyphicon glyphicon-remove"></span>&nbsp;
+                         閉じる
+              </button>
+            </div>
+          </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+      </div>
+    </div>
+    <div id="main_footer">
+      <footer id="footer" style="display: block;">
+        <div class="container-fluid">
+          <div class="row">
+            <div class="col-xs-12">
+              <hr>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-xs-12 col-sm-12 text-center-xs">
+              <p>Powered by <a href="https://github.com/RCOSDP/weko">WEKO3</a></p>
+              <p>
+                <a class="button is-success" onclick="return klaro.show();">Change consent
+                  settings</a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </div>
+</body>
+
+</html>
