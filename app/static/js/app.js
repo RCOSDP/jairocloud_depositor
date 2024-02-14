@@ -1,26 +1,26 @@
-// import { React } from 'react/client';
+import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 // import { DatePicker } from 'react-datepicker';
 
 function PDFform() {
     return (
 
-        <div class="row row-4">
-            <div class="col-sm-12">
-                <div class="files-upload-zone" template="/static/templates/weko_items_ui/upload.html"><div class="well" ngf-drag-over-class="'dragover'">
+        <div className="row row-4">
+            <div className="col-sm-12">
+                <div className="files-upload-zone" template="/static/templates/weko_items_ui/upload.html"><div className="well">
                     <center>
                         Drop pdf here
                     </center>
                 </div>
-                    <p class="text-center legend"><strong>— OR —</strong></p>
-                    <p class="text-center">
-                        <button class="btn btn-primary" ngf-max-size="20GB" ngf-multiple="true" ngf-select="" ngf-change="hookAddFiles($files)">
+                    <p className="text-center legend"><strong>— OR —</strong></p>
+                    <p className="text-center">
+                        <button className="btn btn-primary" ngf-max-size="20GB" ngf-multiple="true" ngf-select="" ngf-change="hookAddFiles($files)">
                             Click to select for pdf
                         </button>
                     </p></div>
-                <p class="text-center">
-                    <button class="btn btn-success">
-                        <span class="glyphicon glyphicon-plus"></span>&nbsp;
+                <p className="text-center">
+                    <button className="btn btn-success">
+                        <span className="glyphicon glyphicon-plus"></span>&nbsp;
                         PDFからメタデータの自動入力
                     </button>
                 </p>
@@ -32,16 +32,16 @@ function PDFform() {
 function FileUploadForm() {
     return (
 
-        <div class="row row-4">
-            <div class="col-sm-12">
-                <div class="files-upload-zone" template="/static/templates/weko_items_ui/upload.html"><div class="well" ngf-drag-over-class="'dragover'">
+        <div className="row row-4">
+            <div className="col-sm-12">
+                <div className="files-upload-zone" template="/static/templates/weko_items_ui/upload.html"><div className="well">
                     <center>
                         Drop file or folders here
                     </center>
                 </div>
-                    <p class="text-center legend"><strong>— OR —</strong></p>
-                    <p class="text-center">
-                        <button class="btn btn-primary" ngf-max-size="20GB" ngf-multiple="true" ngf-select="" ngf-change="hookAddFiles($files)">
+                    <p className="text-center legend"><strong>— OR —</strong></p>
+                    <p className="text-center">
+                        <button className="btn btn-primary" ngf-max-size="20GB" ngf-multiple="true" ngf-select="" ngf-change="hookAddFiles($files)">
                             Click to select
                         </button>
                     </p></div>
@@ -50,47 +50,20 @@ function FileUploadForm() {
     )
 }
 
-function togglepanel(element) {
-    // ボタンの親を取得
-    var parent = element.parentNode;
-
-    // ボタンのHTMLを取得
-    if (parent.lastElementChild.classList.contains('hidden')) {
-        parent.lastElementChild.classList.remove('hidden');
-    } else {
-        parent.lastElementChild.classList.add('hidden');
-    }
-}
-
-function Titleform({ title }) {
-    //onClick="togglepanel()"などでタイトルをクリックするとたためるようにする予定
-    return (
-        <div class="panel-heading"><a class="panel-toggle">
-            {title}
-        </a>
-        </div>
-    );
-}
-
 function Metadatatitle({ title, metadatakey }) {
     var required = false;
-    var keylist;
     var classvalue;
-    keylist = metadatakey.split(".");
-    keylist.forEach(element => {
-        //このreplaceAllよくない気がする直す可能性あり
-        element = element.replaceAll("[]", "")
-        if (schema.required.includes(element)) {
-            required = true;
-        }
-    })
+    //このreplaceAllよくない気がする直す可能性あり
+    if (schema.required.includes(metadatakey)) {
+        required = true;
+    }
     if (required) {
         classvalue = "col-sm-3 control-label field-required";
     } else {
         classvalue = "col-sm-3 control-label";
     }
     return (
-        <label class={classvalue}>
+        <label className={classvalue}>
             {title}
         </label>
     )
@@ -103,11 +76,11 @@ function Textform({ metadatatitle, value, order, item }) {
     //     readonly = true;
     // }
     return (
-        <div class="form-group schema-form-text">
+        <div className="form-group schema-form-text">
             <Metadatatitle title={metadatatitle} metadatakey={item.key} />
-            <div class="col-sm-9">
+            <div className="col-sm-9">
                 <input type="text"
-                    class="form-control input-form"
+                    className="form-control input-form"
                     id={item.key.replaceAll("[]", "[" + String(order) + "]")}
                     name={item.key.split(".")[item.key.split(".").length - 1]}
                     schema-validate="form"
@@ -121,10 +94,10 @@ function Textform({ metadatatitle, value, order, item }) {
 
 function Textareaform({ metadatatitle, value, order, item }) {
     return (
-        <div class="form-group schema-form-textarea">
+        <div className="form-group schema-form-textarea">
             <Metadatatitle title={metadatatitle} metadatakey={item.key} />
-            <div class="col-sm-9">
-                <textarea class="form-control input-form"
+            <div className="col-sm-9">
+                <textarea className="form-control input-form"
                     id={item.key.replaceAll("[]", "[" + String(order) + "]")}
                     name={item.key.split(".")[item.key.split(".").length - 1]}
                     schema-validate="form"
@@ -139,16 +112,15 @@ function Selectform({ metadatatitle, map, order, value, item }) {
     const titlemap = [];
     map.forEach(element => {
         titlemap.push(
-            <option label={element.name} value={element.value}></option>
+            <option label={element.name} value={element.value} key={item.key.replaceAll("[]", "[" + String(order) + "]") + element.value}></option>
         );
     })
-    //TODO 必須項目の場合は field-requiredをlabelのクラスにつける
     return (
-        <div class="form-group schema-form-select">
+        <div className="form-group schema-form-select">
             <Metadatatitle title={metadatatitle} metadatakey={item.key} />
-            <div class="col-sm-9">
-                <select sf-changed="form" class="form-control input-form" schema-validate="form" id={item.key.replaceAll("[]", "[" + String(order) + "]")} name={item.key.split(".")[item.key.split(".").length - 1]} defaultValue={value}>
-                    <option class value="void"></option>
+            <div className="col-sm-9">
+                <select className="form-control input-form" schema-validate="form" id={item.key.replaceAll("[]", "[" + String(order) + "]")} name={item.key.split(".")[item.key.split(".").length - 1]} defaultValue={value}>
+                    <option value=""></option>
                     {titlemap}
                 </select>
             </div>
@@ -162,7 +134,7 @@ function Radioform({ metadatatitle, map, order, value, item }) {
     const titlemap = [];
     map.forEach(element => {
         titlemap.push(
-            <div class="radio">
+            <div className="radio">
                 <label>
                     <input type="radio"
                         id={item.key.replaceAll("[]", "[" + String(order) + "]")}
@@ -175,9 +147,9 @@ function Radioform({ metadatatitle, map, order, value, item }) {
     })
 
     return (
-        <div class="form-group schema-form-radios">
+        <div className="form-group schema-form-radios">
             <Metadatatitle title={metadatatitle} metadatakey={item.key} />
-            <div class="col-sm-9">
+            <div className="col-sm-9">
                 {titlemap}
             </div>
         </div>
@@ -194,12 +166,12 @@ function Datepickerform({ order, value, item }) {
     // const [selectedDate, setSelectedDate] = useState<Date>();
     var metadatatitle = ("title_i18n" in item) && ("ja" in item.title_i18n) ? item.title_i18n.ja : item.title;
     return (
-        <div class="form-group schema-form-datepicker">
+        <div className="form-group schema-form-datepicker">
             <Metadatatitle title={metadatatitle} metadatakey={item.key} />
 
-            <div class="col-sm-9">
+            <div className="col-sm-9">
                 <input type="data"
-                    class="form-control input-form"
+                    className="form-control input-form"
                     id={item.key.replaceAll("[]", "[" + String(order) + "]")}
                     name={item.key.split(".")[item.key.split(".").length - 1]}
                     schema-validate="form"
@@ -229,19 +201,19 @@ function Checkboxesform({ order, value, item }) {
     map = item.titleMap
     map.forEach(element => {
         titlemap.push(
-            <label class="checkbox col-sm-4 checkbox-input">
-                <input type="checkbox" class="touched" schema-vaidate="form" />
+            <label className="checkbox col-sm-4 checkbox-input">
+                <input type="checkbox" className="touched" schema-vaidate="form" />
                 <span style="overflow-wrap: break-word;">{element.name}</span>
             </label>
         );
     })
     return (
-        <div class="form-group schema-form-select">
+        <div className="form-group schema-form-select">
             <Metadatatitle title={metadatatitle} metadatakey={item.key} />
-            <div class="col-sm-9">
-                <div class="checkbox">
-                    <select sf-changed="form" class="form-control" schema-validate="form" id={item.key.replaceAll("[]", "[" + String(order) + "]")} defaultValue={value}>
-                        <option class value="void"></option>
+            <div className="col-sm-9">
+                <div className="checkbox">
+                    <select sf-changed="form" className="form-control" schema-validate="form" id={item.key.replaceAll("[]", "[" + String(order) + "]")} defaultValue={value}>
+                        <option className value=""></option>
                         {titlemap}
                     </select>
                 </div>
@@ -255,41 +227,40 @@ function HTMLpicker({ html }) {
     return (<div>{html}</div>);
 }
 
-function Panelform({ order, value, form, firstnest }) {
+function Inputlist({ form, count }) {
     const input_field = [];
-    var count = 0;
     if (!("items" in form)) {
-        input_field.push(<Datepickerform order={count} item={form} />);
+        input_field.push(<Datepickerform order={count} item={form} key={form.key} />);
     } else {
         form.items.forEach(item => {
             if ("type" in item) {
                 if (item.type === "text") {
                     input_field.push(
-                        <Textform metadatatitle={("title_i18n" in item) && ("ja" in item.title_i18n) ? item.title_i18n.ja : item.title} value={""} order={order} item={item} />
+                        <Textform metadatatitle={("title_i18n" in item) && ("ja" in item.title_i18n) ? item.title_i18n.ja : item.title} value={""} order={count} item={item} key={item.key} />
                     );
                 } else if (item.type === "textarea") {
                     input_field.push(
-                        <Textareaform metadatatitle={("title_i18n" in item) && ("ja" in item.title_i18n) ? item.title_i18n.ja : item.title} map={item.titleMap} value={""} order={order} item={item} />
+                        <Textareaform metadatatitle={("title_i18n" in item) && ("ja" in item.title_i18n) ? item.title_i18n.ja : item.title} map={item.titleMap} value={""} order={count} item={item} key={item.key} />
                     );
                 } else if (item.type === "select") {
                     input_field.push(
-                        <Selectform metadatatitle={("title_i18n" in item) && ("ja" in item.title_i18n) ? item.title_i18n.ja : item.title} map={item.titleMap} value={""} order={order} item={item} />
+                        <Selectform metadatatitle={("title_i18n" in item) && ("ja" in item.title_i18n) ? item.title_i18n.ja : item.title} map={item.titleMap} value={""} order={count} item={item} key={item.key} />
                     );
                 } else if (item.type === "radios") {
                     input_field.push(
-                        <Radioform metadatatitle={("title_i18n" in item) && ("ja" in item.title_i18n) ? item.title_i18n.ja : item.title} map={item.titleMap} value={""} order={order} item={item} />
+                        <Radioform metadatatitle={("title_i18n" in item) && ("ja" in item.title_i18n) ? item.title_i18n.ja : item.title} map={item.titleMap} value={""} order={count} item={item} key={item.key} />
                     );
                 } else if (item.type === "fieldset") {
-                    input_field.push(<Panelform title={("title_i18n" in item) && ("ja" in item.title_i18n) ? item.title_i18n.ja : item.title} form={item} order={count} />);
+                    input_field.push(<Panelform title={("title_i18n" in item) && ("ja" in item.title_i18n) ? item.title_i18n.ja : item.title} form={item} order={count} key={item.key} />);
                 } else if (item.type === "template") {
                     if ("templateUrl" in item) {
                         var template = item.templateUrl.split('/').pop()
                         if (template === "datepicker.html" || template === "datepicker_multi_format.html") {
-                            input_field.push(<Datepickerform order={count} item={item} />);
+                            input_field.push(<Datepickerform order={count} item={item} key={item.key} />);
                         } else if (template === "datalist.html") {
-                            input_field.push(<Datelistform order={count} item={item} />);
+                            input_field.push(<Datelistform order={count} item={item} key={item.key} />);
                         } else if (template === "checkboxes.html") {
-                            input_field.push(<Checkboxesform order={count} item={item} map={item.titleMap} />)
+                            input_field.push(<Checkboxesform order={count} item={item} map={item.titleMap} key={item.key} />)
                         }
                     } else if ("template" in item) {
                         input_field.push(<div></div>);
@@ -299,33 +270,71 @@ function Panelform({ order, value, form, firstnest }) {
                 }
 
             } else {
-                input_field.push(<Panelform title={("title_i18n" in item) && ("ja" in item.title_i18n) ? item.title_i18n.ja : item.title} form={item} order={count} />);
+                input_field.push(<Panelform form={item} key={item.key} />);
             }
         })
     };
-    // <div class="clearfix">
-    // <button type="button" class="btn btn-success pull-right">
-    //     <i class="glyphicon glyphicon-plus"> New </i>
-    // </button>
-    // </div>
     return (
-        <fieldset class="schema-form-fieldset flexbox" id={form.key} name={form.key.split(".")[form.key.split(".").length - 1]}>
-            <div class="panel panel-default deposit-panel">
-                {/* ここからタイトル */}
-                <Titleform title={("title_i18n" in form) && ("ja" in form.title_i18n) ? form.title_i18n.ja : form.title} />
-                {/* ここまでタイトル */}
-                <div class="panel-body panel-body2 list-group">
-                    <div class="schema-form-array">
-                        <div class="col-sm-12">
-                            <li class="list-group-item ui-sortable" id={form.key}>
-                                <div class="list-group-item">
-                                    {/* ここから入力欄 */}
-                                    {input_field}
-                                    {/* ここまで入力欄 */}
-                                </div>
-                            </li>
-                        </div>
+        <div className="list-group">
+            {input_field}
+        </div>
+    );
+}
 
+function Panelform({ form }) {
+    const [count, setcount] = useState(0);
+    const [inputlists, setInputlists] = useState([(<Inputlist form={form} count={count} key={form.key + "[" + String(count) + "]"} />)]);
+    const [toggle, settoggle] = useState(" hidden");
+    let isArray = " hidden";
+
+    function addarray() {
+        setInputlists(prevComponents => [...prevComponents,
+        (<Inputlist form={form} count={count + 1} key={form.key + "[" + String(count + 1) + "]"} />
+        )]);
+        setcount(count + 1);
+    }
+
+    function reducearray(key) {
+        setInputlists(prevItems => prevItems.filter(inputlist => inputlist.key !== key));
+    }
+
+    function togglepanel(){
+        if (toggle==" hidden"){
+            settoggle("")
+        }else{
+            settoggle(" hidden")
+        }
+    }
+
+    if (form.add == "New") {
+        isArray = "";
+    }
+
+    return (
+        <fieldset className="schema-form-fieldset flexbox" id={form.key} name={form.key.split(".")[form.key.split(".").length - 1]}>
+            <div className="panel panel-default deposit-panel">
+                <div className="panel-heading"><a className="panel-toggle" onClick={()  => togglepanel()}>
+                    {("title_i18n" in form) && ("ja" in form.title_i18n) ? form.title_i18n.ja : form.title}
+                </a>
+                </div>
+                <div className={"panel-body panel-body2 list-group"+toggle}>
+                    <div className="schema-form-array">
+                        <div className="col-sm-12">
+                            {inputlists.map(inputlist => (
+                                <li className="list-group-item ui-sortable" id={form.key + "[" + count + "]"} key={inputlist.key}>
+                                    <div className="close-container clear-form">
+                                        <button type="button" className={"close pull-right" + isArray} onClick={() => reducearray(inputlist.key)}>
+                                            <span aria-hidden="true">×</span>
+                                        </button>
+                                    </div>
+                                    {inputlist}
+                                </li>
+                            ))}
+                        </div>
+                        <button onClick={() => addarray()} type="button" className={"btn btn-success pull-right" + isArray}>
+                            <i className="glyphicon glyphicon-plus"></i>
+                            New
+                        </button>
                     </div>
                 </div>
             </div>
@@ -590,8 +599,8 @@ fetch('/static/json/form.json')
         forms.forEach(form => {
             if (!("system_prop" in schema.properties[form.key] && schema.properties[form.key].system_prop == true)) {
                 input_forms.push(
-                    <div class="form_metadata_property">
-                        <Panelform form={form} order={0} firstnest={"True"} />
+                    <div className="form_metadata_property" key={form.key}>
+                        <Panelform form={form} />
                     </div>
                 )
                 count++;
@@ -604,7 +613,7 @@ fetch('/static/json/form.json')
             <FileUploadForm />
         )
         root.render(
-            <div class="form">
+            <div className="form">
                 {input_forms}
             </div>
         );

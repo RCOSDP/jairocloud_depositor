@@ -2,8 +2,10 @@
     "type": "object",
     "$schema": "http://json-schema.org/draft-04/schema#",
     "required": [
-        "dc:title",
-        "dc:type"
+        "dc:title[].dc:title",
+        "dc:title[].xml:lang",
+        "dc:type.dc:type",
+        "dc:type.rdf:resource"
     ],
     "properties": {
         "pubdate": {

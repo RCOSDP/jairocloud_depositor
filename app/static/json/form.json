@@ -8211,12 +8211,12 @@
                 "title": "データセットシリーズ",
                 "titleMap": [
                     {
-                        "name": "True",
-                        "value": "True"
+                        "name": "true",
+                        "value": "true"
                     },
                     {
-                        "name": "False",
-                        "value": "False"
+                        "name": "false",
+                        "value": "false"
                     }
                 ],
                 "title_i18n": {
@@ -8256,6 +8256,7 @@
                         "key": "jpcoar:file[].jpcoar:URI.jpcoar:URI",
                         "type": "text",
                         "title": "本文URL",
+                        "readonly": true,
                         "feedback": false,
                         "title_i18n": {
                             "en": "Text URL",
@@ -8640,7 +8641,7 @@
                 "key": "jpcoar:catalog.dc:title",
                 "items": [
                     {
-                        "key": "jpcoar:catalog.dc:title[].dc:title[]",
+                        "key": "jpcoar:catalog.dc:title[].dc:title",
                         "type": "text",
                         "title": "タイトル",
                         "title_i18n": {

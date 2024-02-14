@@ -23,28 +23,37 @@
   <script src="{{ url_for('static', filename='json/form.json') }}"></script>
   <script src="{{ url_for('static', filename='js/app.js') }}" type="text/babel" data-type="module"></script>
   <script>
-  function load_panel(panel, property, nest) {
-    panel.querySelectorAll('.schema-form-fieldset').forEach(function (element) {
+    function load_panel(panel, property, nest) {
+      panel.querySelectorAll('.schema-form-fieldset').forEach(function (element) {
         if (element.id.split(".").length == nest) {
-            property[element.name] = []
-            var propers = property[element.name]
-            element.querySelectorAll('li.list-group-item.ui-sortable').forEach(function (elem) {
-                if (elem.id.split(".").length == nest) {
-                    var proper = {}
-                    elem.querySelectorAll('.input-form.form-control').forEach(function (e) {
-                        if (e.id.split('.').length <= nest+1) {
-                            proper[e.name] = e.value
-                        }
-                    })
-                    if (elem.querySelector('li.list-group-item.ui-sortable') != null){
-                        load_panel(elem, proper, nest+1)
-                    }
-                    propers.push(proper)
+          property[element.name] = []
+          var propers = property[element.name]
+          element.querySelectorAll('li.list-group-item.ui-sortable').forEach(function (elem) {
+            if (elem.id.split(".").length == nest) {
+              var proper = {}
+              elem.querySelectorAll('.input-form.form-control').forEach(function (e) {
+                if (e.id.split('.').length <= nest + 1) {
+                  if (e.value != "")
+                    proper[e.name] = e.value;
                 }
-            })
+              })
+              if (elem.querySelector('li.list-group-item.ui-sortable') != null) {
+                load_panel(elem, proper, nest + 1)
+              }
+              if (Object.keys(proper).length){
+                propers.push(proper)
+              }
+            }
+          })
+        // 入力がない項目のキーを削除
+          if (!(propers.length)){
+            console.log(propers.length);
+            delete property[element.name];
+          }
         }
-    })
-  }
+      })
+    }
+
     function load_metadata() {
       var panel = $('div[name="jpcoar:creator"]').find();
 
@@ -65,14 +74,31 @@
             //
             elemen.querySelectorAll('.input-form.form-control').forEach(function (e) {
               if (e.id.split('.').length <= 2) {
-                property[e.name] = e.value
+                if (e.value != ""){
+                  property[e.name] = e.value;
+                }
               }
             })
 
             load_panel(elemen, property, 2)
-            properties.push(property)
+            if (Object.keys(property).length){
+              properties.push(property)
+            }
           }
         })
+        // 入力がない項目のキーを削除
+        if (!(properties.length)){
+          console.log("aaaaaa")
+          delete item_metadata[metadata_property.name];
+        }
+      })
+      $.ajax({
+        method: "POST",
+        url: "/item_register/register",
+        mimeType: "application/json",
+        dataType: "json",
+        contentType: 'application/json',
+        data: JSON.stringify(item_metadata)
       })
       console.log(item_metadata)
     }
@@ -155,18 +181,18 @@
                                         <div id="upload_form_container"></div>
                                         <hr>
                                         <div class="col-sm-12">
-                                          <form name="metadata" class="form-horizontal" method="POST"
-                                            action="{{ url_for('item_register.register') }}">
+                                          <div name="metadata" class="form-horizontal">
                                             <div id="input_form_container"></div>
                                             <div class="col-sm-12">
                                               <div class="col-sm-offset-3 col-sm-6">
                                                 <div class="list-inline text-center">
                                                   <!-- <input type="submit" value="登録" class="btn btn-info next-button" onclick="kansuu()" > -->
-                                                  <input value="登録" class="btn btn-info next-button" onclick="load_metadata()">
+                                                  <input value="登録" class="btn btn-info next-button"
+                                                    onclick="load_metadata()">
                                                 </div>
                                               </div>
                                             </div>
-                                          </form>
+                                          </div>
                                         </div>
                                         <!-- ここまでreact -->
 
