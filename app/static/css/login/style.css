@@ -1,0 +1,28 @@
+body.cover-page {
+    background-color: rgba(13,95,137,.8);
+    text-align: center;
+}
+.row {
+    margin:80px;
+}
+
+.panel-body {
+    padding-left: 40px;
+    padding-right: 40px;
+    padding-bottom: 40px;
+}
+
+.container {
+    width: 1170px;
+}
+.container, .container-fluid {
+    margin-right: auto;
+    margin-left: auto;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+.panel {
+    color: #000;
+    border-radius: 12px;
+}

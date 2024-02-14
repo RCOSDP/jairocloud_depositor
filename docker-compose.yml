@@ -1,0 +1,54 @@
+version: "3"
+services:
+  app:
+    build: .
+    ports:
+      - "5001:5000"
+    container_name: app
+    command: flask run --host=0.0.0.0 --debugger --reload
+    links:
+      - postgresql
+    volumes:
+      - type: bind
+        source: ./app
+        target: /usr/src/app
+
+
+  postgresql:
+    restart: "always"
+    image: postgres:12
+#    command: postgres -c log_destination=stderr -c log_statement=all -c log_connections=on -c log_disconnections=on
+    environment:
+      - POSTGRES_USER=invenio
+      - POSTGRES_DB=invenio
+      - POSTGRES_PASSWORD=dbpass123
+    volumes:
+      - pgsql-data:/var/lib/postgresql/data
+    ports:
+      - "25401:5432"
+
+
+  nginx:
+    restart: "always"
+    build: ./nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - static_data:/home/invenio/.virtualenvs/invenio/var/instance/static
+      - data_data:/home/invenio/.virtualenvs/invenio/var/instance/data
+#      - letsencrypt_etc:/etc/letsencrypt
+#      - letsencrypt_html:/var/www/html
+    links:
+      - app
+    deploy:
+      resources:
+        limits:
+          memory: 300m
+
+volumes:
+  weko3_data:
+  static_data:
+  data_data:
+  conf_data:
+  pgsql-data:
