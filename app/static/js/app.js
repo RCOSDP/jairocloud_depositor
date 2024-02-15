@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 // import { DatePicker } from 'react-datepicker';
+
+
 
 function PDFform() {
     return (
@@ -29,31 +31,175 @@ function PDFform() {
     )
 }
 
-function FileUploadForm() {
+function Datalistform({ order, value, item }) {
     return (
+        <Textform metadatatitle={("title_i18n" in item) && ("ja" in item.title_i18n) ? item.title_i18n.ja : item.title} value={""} order={order} item={item} />
+    )
+}
 
-        <div className="row row-4">
-            <div className="col-sm-12">
-                <div className="files-upload-zone" template="/static/templates/weko_items_ui/upload.html"><div className="well">
-                    <center>
-                        Drop file or folders here
-                    </center>
+function Datalist({ contentfiles, deletefile }) {
+    return (
+        <div className="panel panel-default">
+            <div className="panel-heading">
+                <div className="row">
+                    <div className="col-sm-6">
+                    </div>
                 </div>
-                    <p className="text-center legend"><strong>— OR —</strong></p>
-                    <p className="text-center">
-                        <button className="btn btn-primary" ngf-max-size="20GB" ngf-multiple="true" ngf-select="" ngf-change="hookAddFiles($files)">
-                            Click to select
-                        </button>
-                    </p></div>
             </div>
+            <table className="table">
+                <tbody><tr>
+                    <th>Filename</th>
+                    <th>Size</th>
+                    <th className="text-center">Actions</th>
+                </tr>
+                    {contentfiles.map(file => (
+                        (<tr key={file.name}>
+                            <td>{file.name}</td>
+                            <td>{Math.round(file.size / 1024)}KB</td>
+                            <td className="text-center">
+                                <a onClick={() => deletefile(file.name)}>
+                                    削除
+                                </a>
+                            </td>
+                        </tr>)
+                    ))}
+                </tbody></table>
+            <div className="panel-footer"></div>
         </div>
     )
+}
+
+function DropFileArea({ addfiles }) {
+
+    function dragOverHandler(event) {
+        event.preventDefault()
+    }
+
+    function dropFile(event) {
+        event.preventDefault();
+        let isfiles = true;
+        if (event.dataTransfer.files) {
+            [...event.dataTransfer.items].forEach((item) => {
+                // ドロップしたものがファイルでない場合は拒否する
+                if (item.kind !== "file") {
+                    console.log("not file");
+                    isfiles = false;
+                }
+            })
+        } else {
+            console.log("no files");
+            isfiles = false;
+        }
+        if (isfiles == true) {
+            addfiles(event.dataTransfer.files)
+        }
+    }
+
+    return (
+        <div className="well" onDragOver={(e) => { dragOverHandler(e) }} onDrop={(e) => { dropFile(e) }}>
+            <center>
+                Drop files or folders here
+            </center>
+        </div>)
+}
+
+function AddFileButton({ addfiles, acceptfiletype}) {
+    const self = useRef();
+    function fileaddaction() {
+        self.current.click();
+    }
+    return (
+        <p className="text-center">
+            <button className="btn btn-primary" onClick={fileaddaction} >
+                Click to select
+            </button>
+            <input ref={self} type="file" className="hidden" multiple accept={acceptfiletype} onChange={(e) => { addfiles(e.target.files); e.target.value = ""; }} />
+        </p>
+    )
+}
+
+function FileUploadForm({ }) {
+    const [contentfiles, setcontentfiles] = sharedFiles();
+    const contentfilenames = contentfiles.map(contentfile => contentfile.name);
+    function addfiles(files) {
+        // 一時的なリストをdeepcopyで生成
+        let tmpfiles = contentfiles.map(contentfile => contentfile)
+        // リストに名前が存在しないなら一時リストにプッシュ
+        Array.from(files).forEach(file => {
+            if (!(contentfilenames.includes(file.name))) {
+                contentfilenames.push(file.name)
+                tmpfiles.push(file)
+            }
+        })
+        // 一時的なリストからレンダー
+        setcontentfiles(tmpfiles);
+    }
+    function deletefile(filename) {
+        let tmpfiles = contentfiles.map(contentfile => contentfile).filter(file => file.name !== filename)
+        setcontentfiles(tmpfiles);
+    }
+
+    return (
+        <div className="row row-4 list-group-item">
+            <div className="col-sm-12">
+                <div className="files-upload-zone">
+                    <DropFileArea addfiles={addfiles} />
+                    <p className="text-center legend"><strong>— OR —</strong></p>
+                    <AddFileButton addfiles={addfiles} />
+                </div>
+                {(contentfiles.length !== 0) && <Datalist contentfiles={contentfiles} deletefile={deletefile} />}
+            </div>
+        </div>
+
+    )
+}
+
+function ThumbnailUploadForm() {
+    const [thumbnail, setthumbnail] = sharedFiles();
+    console.log(thumbnail)
+    function addfiles(files) {
+        if (files.length > 0) {
+            const firstFile = files[0];
+            console.log("1つ目のファイル:", firstFile);
+            if (firstFile.type.startsWith('image/')){
+                setthumbnail([firstFile]);
+            }else{
+                console.log("画像ファイルではありません。")
+            }
+        } else {
+            console.log("ドロップされたファイルはありません");
+        }
+    }
+    function deletefile(filename) {
+        setthumbnail([]);
+    }
+
+    return (
+        <div className="row row-4 list-group-item">
+            <div className="col-sm-12">
+                <div className="files-upload-zone">
+                    <DropFileArea addfiles={addfiles} />
+                    <p className="text-center legend"><strong>— OR —</strong></p>
+                    <AddFileButton addfiles={addfiles} acceptfiletype={"image/*"}/>
+                </div>
+                <p className="text-center">登録可能なファイルは「gif, jpg, jpe, jpeg, png, bmp」</p>
+                {(thumbnail.length!==0) && <Datalist contentfiles={thumbnail} deletefile={deletefile} />}
+            </div>
+        </div>
+
+    )
+}
+
+export const sharedFiles= () =>{
+    const [contentfiles, setcontentfiles] = useState([]);
+    const [thumbnail, setthumbnail] = useState([]);
+
+    return [contentfiles, setcontentfiles, thumbnail, setthumbnail]
 }
 
 function Metadatatitle({ title, metadatakey }) {
     var required = false;
     var classvalue;
-    //このreplaceAllよくない気がする直す可能性あり
     if (schema.required.includes(metadatakey)) {
         required = true;
     }
@@ -71,7 +217,7 @@ function Metadatatitle({ title, metadatakey }) {
 
 function Textform({ metadatatitle, value, order, item }) {
     var readonly = false;
-    // とりあえず今は手打ちなのでコメントアウト
+    // とりあえず今はコメントアウト
     // if ("readonly" in item && item.readonly == true) {
     //     readonly = true;
     // }
@@ -161,7 +307,7 @@ function Fieldsetform({ order, value, item }) {
 
 }
 
-// 実装できていない。いまはとりあえず　input型である。
+// 実装できていない。いまはとりあえず　input text型である。
 function Datepickerform({ order, value, item }) {
     // const [selectedDate, setSelectedDate] = useState<Date>();
     var metadatatitle = ("title_i18n" in item) && ("ja" in item.title_i18n) ? item.title_i18n.ja : item.title;
@@ -188,11 +334,6 @@ function Datepickerform({ order, value, item }) {
     )
 }
 
-function Datelistform({ order, value, item }) {
-    return (
-        <Textform metadatatitle={("title_i18n" in item) && ("ja" in item.title_i18n) ? item.title_i18n.ja : item.title} value={""} order={order} item={item} />
-    )
-}
 
 // 未完成jpcoar2.0では使わない
 function Checkboxesform({ order, value, item }) {
@@ -252,13 +393,15 @@ function Inputlist({ form, count }) {
                     );
                 } else if (item.type === "fieldset") {
                     input_field.push(<Panelform title={("title_i18n" in item) && ("ja" in item.title_i18n) ? item.title_i18n.ja : item.title} form={item} order={count} key={item.key} />);
+                } else if (item.type === "contentfile" || item.type === "thumbnail") {
+                    input_field.push(<Panelform form={item} key={item.key} />);
                 } else if (item.type === "template") {
                     if ("templateUrl" in item) {
                         var template = item.templateUrl.split('/').pop()
                         if (template === "datepicker.html" || template === "datepicker_multi_format.html") {
                             input_field.push(<Datepickerform order={count} item={item} key={item.key} />);
                         } else if (template === "datalist.html") {
-                            input_field.push(<Datelistform order={count} item={item} key={item.key} />);
+                            input_field.push(<Datalistform order={count} item={item} key={item.key} />);
                         } else if (template === "checkboxes.html") {
                             input_field.push(<Checkboxesform order={count} item={item} map={item.titleMap} key={item.key} />)
                         }
@@ -285,7 +428,7 @@ function Panelform({ form }) {
     const [count, setcount] = useState(0);
     const [inputlists, setInputlists] = useState([(<Inputlist form={form} count={count} key={form.key + "[" + String(count) + "]"} />)]);
     const [toggle, settoggle] = useState(" hidden");
-    let isArray = " hidden";
+    let isArray = false;
 
     function addarray() {
         setInputlists(prevComponents => [...prevComponents,
@@ -298,43 +441,48 @@ function Panelform({ form }) {
         setInputlists(prevItems => prevItems.filter(inputlist => inputlist.key !== key));
     }
 
-    function togglepanel(){
-        if (toggle==" hidden"){
+    function togglepanel() {
+        if (toggle == " hidden") {
             settoggle("")
-        }else{
+        } else {
             settoggle(" hidden")
         }
     }
 
     if (form.add == "New") {
-        isArray = "";
+        isArray = true;
     }
+
 
     return (
         <fieldset className="schema-form-fieldset flexbox" id={form.key} name={form.key.split(".")[form.key.split(".").length - 1]}>
             <div className="panel panel-default deposit-panel">
-                <div className="panel-heading"><a className="panel-toggle" onClick={()  => togglepanel()}>
+                <div className="panel-heading"><a className="panel-toggle" onClick={() => togglepanel()}>
                     {("title_i18n" in form) && ("ja" in form.title_i18n) ? form.title_i18n.ja : form.title}
                 </a>
                 </div>
-                <div className={"panel-body panel-body2 list-group"+toggle}>
+                <div className={"panel-body panel-body2 list-group" + toggle}>
                     <div className="schema-form-array">
                         <div className="col-sm-12">
+                            {(form.type == "contentfile") && <FileUploadForm />}
+                            {(form.type == "thumbnail") && <ThumbnailUploadForm />}
                             {inputlists.map(inputlist => (
                                 <li className="list-group-item ui-sortable" id={form.key + "[" + count + "]"} key={inputlist.key}>
-                                    <div className="close-container clear-form">
-                                        <button type="button" className={"close pull-right" + isArray} onClick={() => reducearray(inputlist.key)}>
-                                            <span aria-hidden="true">×</span>
-                                        </button>
-                                    </div>
+                                    {isArray &&
+                                        (<div className="close-container clear-form">
+                                            <button type="button" className={"close pull-right"} onClick={() => reducearray(inputlist.key)}>
+                                                <span aria-hidden="true">×</span>
+                                            </button>
+                                        </div>)}
                                     {inputlist}
                                 </li>
                             ))}
                         </div>
-                        <button onClick={() => addarray()} type="button" className={"btn btn-success pull-right" + isArray}>
-                            <i className="glyphicon glyphicon-plus"></i>
-                            New
-                        </button>
+                        {isArray &&
+                            (<button onClick={() => addarray()} type="button" className={"btn btn-success pull-right"}>
+                                <i className="glyphicon glyphicon-plus"></i>
+                                New
+                            </button>)}
                     </div>
                 </div>
             </div>
@@ -608,9 +756,6 @@ fetch('/static/json/form.json')
         });
         uploadpdf.render(
             <PDFform />
-        )
-        uploadfile.render(
-            <FileUploadForm />
         )
         root.render(
             <div className="form">

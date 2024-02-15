@@ -8234,6 +8234,7 @@
     {
         "add": "New",
         "key": "jpcoar:file",
+        "type": "contentfile",
         "items": [
             {
                 "key": "jpcoar:file[].filename",
@@ -9331,7 +9332,7 @@
             },
             {
                 "key": "jpcoar:catalog.jpcoar:file",
-                "type": "fieldset",
+                "type": "thumbnail",
                 "items": [
                     {
                         "key": "jpcoar:catalog.jpcoar:file.jpcoar:URI",
