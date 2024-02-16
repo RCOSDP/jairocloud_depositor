@@ -22,89 +22,6 @@
   </script>
   <script src="{{ url_for('static', filename='json/form.json') }}"></script>
   <script src="{{ url_for('static', filename='js/app.js') }}" type="text/babel" data-type="module"></script>
-  <script>
-    function load_panel(panel, property, nest) {
-      panel.querySelectorAll('.schema-form-fieldset').forEach(function (element) {
-        if (element.id.split(".").length == nest) {
-          property[element.name] = []
-          var propers = property[element.name]
-          element.querySelectorAll('li.list-group-item.ui-sortable').forEach(function (elem) {
-            if (elem.id.split(".").length == nest) {
-              var proper = {}
-              elem.querySelectorAll('.input-form.form-control').forEach(function (e) {
-                if (e.id.split('.').length <= nest + 1) {
-                  if (e.value != "")
-                    proper[e.name] = e.value;
-                }
-              })
-              if (elem.querySelector('li.list-group-item.ui-sortable') != null) {
-                load_panel(elem, proper, nest + 1)
-              }
-              if (Object.keys(proper).length){
-                propers.push(proper)
-              }
-            }
-          })
-        // 入力がない項目のキーを削除
-          if (!(propers.length)){
-            console.log(propers.length);
-            delete property[element.name];
-          }
-        }
-      })
-    }
-
-    function load_metadata() {
-      var panel = $('div[name="jpcoar:creator"]').find();
-
-      var item_metadata = {}
-      // 項目ごとにHTMLを取得
-      document.querySelectorAll('.form_metadata_property').forEach(function (element) {
-        //項目の大枠を取得
-        metadata_property = element.querySelector('.schema-form-fieldset');
-
-        // item_metadataに項目のキーを追加し、操作できるようにする。
-        item_metadata[metadata_property.name] = []
-
-        var properties = item_metadata[metadata_property.name]
-
-        metadata_property.querySelectorAll('li.list-group-item.ui-sortable').forEach(function (elemen) {
-          if (elemen.id.split(".").length == 1) {
-            var property = {}
-            //
-            elemen.querySelectorAll('.input-form.form-control').forEach(function (e) {
-              if (e.id.split('.').length <= 2) {
-                if (e.value != ""){
-                  property[e.name] = e.value;
-                }
-              }
-            })
-
-            load_panel(elemen, property, 2)
-            if (Object.keys(property).length){
-              properties.push(property)
-            }
-          }
-        })
-        // 入力がない項目のキーを削除
-        if (!(properties.length)){
-          console.log("aaaaaa")
-          delete item_metadata[metadata_property.name];
-        }
-      })
-      $.ajax({
-        method: "POST",
-        url: "/item_register/register",
-        mimeType: "application/json",
-        dataType: "json",
-        contentType: 'application/json',
-        data: JSON.stringify(item_metadata)
-      })
-      console.log(item_metadata)
-    }
-
-
-  </script>
   <!-- <script src="{{ url_for('static', filename='json/form.json') }}" type="text/json" id="form-json"></script> -->
   <link href={{url_for('static', filename='css/deposit.css' )}} rel="stylesheet">
   <link href={{url_for('static', filename='css/theme.css' )}} rel="stylesheet">
@@ -150,7 +67,7 @@
                 <div class="pull-right">
                 </div>
                 <strong>
-                  <p id="title-main-content">WEKO3</p>
+                  <p id="title-main-content">Overlay</p>
                 </strong>
               </div>
               <div class="panel-body panel-body2" id="background-color-main-content">
@@ -176,26 +93,12 @@
                                       <div class="hide" id="hide_endpoints"></div>
                                       <div id="weko-records">
                                         <!-- ここからreact -->
-                                        <div id="upload_pdf_form_container"></div>
-                                        <hr>
-                                        <div id="upload_form_container"></div>
-                                        <hr>
                                         <div class="col-sm-12">
                                           <div name="metadata" class="form-horizontal">
                                             <div id="input_form_container"></div>
-                                            <div class="col-sm-12">
-                                              <div class="col-sm-offset-3 col-sm-6">
-                                                <div class="list-inline text-center">
-                                                  <!-- <input type="submit" value="登録" class="btn btn-info next-button" onclick="kansuu()" > -->
-                                                  <input value="登録" class="btn btn-info next-button"
-                                                    onclick="load_metadata()">
-                                                </div>
-                                              </div>
-                                            </div>
                                           </div>
                                         </div>
                                         <!-- ここまでreact -->
-
                                       </div>
                                     </div>
                                   </div>
@@ -223,10 +126,9 @@
           </div>
           <div class="row">
             <div class="col-xs-12 col-sm-12 text-center-xs">
-              <p>Powered by <a href="https://github.com/RCOSDP/weko">WEKO3</a></p>
+              <p></a></p>
               <p>
-                <a class="button is-success" onclick="return klaro.show();">Change consent
-                  settings</a>
+                <a class="button is-success" onclick="return klaro.show();">　　　</a>
               </p>
             </div>
           </div>

@@ -1,33 +1,87 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, createContext, useContext } from 'react';
 import { createRoot } from 'react-dom/client';
 // import { DatePicker } from 'react-datepicker';
 
+const contentFilesContext = createContext([]);
+const setContentFilesContext = createContext(null);
+const thumbnailContext = createContext([]);
+const setThumbnailContext = createContext(null);
 
+const FileProvider = ({ children }) => {
+    const [contentfiles, setcontentfiles] = useState([]);
+    const [thumbnail, setthumbnail] = useState([]);
+
+    return (
+        <contentFilesContext.Provider value={contentfiles}>
+            <setContentFilesContext.Provider value={setcontentfiles}>
+                <thumbnailContext.Provider value={thumbnail}>
+                    <setThumbnailContext.Provider value={setthumbnail}>
+                        {children}
+                    </setThumbnailContext.Provider>
+                </thumbnailContext.Provider>
+            </setContentFilesContext.Provider>
+        </contentFilesContext.Provider>
+    )
+}
+
+const useFilesValue = () => useContext(contentFilesContext);
+const useFilesSetValue = () => useContext(setContentFilesContext);
+const useThumbnailValue = () => useContext(thumbnailContext);
+const useThumbnailSetValue = () => useContext(setThumbnailContext);
 
 function PDFform() {
+    const contentfiles = useFilesValue();
+    const setcontentfiles = useFilesSetValue();
+    const [pdffile, setpdffile] =useState([]); 
+    const contentfilenames = contentfiles.map(contentfile => contentfile.name);
+    function addfiles(files) {
+        // 一時的なリストをdeepcopyで生成
+        let tmpfiles = contentfiles.map(contentfile => contentfile)
+        // リストに名前が存在しないなら一時リストにプッシュ
+        if (files.length > 0) {
+            const firstFile = files[0];
+            if(check_filesize_over_100MB(firstFile)){
+                console.log("ファイルサイズが100MBを超えています。")
+                console.log(firstFile.name)
+            } else if (firstFile.type === "application/pdf") {
+                if (!(contentfilenames.includes(firstFile.name))) {
+                    tmpfiles.push(firstFile)
+                }
+                if (pdffile.length===0 || pdffile[0].name!==firstFile.name){
+                    setpdffile([firstFile])
+                }
+            } else {
+                console.log("PDFファイルではありません。")
+            }
+        } else {
+            console.log("ドロップされたファイルはありません");
+        }
+        setcontentfiles(tmpfiles);
+    }
+    
+    function deletefile(filename) {
+        setpdffile([]);
+    }
     return (
-
         <div className="row row-4">
             <div className="col-sm-12">
-                <div className="files-upload-zone" template="/static/templates/weko_items_ui/upload.html"><div className="well">
-                    <center>
-                        Drop pdf here
-                    </center>
-                </div>
+                <p className="text-center">pdf自動入力フォーム</p>
+                <div className="files-upload-zone">
+                    <DropFileArea addfiles={addfiles} />
                     <p className="text-center legend"><strong>— OR —</strong></p>
-                    <p className="text-center">
-                        <button className="btn btn-primary" ngf-max-size="20GB" ngf-multiple="true" ngf-select="" ngf-change="hookAddFiles($files)">
-                            Click to select for pdf
-                        </button>
-                    </p></div>
+                    <AddFileButton addfiles={addfiles} acceptfiletype={"application/pdf"} />
+                </div>
+                <p className="text-center">登録可能なファイルは「pdf」のみ</p>
                 <p className="text-center">
                     <button className="btn btn-success">
                         <span className="glyphicon glyphicon-plus"></span>&nbsp;
                         PDFからメタデータの自動入力
                     </button>
                 </p>
+            {(pdffile.length !== 0) && <Datalist contentfiles={pdffile} deletefile={deletefile} />}
             </div>
         </div>
+
     )
 }
 
@@ -103,7 +157,7 @@ function DropFileArea({ addfiles }) {
         </div>)
 }
 
-function AddFileButton({ addfiles, acceptfiletype}) {
+function AddFileButton({ addfiles, acceptfiletype }) {
     const self = useRef();
     function fileaddaction() {
         self.current.click();
@@ -119,14 +173,18 @@ function AddFileButton({ addfiles, acceptfiletype}) {
 }
 
 function FileUploadForm({ }) {
-    const [contentfiles, setcontentfiles] = sharedFiles();
+    const contentfiles = useFilesValue();
+    const setcontentfiles = useFilesSetValue();
     const contentfilenames = contentfiles.map(contentfile => contentfile.name);
     function addfiles(files) {
         // 一時的なリストをdeepcopyで生成
         let tmpfiles = contentfiles.map(contentfile => contentfile)
         // リストに名前が存在しないなら一時リストにプッシュ
         Array.from(files).forEach(file => {
-            if (!(contentfilenames.includes(file.name))) {
+            if(check_filesize_over_100MB(file)){
+                console.log("ファイルサイズが100MBを超えています。")
+                console.log(file.name)
+            }else if (!(contentfilenames.includes(file.name))) {
                 contentfilenames.push(file.name)
                 tmpfiles.push(file)
             }
@@ -155,16 +213,19 @@ function FileUploadForm({ }) {
 }
 
 function ThumbnailUploadForm() {
-    const [thumbnail, setthumbnail] = sharedFiles();
-    console.log(thumbnail)
+    const thumbnail = useThumbnailValue();
+    const setthumbnail = useThumbnailSetValue();
+    const files = useFilesValue();
+    console.log(files)
     function addfiles(files) {
         if (files.length > 0) {
             const firstFile = files[0];
-            console.log("1つ目のファイル:", firstFile);
-            if (firstFile.type.startsWith('image/')){
-                setthumbnail([firstFile]);
-            }else{
+            if(check_filesize_over_100MB(firstFile)){
+                console.log("ファイルサイズが100MBを超えています。")
+            }else if(!(firstFile.type.startsWith('image/'))) {
                 console.log("画像ファイルではありません。")
+            } else {
+                setthumbnail([firstFile]);
             }
         } else {
             console.log("ドロップされたファイルはありません");
@@ -180,26 +241,19 @@ function ThumbnailUploadForm() {
                 <div className="files-upload-zone">
                     <DropFileArea addfiles={addfiles} />
                     <p className="text-center legend"><strong>— OR —</strong></p>
-                    <AddFileButton addfiles={addfiles} acceptfiletype={"image/*"}/>
+                    <AddFileButton addfiles={addfiles} acceptfiletype={"image/*"} />
                 </div>
                 <p className="text-center">登録可能なファイルは「gif, jpg, jpe, jpeg, png, bmp」</p>
-                {(thumbnail.length!==0) && <Datalist contentfiles={thumbnail} deletefile={deletefile} />}
+                {(thumbnail.length !== 0) && <Datalist contentfiles={thumbnail} deletefile={deletefile} />}
             </div>
         </div>
 
     )
 }
 
-export const sharedFiles= () =>{
-    const [contentfiles, setcontentfiles] = useState([]);
-    const [thumbnail, setthumbnail] = useState([]);
-
-    return [contentfiles, setcontentfiles, thumbnail, setthumbnail]
-}
-
 function Metadatatitle({ title, metadatakey }) {
-    var required = false;
-    var classvalue;
+    let required = false;
+    let classvalue;
     if (schema.required.includes(metadatakey)) {
         required = true;
     }
@@ -216,7 +270,7 @@ function Metadatatitle({ title, metadatakey }) {
 }
 
 function Textform({ metadatatitle, value, order, item }) {
-    var readonly = false;
+    let readonly = false;
     // とりあえず今はコメントアウト
     // if ("readonly" in item && item.readonly == true) {
     //     readonly = true;
@@ -302,15 +356,11 @@ function Radioform({ metadatatitle, map, order, value, item }) {
     )
 }
 
-function Fieldsetform({ order, value, item }) {
-
-
-}
 
 // 実装できていない。いまはとりあえず　input text型である。
 function Datepickerform({ order, value, item }) {
     // const [selectedDate, setSelectedDate] = useState<Date>();
-    var metadatatitle = ("title_i18n" in item) && ("ja" in item.title_i18n) ? item.title_i18n.ja : item.title;
+    let metadatatitle = ("title_i18n" in item) && ("ja" in item.title_i18n) ? item.title_i18n.ja : item.title;
     return (
         <div className="form-group schema-form-datepicker">
             <Metadatatitle title={metadatatitle} metadatakey={item.key} />
@@ -338,7 +388,7 @@ function Datepickerform({ order, value, item }) {
 // 未完成jpcoar2.0では使わない
 function Checkboxesform({ order, value, item }) {
     const titlemap = [];
-    var metadatatitle = ("title_i18n" in item) && ("ja" in item.title_i18n) ? item.title_i18n.ja : item.title
+    let metadatatitle = ("title_i18n" in item) && ("ja" in item.title_i18n) ? item.title_i18n.ja : item.title
     map = item.titleMap
     map.forEach(element => {
         titlemap.push(
@@ -397,7 +447,7 @@ function Inputlist({ form, count }) {
                     input_field.push(<Panelform form={item} key={item.key} />);
                 } else if (item.type === "template") {
                     if ("templateUrl" in item) {
-                        var template = item.templateUrl.split('/').pop()
+                        let template = item.templateUrl.split('/').pop()
                         if (template === "datepicker.html" || template === "datepicker_multi_format.html") {
                             input_field.push(<Datepickerform order={count} item={item} key={item.key} />);
                         } else if (template === "datalist.html") {
@@ -491,6 +541,191 @@ function Panelform({ form }) {
 }
 
 
+function SubmitButton() {
+    const contentfiles = useFilesValue();
+    const thumbnail = useThumbnailValue();
+    const [disabled, setdisabled] = useState(false);
+    // ファイルをBase64にエンコードする関数
+    function encodeFileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const base64Data = event.target.result.split(",")[1];
+                console.log(file.name+":"+base64Data.length)
+                resolve({ "name": file.name, "base64": base64Data });
+            };
+            reader.onerror = function (error) {
+                reject(error);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // 複数のファイルをBase64にエンコードする関数
+    function encodeFilesToBase64(files) {
+        const promises = files.map(file => {
+            return encodeFileToBase64(file)
+        });
+        return Promise.all(promises);
+    }
+
+
+    function request_python(metadata, files, thumb) {
+        const dataforrequest = { "item_metadata": metadata, "contentfiles": files, "thumbnail": thumb }
+        // const dataforrequest = { "item_metadata": metadata, "contentfiles": [], "thumbnail": thumb }
+        console.log("request_python")
+        console.log(dataforrequest)
+        return fetch("/item_register/register", {
+            method: "POST",
+            headers: {"Content-Type":"application/json"},
+            body: JSON.stringify(dataforrequest)
+        })
+    }
+
+    function itemRegister() {
+        console.log("aaaaaaaaa")
+        let metadata = load_metadata()
+        console.log(metadata)
+        let files = [];
+        let thumb = null;
+        encodeFilesToBase64(contentfiles).then(base64files => {
+                files = base64files.map(base64file => base64file) // 全てのファイルのBase64データの配列が表示される
+                console.log("nnnnn")
+                console.log(files)
+                return encodeFilesToBase64(thumbnail)
+            }).then(thumbnail => {
+                console.log("thumb")
+                thumb = thumbnail.map(base64thumbnail => base64thumbnail)
+                return request_python(metadata, files, thumb)
+            }).catch(error => {
+                console.error('Error encoding files:', error);
+            }).finally(
+                console.log("finally")
+            );
+        
+
+    }
+    return (
+        <div className="col-sm-12">
+            <div className="col-sm-offset-3 col-sm-6">
+                <div className="list-inline text-center">
+                    
+                    <button id="submit_button" className="btn btn-info next-button" disabled={disabled} onClick={itemRegister}>
+                        送信
+                    </button>
+                </div>
+            </div>
+        </div>)
+}
+
+
+
+function ItemRegisterPanel({ forms, schema }) {
+    let count = 0;
+    const input_forms = [];
+    forms.forEach(form => {
+        if (!("system_prop" in schema.properties[form.key] && schema.properties[form.key].system_prop == true)) {
+            input_forms.push(
+                <div className="form_metadata_property" key={form.key}>
+                    <Panelform form={form} />
+                </div>
+            )
+            count++;
+        }
+    });
+    return (
+        <FileProvider>
+            <PDFform />
+            <hr />
+            <div className="form">
+                {input_forms}
+            </div>
+            <SubmitButton />
+        </FileProvider>
+    )
+}
+
+function load_panel(panel, property, nest) {
+    panel.querySelectorAll('.schema-form-fieldset').forEach(function (element) {
+        if (element.id.split(".").length == nest) {
+            property[element.name] = []
+            let propers = property[element.name]
+            element.querySelectorAll('li.list-group-item.ui-sortable').forEach(function (elem) {
+                if (elem.id.split(".").length == nest) {
+                    let proper = {}
+                    elem.querySelectorAll('.input-form.form-control').forEach(function (e) {
+                        if (e.id.split('.').length <= nest + 1) {
+                            if (e.value != "")
+                                proper[e.name] = e.value;
+                        }
+                    })
+                    if (elem.querySelector('li.list-group-item.ui-sortable') != null) {
+                        load_panel(elem, proper, nest + 1)
+                    }
+                    if (Object.keys(proper).length) {
+                        propers.push(proper)
+                    }
+                }
+            })
+            // 入力がない項目のキーを削除
+            if (!(propers.length)) {
+                delete property[element.name];
+            }
+        }
+    })
+}
+
+function load_metadata() {
+    let item_metadata = {}
+    // 項目ごとにHTMLを取得
+    document.querySelectorAll('.form_metadata_property').forEach(function (element) {
+
+        //項目の大枠を取得
+        let metadata_property = element.querySelector('.schema-form-fieldset');
+
+        // item_metadataに項目のキーを追加し、操作できるようにする。
+        item_metadata[metadata_property.name] = []
+
+        let properties = item_metadata[metadata_property.name]
+
+        metadata_property.querySelectorAll('li.list-group-item.ui-sortable').forEach(function (elemen) {
+            if (elemen.id.split(".").length == 1) {
+                let property = {}
+                //
+                elemen.querySelectorAll('.input-form.form-control').forEach(function (e) {
+                    if (e.id.split('.').length <= 2) {
+                        if (e.value != "") {
+                            property[e.name] = e.value;
+                        }
+                    }
+                })
+
+                load_panel(elemen, property, 2)
+                if (Object.keys(property).length) {
+                    properties.push(property)
+                }
+            }
+        })
+        // 入力がない項目のキーを削除
+        if (!(properties.length)) {
+            delete item_metadata[metadata_property.name];
+        }
+    })
+
+    return item_metadata
+}
+
+function check_filesize_over_100MB(file){
+    /// ファイルサイズ取得
+    const fileSize = file.size;
+    /// MB単位のファイルサイズ計算
+    const fileMib = fileSize/1024**2;
+    if (fileMib < 100){
+        return false
+    }else{
+        return true
+    }
+}
 
 /**
  * Custom bs-datepicker.
@@ -501,19 +736,19 @@ function Panelform({ form }) {
  *  customFormat: enter your pattern.
  *    if it none, pattern are yyyy-MM-dd, yyyy-MM, yyyy.
 */
-var Pattern = {
+let Pattern = {
     yyyy: '\\d{4}',
     MM: '(((0)[1-9])|((1)[0-2]))',
     dd: '([0-2][0-9]|(3)[0-1])',
     sep: '(-)'
 }
-var Format = {
+let Format = {
     yyyyMMdd: '^(' + Pattern.yyyy + Pattern.sep +
         Pattern.MM + Pattern.sep + Pattern.dd + ')$',
     yyyyMM: '^(' + Pattern.yyyy + Pattern.sep + Pattern.MM + ')$',
     yyyy: '^(' + Pattern.yyyy + ')$',
 }
-var CustomBSDatePicker = {
+let CustomBSDatePicker = {
     option: {
         element: undefined,
         defaultFormat: Format.yyyyMMdd + '|' + Format.yyyyMM + '|' + Format.yyyy,
@@ -718,8 +953,8 @@ var CustomBSDatePicker = {
         });
     }
 }
-const uploadpdf = createRoot(document.getElementById('upload_pdf_form_container'));
-const uploadfile = createRoot(document.getElementById('upload_form_container'));
+
+
 const root = createRoot(document.getElementById('input_form_container'));
 let forms = null;
 let schema = null;
@@ -742,26 +977,8 @@ fetch('/static/json/form.json')
     })
     .then(data => {
         schema = JSON.parse(data);
-        const input_forms = [];
-        var count = 0;
-        forms.forEach(form => {
-            if (!("system_prop" in schema.properties[form.key] && schema.properties[form.key].system_prop == true)) {
-                input_forms.push(
-                    <div className="form_metadata_property" key={form.key}>
-                        <Panelform form={form} />
-                    </div>
-                )
-                count++;
-            }
-        });
-        uploadpdf.render(
-            <PDFform />
-        )
-        root.render(
-            <div className="form">
-                {input_forms}
-            </div>
-        );
+
+        root.render(<ItemRegisterPanel forms={forms} schema={schema} />);
     })
     .catch(error => {
         console.error('There was a problem with the fetch operation:', error);

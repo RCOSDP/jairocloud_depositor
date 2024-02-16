@@ -1,17 +1,5 @@
 [
     {
-        "key": "pubdate",
-        "type": "template",
-        "title": "PubDate",
-        "format": "yyyy-MM-dd",
-        "required": true,
-        "title_i18n": {
-            "en": "PubDate",
-            "ja": "公開日"
-        },
-        "templateUrl": "/static/templates/weko_deposit/datepicker.html"
-    },
-    {
         "add": "New",
         "key": "dc:title",
         "items": [
