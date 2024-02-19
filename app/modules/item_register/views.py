@@ -11,6 +11,7 @@ from wtforms import StringField, SubmitField ,PasswordField
 from modules.config import MOCK_SHIB_DATA
 from modules.models import User as _User
 from modules.models import Affiliation_Id as _Affiliation_Id
+from modules.api import Affiliation_Repository
 from .utils import dicttoxmlforsword # zip_folder
 
 blueprint = Blueprint(
@@ -22,6 +23,9 @@ blueprint = Blueprint(
 
 @blueprint.route("/", methods=['GET'])
 def index_item():
+    if current_user.is_anonymous:
+        return redirect(url_for('login.index_login'))
+    current_app.logger.info(current_user.affiliation_id)
     form = FlaskForm(request.form)
     return render_template("item_register/item_index.html", form = form)
 
@@ -35,64 +39,41 @@ def register():
     post_dataの例:
     {"item_metadata;{}, "contentfiles": [{"name":"file.png", "base64":"aaaaa"}, "thumbneil":[{"name":"thumb.png", "base64":"bbbb"}] ]}
     """
-    try :
-        current_app.logger.info("はじまり")
-        current_app.logger.info(request)
-        
-        post_data = request.get_json(True,True,True)
-        
-        current_app.logger.info("jsonのowari")
-        contenfiles=[]
-        thumbnail=[]
-    except Exception as ex:
-        current_app.logger.info(ex)
-    # current_app.logger.info(post_data)
-    # with io.BytesIO() as mem_zip:
-    #     current_app.logger.info("mem_zip")
-    #     with zipfile.ZipFile("test.zip", mode="w") as zipf: #zipファイル確認のため"test.zip"だが本来はmem_zip
-    #         current_app.logger.info("zipf")
-    #         xmltree = dicttoxmlforsword("jpcoar2.0", post_data.get("item_metadata"))
-    #         current_app.logger.info("aaaaaaaaaaa")
-    #         zipf.writestr("metadata.xml", xmltree)
-    #         for file in post_data.get("contentfiles"):
-    #             binary_data = base64.b64decode(file.get("base64", ""))
-    #             zipf.writestr(file.get("name",""), binary_data)
-        
-    # 一時tmpフォルダにxml,その他ファイルを書きだす処理
-    current_app.logger.info("uuidの始まり")
-    tmp_path_for_xml = os.path.join("tmp","tmp-"+str(uuid.uuid4()))
-    tmp_path = "./"+tmp_path_for_xml
-    # フォルダ作成
-    os.mkdir(tmp_path)
-    current_app.logger.info("uuidのowari")
+    current_app.logger.info("はじまり")
+    # current_app.logger.info(request)
     
-    # xml書き出し
-    current_app.logger.info("xmlの始まり")
-    xmltree = dicttoxmlforsword("jpcoar2.0", post_data.get("item_metadata"))
-    current_app.logger.info("tmp_path_for_xml")
-    current_app.logger.info(tmp_path_for_xml)
-    xmltree.write(tmp_path_for_xml+"/metadata.xml", encoding="utf-8", xml_declaration=True)
-    current_app.logger.info("tmp_path_for_xml終わり")
+    post_data = request.get_json()
     
-    # コンテンツファイル書き出し
-    for file in post_data.get("contentfiles"):
-        binary_data = base64.b64decode(file.get("base64", ""))
-        file_path = os.path.join(tmp_path,file.get("name",""))
-        current_app.logger.info(file_path)
-        with open(file_path, 'wb') as f:
-            f.write(binary_data)
-    current_app.logger.info("終わり２")
-    # サムネ書き出し
-    for thumbnail in post_data.get("thumbnail"):
-        binary_data = base64.b64decode(thumbnail.get("base64", ""))
-        file_path = os.path.join(tmp_path,thumbnail.get("name",""))
-        current_app.logger.info(file_path)
-        with open(file_path, 'wb') as f:
-            f.write(binary_data)
-    current_app.logger.info("終わり３")
+    current_app.logger.info("jsonのowari")
 
-    # xmlとコンテンツファイルをzipにまとめる処理
-    # zip_folder(tmp_path, tmp_path+"/forsender.zip"
+    # current_app.logger.info(post_data)
+    
+    # メモリー内にzipファイルを作る処理
+    with io.BytesIO() as mem_zip:
+        current_app.logger.info("mem_zip")
+         # zipファイル確認のため"test.zip"だが本来はmem_zip
+         # ex: with zipfile.ZipFile(mem_zip, mode="w") as zipf
+        with zipfile.ZipFile("test.zip", mode="w") as zipf:
+            current_app.logger.info("zipf")
+            # xml書き出し
+            current_app.logger.info("xmlの始まり")
+            xml_string = dicttoxmlforsword("jpcoar2.0", post_data.get("item_metadata"))
+            zipf.writestr("data/metadata.xml", xml_string)
+            current_app.logger.info("xml終わり")
+            
+            # コンテンツファイル書き込み
+            current_app.logger.info("コンテンツファイル始まり")
+            for file in post_data.get("contentfiles"):
+                binary_data = base64.b64decode(file.get("base64", ""))
+                zipf.writestr("data/contentfiles/"+file.get("name",""), binary_data)
+            current_app.logger.info("コンテンツファイル終わり")
+                
+            # サムネイル書き込み
+            current_app.logger.info("サムネイル始まり")
+            for file in post_data.get("thumbnail"):
+                binary_data = base64.b64decode(file.get("base64", ""))
+                zipf.writestr("data/thumbnail/"+file.get("name",""), binary_data)
+            current_app.logger.info("サムネイル終わり")
 
     # current_userよりaffiliation_idをとってaffiliaiton_repositoryテーブルからリポジトリURLをとる処理
     # 設定されていない場合デフォルトURLをとる
