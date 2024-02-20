@@ -1,3 +1,4 @@
+import os
 
 from typing import NoReturn
 
@@ -12,7 +13,9 @@ from werkzeug.local import LocalProxy
 from werkzeug.utils import import_string
 
 # 接続先DBの設定
-DATABASE = 'postgresql://invenio:dbpass123@192.168.56.111:25401/invenio??charset=utf8'
+DATABASE = os.environ.get("INVENIO_POSTGRESQL_HOST")+'://'+os.environ.get("INVENIO_POSTGRESQL_DBUSER")+\
+  os.environ.get("INVENIO_POSTGRESQL_DBPASS")+'@'+os.environ.get("INVENIO_POSTGRESQL_HOST")+\
+  'postgresql/'+os.environ.get("INVENIO_POSTGRESQL_DBNAME")+'??charset=utf8'
 
 Engine = create_engine(
   DATABASE,
