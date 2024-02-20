@@ -1,9 +1,9 @@
 # pythonのバージョンは任意
-FROM python:3.6-slim-buster
-
+FROM python:3.12-slim-bookworm
 WORKDIR /usr/src/app
 ENV FLASK_APP=app
 ENV FLASK_DEBUG=1
+RUN adduser --uid 1000 --disabled-password --gecos '' invenio
 
 COPY /app/requirements.txt ./
 ENV INVENIO_WEB_HOST=127.0.0.1
@@ -19,5 +19,8 @@ ENV INVENIO_POSTGRESQL_DBPASS=dbpass123
 ENV INVENIO_WORKER_HOST=127.0.0.1
 ENV INVENIO_DB_POOL_CLASS=QueuePool
 
+RUN apt-get update
+RUN apt-get -y install libpq-dev
+RUN apt-get install gcc -y
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt

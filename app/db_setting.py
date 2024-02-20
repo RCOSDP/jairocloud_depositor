@@ -12,11 +12,10 @@ from werkzeug.local import LocalProxy
 from werkzeug.utils import import_string
 
 # 接続先DBの設定
-DATABASE = 'postgresql://invenio:dbpass123@192.168.56.111:25401/invenio'
+DATABASE = 'postgresql://invenio:dbpass123@192.168.56.111:25401/invenio??charset=utf8'
 
 Engine = create_engine(
   DATABASE,
-  encoding="utf-8",
   echo=False
 )
 
