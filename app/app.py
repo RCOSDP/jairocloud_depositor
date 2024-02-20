@@ -18,9 +18,14 @@ from modules.api import User
 app = Flask(__name__)
 app.config['SECRET_KEY'] = "secret"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS']=False
-app.config['SQLALCHEMY_DATABASE_URI']=os.environ.get("INVENIO_POSTGRESQL_HOST")+'://'+os.environ.get("INVENIO_POSTGRESQL_DBUSER")+\
-  os.environ.get("INVENIO_POSTGRESQL_DBPASS")+'@'+os.environ.get("INVENIO_POSTGRESQL_HOST")+\
-  'postgresql/'+os.environ.get("INVENIO_POSTGRESQL_DBNAME")+'??charset=utf8'
+
+HOST_NAME=os.environ.get("INVENIO_POSTGRESQL_HOST") #postgresql
+DBNAME=os.environ.get("INVENIO_POSTGRESQL_DBNAME") #invenio
+DBPASS=os.environ.get("INVENIO_POSTGRESQL_DBPASS") #dbpass123
+DBUSER=os.environ.get("INVENIO_POSTGRESQL_DBUSER") #invenio
+
+# 接続先DBの設定
+app.config['SQLALCHEMY_DATABASE_URI'] = HOST_NAME+"://"+DBUSER+":"+DBPASS+"@"+HOST_NAME+":5432/"+ DBNAME
 app.logger.setLevel(logging.INFO)
 app.logger.addHandler(logging.StreamHandler(sys.stdout))
 app.logger.setLevel(logging.DEBUG)

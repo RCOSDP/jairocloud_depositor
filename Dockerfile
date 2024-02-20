@@ -1,6 +1,6 @@
 # pythonのバージョンは任意
 FROM python:3.12-slim-bookworm
-WORKDIR /usr/src/app
+WORKDIR /code
 ENV FLASK_APP=app
 ENV FLASK_DEBUG=1
 RUN adduser --uid 1000 --disabled-password --gecos '' invenio

@@ -12,10 +12,14 @@ from sqlalchemy import MetaData, event, util
 from werkzeug.local import LocalProxy
 from werkzeug.utils import import_string
 
+HOST_NAME=os.environ.get("INVENIO_POSTGRESQL_HOST") #postgresql
+DBNAME=os.environ.get("INVENIO_POSTGRESQL_DBNAME") #invenio
+DBPASS=os.environ.get("INVENIO_POSTGRESQL_DBPASS") #dbpass123
+DBUSER=os.environ.get("INVENIO_POSTGRESQL_DBUSER") #invenio
+
 # 接続先DBの設定
-DATABASE = os.environ.get("INVENIO_POSTGRESQL_HOST")+'://'+os.environ.get("INVENIO_POSTGRESQL_DBUSER")+\
-  os.environ.get("INVENIO_POSTGRESQL_DBPASS")+'@'+os.environ.get("INVENIO_POSTGRESQL_HOST")+\
-  'postgresql/'+os.environ.get("INVENIO_POSTGRESQL_DBNAME")+'??charset=utf8'
+DATABASE = HOST_NAME+"://"+DBUSER+":"+DBPASS+"@"+HOST_NAME+":5432/"+ DBNAME 
+# DATABASE = 'postgresql://invenio:dbpass123@192.168.56.111:25401/invenio??charset=utf8'
 
 Engine = create_engine(
   DATABASE,

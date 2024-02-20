@@ -109,10 +109,10 @@ def register():
 
     # # POSTリクエストを送信
     try:
-        current_app.logger.info(sword_api_url)
-        current_app.logger.info(data)
-        current_app.logger.info(headers)
-        current_app.logger.info(files)
+        # current_app.logger.info(sword_api_url)
+        # current_app.logger.info(data)
+        # current_app.logger.info(headers)
+        # current_app.logger.info(files)
         response = requests.post(url=sword_api_url, data=data, headers=headers, files=files)
     except requests.exceptions.RequestException as ex:
         current_app.logger.info(ex)
