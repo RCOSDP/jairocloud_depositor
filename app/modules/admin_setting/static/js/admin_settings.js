@@ -27,6 +27,22 @@ if(role=="管理者"){
 }
 });
 
+function handleSelect(){
+  closeError();
+  const aff_repository_dict = document.getElementById("aff_repository_dict").value;
+  const aff_repository_info = JSON.parse(aff_repository_dict);
+  const affiliation_name_id = document.getElementById("affiliation_name").value;
+  const repogitory_url = document.getElementById("repository_url");
+  const access_token = document.getElementById("access_token");
+  if(affiliation_name_id in aff_repository_info){
+    repogitory_url.value = aff_repository_info[affiliation_name_id]["repository_url"];
+    access_token.value = aff_repository_info[affiliation_name_id]["access_token"];
+  }else{
+    repogitory_url.value = "";
+    access_token.value = "";
+  }
+}
+
 function handleAffiliSubmit(){
     closeError();
     const form ={
