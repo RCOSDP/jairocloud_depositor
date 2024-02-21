@@ -11,7 +11,7 @@
             <div class="pull-right">
             </div>
             <strong>
-              <p id="title-main-content">overlay</p>
+              <p id="title-main-content">WEKO3</p>
             </strong>
           </div>
             <div class="panel-body panel-body2" id="background-color-main-content">
@@ -28,24 +28,14 @@
                             <div class="panel-body">
                               <section class="content-header"></section>
                               <div class="row row-4">
-                                <input type="hidden" id="user_role" value="{{current_user.role}}">
-                                <input type="hidden" id="aff_repository_dict" value="{{aff_repository_dict}}">
                                 <div class="row" style="margin-bottom: 15px;">
                                   <div class="col-sm-1 text-right">
                                     <label>機関名</label>
                                   </div>
                                   <div class="col-sm-5">
-                                    {%- if current_user.role == "図書館員" -%}
                                     <input type="text" class="form-control" name="affiliation_name"  id="affiliation_name"
-                                      value={{affiliation_name}} readonly></option>
-                                    {%- endif -%}
-                                    {%- if current_user.role == "管理者" -%}
-                                    <select class="form-control" name="affiliation_name"  id="affiliation_name" onchange="handleSelect()">
-                                      {%- for affiliation_id in affiliation_id_list -%}
-                                      <option value="{{affiliation_id.id}}">{{ affiliation_id.affiliation_name }}</option>
-                                      {%- endfor -%}
-                                    </select>
-                                    {%- endif -%}
+                                    value={{affiliation_name}} readonly>
+                                    <input type="hidden" id="user_role" value="{{current_user.role}}">
                                   </div>
                                 </div>
                                 <div class="row" style="margin-bottom: 15px;">

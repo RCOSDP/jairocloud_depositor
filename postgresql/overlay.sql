@@ -31,10 +31,6 @@ create sequence public.affiliation_id_seq
 
 alter sequence public.affiliation_id_seq owned by public.affiliation_id.id;
 
--- 「default」レコードの追加
-insert into affiliation_id(created,updated,id,affiliation_idp_url,affiliation_name)
-values(CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1,'-','default');
-
 
 -- 新テーブルの作成 (user)
 create table public.user (
