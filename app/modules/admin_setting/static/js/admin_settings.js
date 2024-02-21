@@ -20,12 +20,6 @@ async function componentDidMount() {
     }
 }
 
-window.addEventListener("load",(event) =>{
-const role= document.getElementById("user_role").value;
-if(role=="管理者"){
-  document.getElementById("affiliation_name").removeAttribute("readonly");
-}
-});
 
 function handleSelect(){
   closeError();

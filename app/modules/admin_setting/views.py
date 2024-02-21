@@ -22,10 +22,13 @@ def index_affili():
     if not current_user.is_authenticated:
         return index_login()
     if request.method == "POST":
-        affiliation_name_id = request.json.get("affiliation_name")
+        affiliation_name = request.json.get("affiliation_name")
         repository_url = request.json.get("repository_url")
         access_token = request.json.get("access_token")
-        affiliation_id_info = Affiliation_Id().get_affiliation_id_by_id(affiliation_name_id)
+        if current_user.role == "管理者":
+            affiliation_id_info = Affiliation_Id().get_affiliation_id_by_id(affiliation_name)
+        else:
+            affiliation_id_info = Affiliation_Id().get_affiliation_id_by_affiliation_name(affiliation_name)
         if affiliation_id_info:
             affiliation_repository_info = Affiliation_Repository().get_aff_repository_by_affiliation_id(affiliation_id_info.id)
             if affiliation_repository_info:
