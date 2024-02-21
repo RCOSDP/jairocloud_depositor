@@ -51,6 +51,15 @@ class Affiliation_Repository(object):
         with db.session.no_autoflush:
             query = _Affiliation_Repository.query.filter_by(affiliation_id=affiliation_id)
             return query.one_or_none()
+        
+    def get_affiliation_repository_list(self):
+        """Get affiliation_repository list info.
+
+        :return:
+        """
+        with db.session.no_autoflush:
+            query = _Affiliation_Repository.query.filter_by().order_by(asc(_Affiliation_Repository.id))
+            return query.all()
 
 
 class User(object):
@@ -153,9 +162,9 @@ class Affiliation_Id(object):
         query = _Affiliation_Id.query.filter_by(id = affiliation_id)
         return query.one_or_none()
         
-    def get_affiliation_id_by_idp_url(self, idp_url):
+    def get_affiliation_id_by_idp_url(self, affiliation_idp_url):
         # with db.session.no_autoflush():
-        query = _Affiliation_Id.query.filter_by(affiliation_idp_url = idp_url)
+        query = _Affiliation_Id.query.filter_by(affiliation_idp_url = affiliation_idp_url)
         return query.one_or_none()
     
     def get_affiliation_id_by_affiliation_name(self, affiliation_name):
@@ -163,3 +172,12 @@ class Affiliation_Id(object):
         query = _Affiliation_Id.query.filter_by(affiliation_name = affiliation_name)
         return query.one_or_none()
     
+    def get_affiliation_id_list(self):
+        """Get affiliation_name list info.
+
+        :return:
+        """
+        with db.session.no_autoflush:
+            query = _Affiliation_Id.query.filter_by().order_by(asc(_Affiliation_Id.id))
+            return query.all()
+
