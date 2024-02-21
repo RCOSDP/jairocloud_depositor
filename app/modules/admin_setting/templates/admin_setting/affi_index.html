@@ -37,7 +37,7 @@
                                   <div class="col-sm-5">
                                     {%- if current_user.role == "図書館員" -%}
                                     <input type="text" class="form-control" name="affiliation_name"  id="affiliation_name"
-                                      value={{affiliation_name}} readonly></option>
+                                      value={{affiliation_name}} readonly>
                                     {%- endif -%}
                                     {%- if current_user.role == "管理者" -%}
                                     <select class="form-control" name="affiliation_name"  id="affiliation_name" onchange="handleSelect()">
