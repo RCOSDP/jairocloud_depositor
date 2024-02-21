@@ -1,5 +1,5 @@
 from datetime import datetime
-
+from flask import current_app
 from flask_security import RoleMixin, UserMixin
 from sqlalchemy.dialects import mysql, postgresql
 from sqlalchemy import Column, Integer, String, Float, DateTime,  and_, asc, desc, func, or_
@@ -22,31 +22,44 @@ class Affiliation_Repository(object):
             with db.session.begin_nested():
                 db.session.execute(_Affiliation_Repository.__table__.insert(), aff_repository)
             db.session.commit()
-            return aff_repository
         except Exception as ex:
             db.session.rollback()
-            return None
+            current_app.logger.error(ex)
+            raise
+        
+        return aff_repository
         
     def upt_aff_repository(self, aff_repository):
         assert aff_repository
         try:
             with db.session.begin_nested():
-                _aff_repository = _User.query.filter_by(id=aff_repository.get('id')).one_or_none()
+                _aff_repository = _Affiliation_Repository.query.filter_by(id=aff_repository.get('id')).one_or_none()
                 if _aff_repository:
                     _aff_repository.affiliation_id = aff_repository.get('affiliation_id')
-                    _aff_repository.role = aff_repository.get('repository_url')
+                    _aff_repository.repository_url = aff_repository.get('repository_url')
                     _aff_repository.access_token = aff_repository.get('access_token')
                     db.session.merge(_aff_repository)
             db.session.commit()
-            return _aff_repository
         except Exception as ex:
             db.session.rollback()
-            return None
+            current_app.logger.error(ex)
+            raise
+        
+        return _aff_repository
 
     def get_aff_repository_by_affiliation_id(self, affiliation_id):
-        with db.session.autoflush():
+        with db.session.no_autoflush:
             query = _Affiliation_Repository.query.filter_by(affiliation_id=affiliation_id)
             return query.one_or_none()
+        
+    def get_affiliation_repository_list(self):
+        """Get affiliation_repository list info.
+
+        :return:
+        """
+        with db.session.no_autoflush:
+            query = _Affiliation_Repository.query.filter_by().order_by(asc(_Affiliation_Repository.id))
+            return query.all()
 
 
 class User(object):
@@ -61,10 +74,12 @@ class User(object):
             with db.session.begin_nested():
                 db.session.add(user)
             db.session.commit()
-            return user
         except Exception as ex:
             db.session.rollback()
-            return None
+            current_app.logger.error(ex)
+            raise
+        
+        return user
         
     def upt_user(self, user):
         assert user
@@ -77,10 +92,12 @@ class User(object):
                     _user.role = user.get('role')
                     db.session.merge(_user)
             db.session.commit()
-            return _user
         except Exception as ex:
             db.session.rollback()
-            return None
+            current_app.logger.error(ex)
+            raise
+        
+        return _user
         
     def get_user_by_id(self, id):
         with db.session.no_autoflush:
@@ -116,10 +133,12 @@ class Affiliation_Id(object):
             with db.session.begin_nested():
                 db.session.add(affiliation_id)
             db.session.commit()
-            return affiliation_id
         except Exception as ex:
             db.session.rollback()
-            return None
+            current_app.logger.error(ex)
+            raise
+        
+        return affiliation_id
 
     def upt_affiliation_id(self, affiliation_id):
         assert affiliation_id
@@ -131,18 +150,34 @@ class Affiliation_Id(object):
                     _affliation_id.affiliation_name = affiliation_id.get('affiliation_name')
                     db.session.merge(_affliation_id)
             db.session.commit()
-            return _affliation_id
         except Exception as ex:
             db.session.rollback()
-            return None
+            current_app.logger.error(ex)
+            raise
+        
+        return _affliation_id
         
     def get_affiliation_id_by_id(self, affiliation_id):
         # with db.session.no_autoflush():
         query = _Affiliation_Id.query.filter_by(id = affiliation_id)
         return query.one_or_none()
         
-    def get_affiliation_id_by_idp_url(self, idp_url):
+    def get_affiliation_id_by_idp_url(self, affiliation_idp_url):
         # with db.session.no_autoflush():
-        query = _Affiliation_Id.query.filter_by(affiliation_idp_url = idp_url)
+        query = _Affiliation_Id.query.filter_by(affiliation_idp_url = affiliation_idp_url)
         return query.one_or_none()
     
+    def get_affiliation_id_by_affiliation_name(self, affiliation_name):
+        # with db.session.no_autoflush():
+        query = _Affiliation_Id.query.filter_by(affiliation_name = affiliation_name)
+        return query.one_or_none()
+    
+    def get_affiliation_id_list(self):
+        """Get affiliation_name list info.
+
+        :return:
+        """
+        with db.session.no_autoflush:
+            query = _Affiliation_Id.query.filter_by().order_by(asc(_Affiliation_Id.id))
+            return query.all()
+
