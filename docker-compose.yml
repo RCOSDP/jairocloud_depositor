@@ -1,17 +1,16 @@
 version: "3"
 services:
   app:
+    restart: "always"
     build: .
     ports:
       - "5001:5000"
     container_name: app
-    command: flask run --host=0.0.0.0 --debugger --reload
+    command: uwsgi --ini uwsgi.ini
     links:
       - postgresql
     volumes:
-      - type: bind
-        source: ./app
-        target: /usr/src/app
+      - ./app:/code
 
 
   postgresql:
@@ -35,10 +34,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - static_data:/home/invenio/.virtualenvs/invenio/var/instance/static
-      - data_data:/home/invenio/.virtualenvs/invenio/var/instance/data
-#      - letsencrypt_etc:/etc/letsencrypt
-#      - letsencrypt_html:/var/www/html
+      - ./app:/code
     links:
       - app
     deploy:
@@ -47,8 +43,5 @@ services:
           memory: 300m
 
 volumes:
-  weko3_data:
   static_data:
-  data_data:
-  conf_data:
   pgsql-data:
