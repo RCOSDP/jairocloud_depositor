@@ -19,7 +19,6 @@ from modules.api import User
 app = Flask(__name__)
 app.config['SECRET_KEY'] = "secret"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS']=False
-<<<<<<< Updated upstream
 
 HOST_NAME=os.environ.get("INVENIO_POSTGRESQL_HOST") #postgresql
 DBNAME=os.environ.get("INVENIO_POSTGRESQL_DBNAME") #invenio
@@ -28,9 +27,6 @@ DBUSER=os.environ.get("INVENIO_POSTGRESQL_DBUSER") #invenio
 
 # 接続先DBの設定
 app.config['SQLALCHEMY_DATABASE_URI'] = HOST_NAME+"://"+DBUSER+":"+DBPASS+"@"+HOST_NAME+":5432/"+ DBNAME
-=======
-app.config['SQLALCHEMY_DATABASE_URI']='postgresql://invenio:dbpass123@192.168.56.103:25401/invenio'
->>>>>>> Stashed changes
 app.logger.setLevel(logging.INFO)
 app.logger.addHandler(logging.StreamHandler(sys.stdout))
 app.logger.setLevel(logging.DEBUG)
