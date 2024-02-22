@@ -13,7 +13,6 @@ from db_setting import init_db
 from modules.login.ext import LoginApp
 from modules.admin_setting.ext import AdminSettingApp
 from modules.item_register.ext import ItemRegisterApp
-from modules.common.ext import CommonApp
 from modules.api import User
 
 app = Flask(__name__)
@@ -41,8 +40,6 @@ adminapp = AdminSettingApp()
 adminapp.init_app(app)
 itemregister = ItemRegisterApp()
 itemregister.init_app(app)
-commonapp = CommonApp()
-commonapp.init_app(app)
 
 @login_manager.user_loader
 def load_user(user_id):
