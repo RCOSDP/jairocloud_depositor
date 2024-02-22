@@ -52,8 +52,7 @@ class Affiliation_Repository(object):
             query = _Affiliation_Repository.query.filter_by(affiliation_id=affiliation_id)
             return query.one_or_none()
         
-
-    def get_affiliation_id_by_affiliation_name(self, affiliation_name):
+    def get_aff_repository_by_affiliation_name(self, affiliation_name):
         with db.session.no_autoflush:
             query = _Affiliation_Id.query.filter_by(affiliation_name = affiliation_name)
             return query.one_or_none()
