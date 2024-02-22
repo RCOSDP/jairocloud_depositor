@@ -241,13 +241,34 @@
                         "type": "select",
                         "title": "作成者識別子Scheme",
                         "titleMap": [
-                            {"name": "e-Rad_Researcher", "value": "e-Rad_Researcher"},
-                            {"name": "ORCID", "value": "ORCID"},
-                            {"name": "ISNI", "value": "ISNI"},
-                            {"name": "VIAF", "value": "VIAF"},
-                            {"name": "AID", "value": "AID"},
-                            {"name": "Ringgold", "value": "Ringgold"},
-                            {"name": "ROR", "value": "ROR"}
+                            {
+                                "name": "e-Rad_Researcher",
+                                "value": "e-Rad_Researcher"
+                            },
+                            {
+                                "name": "ORCID",
+                                "value": "ORCID"
+                            },
+                            {
+                                "name": "ISNI",
+                                "value": "ISNI"
+                            },
+                            {
+                                "name": "VIAF",
+                                "value": "VIAF"
+                            },
+                            {
+                                "name": "AID",
+                                "value": "AID"
+                            },
+                            {
+                                "name": "Ringgold",
+                                "value": "Ringgold"
+                            },
+                            {
+                                "name": "ROR",
+                                "value": "ROR"
+                            }
                         ],
                         "title_i18n": {
                             "en": "Creator Identifier Scheme",
@@ -1070,13 +1091,35 @@
                         "type": "select",
                         "title": "寄与者識別子Scheme",
                         "titleMap": [
-                            {"name": "e-Rad_Researcher", "value": "e-Rad_Researcher"},
-                            {"name": "ORCID", "value": "ORCID"},
-                            {"name": "ISNI", "value": "ISNI"},
-                            {"name": "VIAF", "value": "VIAF"},
-                            {"name": "AID", "value": "AID"},
-                            {"name": "Ringgold", "value": "Ringgold"},
-                            {"name": "ROR", "value": "ROR"}],
+                            {
+                                "name": "e-Rad_Researcher",
+                                "value": "e-Rad_Researcher"
+                            },
+                            {
+                                "name": "ORCID",
+                                "value": "ORCID"
+                            },
+                            {
+                                "name": "ISNI",
+                                "value": "ISNI"
+                            },
+                            {
+                                "name": "VIAF",
+                                "value": "VIAF"
+                            },
+                            {
+                                "name": "AID",
+                                "value": "AID"
+                            },
+                            {
+                                "name": "Ringgold",
+                                "value": "Ringgold"
+                            },
+                            {
+                                "name": "ROR",
+                                "value": "ROR"
+                            }
+                        ],
                         "title_i18n": {
                             "en": "Contributor Identifier Scheme",
                             "ja": "寄与者識別子Scheme"
@@ -3298,6 +3341,10 @@
                         "value": "editorial"
                     },
                     {
+                        "name": "journal",
+                        "value": "journal"
+                    },
+                    {
                         "name": "journal article",
                         "value": "journal article"
                     },
@@ -3306,12 +3353,12 @@
                         "value": "newspaper"
                     },
                     {
-                        "name": "periodical",
-                        "value": "periodical"
-                    },
-                    {
                         "name": "review article",
                         "value": "review article"
+                    },
+                    {
+                        "name": "other periodical",
+                        "value": "other periodical"
                     },
                     {
                         "name": "software paper",
@@ -3338,8 +3385,12 @@
                         "value": "map"
                     },
                     {
-                        "name": "conference object",
-                        "value": "conference object"
+                        "name": "conference output",
+                        "value": "conference output"
+                    },
+                    {
+                        "name": "conference presentation",
+                        "value": "conference presentation"
                     },
                     {
                         "name": "conference proceedings",
@@ -3360,6 +3411,10 @@
                     {
                         "name": "compiled data",
                         "value": "compiled data"
+                    },
+                    {
+                        "name": "dataset",
+                        "value": "dataset"
                     },
                     {
                         "name": "encoded data",
@@ -3402,14 +3457,6 @@
                         "value": "survey data"
                     },
                     {
-                        "name": "dataset",
-                        "value": "dataset"
-                    },
-                    {
-                        "name": "interview",
-                        "value": "interview"
-                    },
-                    {
                         "name": "image",
                         "value": "image"
                     },
@@ -3430,12 +3477,36 @@
                         "value": "lecture"
                     },
                     {
+                        "name": "design patent",
+                        "value": "design patent"
+                    },
+                    {
                         "name": "patent",
                         "value": "patent"
                     },
                     {
-                        "name": "internal report",
-                        "value": "internal report"
+                        "name": "PCT application",
+                        "value": "PCT application"
+                    },
+                    {
+                        "name": "plant patent",
+                        "value": "plant patent"
+                    },
+                    {
+                        "name": "plant variety protection",
+                        "value": "plant variety protection"
+                    },
+                    {
+                        "name": "software patent",
+                        "value": "software patent"
+                    },
+                    {
+                        "name": "trademark",
+                        "value": "trademark"
+                    },
+                    {
+                        "name": "utility model",
+                        "value": "utility model"
                     },
                     {
                         "name": "report",
@@ -3452,10 +3523,6 @@
                     {
                         "name": "policy report",
                         "value": "policy report"
-                    },
-                    {
-                        "name": "report part",
-                        "value": "report part"
                     },
                     {
                         "name": "working paper",
@@ -3486,8 +3553,24 @@
                         "value": "doctoral thesis"
                     },
                     {
+                        "name": "commentary",
+                        "value": "commentary"
+                    },
+                    {
+                        "name": "design",
+                        "value": "design"
+                    },
+                    {
+                        "name": "industrial design",
+                        "value": "industrial design"
+                    },
+                    {
                         "name": "interactive resource",
                         "value": "interactive resource"
+                    },
+                    {
+                        "name": "layout design",
+                        "value": "layout design"
                     },
                     {
                         "name": "learning object",
@@ -3502,16 +3585,32 @@
                         "value": "musical notation"
                     },
                     {
+                        "name": "peer review",
+                        "value": "peer review"
+                    },
+                    {
                         "name": "research proposal",
                         "value": "research proposal"
+                    },
+                    {
+                        "name": "research protocol",
+                        "value": "research protocol"
                     },
                     {
                         "name": "software",
                         "value": "software"
                     },
                     {
+                        "name": "source code",
+                        "value": "source code"
+                    },
+                    {
                         "name": "technical documentation",
                         "value": "technical documentation"
+                    },
+                    {
+                        "name": "transcription",
+                        "value": "transcription"
                     },
                     {
                         "name": "workflow",
@@ -5132,15 +5231,42 @@
                         "type": "select",
                         "title": "Degree Grantor Name Identifier Scheme",
                         "titleMap": [
-                            {"name": "e-Rad", "value": "e-Rad"},
-                            {"name": "NRID", "value": "NRID"},
-                            {"name": "ORCID", "value": "ORCID"},
-                            {"name": "ISNI", "value": "ISNI"},
-                            {"name": "VIAF", "value": "VIAF"},
-                            {"name": "AID", "value": "AID"},
-                            {"name": "kakenhi", "value": "kakenhi"},
-                            {"name": "Ringgold", "value": "Ringgold"},
-                            {"name": "GRID", "value": "GRID"}
+                            {
+                                "name": "e-Rad",
+                                "value": "e-Rad"
+                            },
+                            {
+                                "name": "NRID",
+                                "value": "NRID"
+                            },
+                            {
+                                "name": "ORCID",
+                                "value": "ORCID"
+                            },
+                            {
+                                "name": "ISNI",
+                                "value": "ISNI"
+                            },
+                            {
+                                "name": "VIAF",
+                                "value": "VIAF"
+                            },
+                            {
+                                "name": "AID",
+                                "value": "AID"
+                            },
+                            {
+                                "name": "kakenhi",
+                                "value": "kakenhi"
+                            },
+                            {
+                                "name": "Ringgold",
+                                "value": "Ringgold"
+                            },
+                            {
+                                "name": "GRID",
+                                "value": "GRID"
+                            }
                         ],
                         "title_i18n": {
                             "en": "Degree Grantor Name Identifier Scheme",
@@ -8220,7 +8346,6 @@
         }
     },
     {
-        "add": "New",
         "key": "jpcoar:file",
         "type": "contentfile",
         "items": [

@@ -1,4 +1,4 @@
-import React, { useState, useRef, createContext, useContext } from 'react';
+import React, { useState, useRef, createContext, useContext, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 // import { DatePicker } from 'react-datepicker';
 
@@ -9,6 +9,7 @@ const setThumbnailContext = createContext(null);
 const metadataContext = createContext({});
 const setMetadataContext = createContext(null);
 const changeMetadataContext = createContext(null);
+const addFileContext = createContext(null);
 
 const FileProvider = ({ children }) => {
     const [contentfiles, setcontentfiles] = useState([]);
@@ -19,7 +20,38 @@ const FileProvider = ({ children }) => {
         setmetadata((prevState) => ({
             ...prevState, [key]: value
         }));
+    }
 
+    function addfiles(files, schema) {
+        console.log(schema.file_info)
+        const fileproperty = schema.file_info
+        const contentfilenames = contentfiles.map(contentfile => contentfile.name)
+        // 一時的なリストをdeepcopyで生成
+        let tmpfiles = contentfiles.map(contentfile => contentfile)
+        let tmpmetadata = structuredClone(metadata)
+        // リストに名前が存在しないなら一時リストにプッシュ
+        Array.from(files).forEach(file => {
+            if (check_filesize_over_100MB(file)) {
+                console.log("ファイルサイズが100MBを超えています。")
+                console.log(file.name)
+            } else if (!(contentfilenames.includes(file.name))) {
+                contentfilenames.push(file.name)
+                tmpfiles.push(file)
+            }
+        })
+        // ファイルを埋め込んだ時ファイルの名前、サイズ、mimetypeをtmpmetadataに埋め込む
+        for (let i = 0; i < tmpfiles.length; i++) {
+            let file = tmpfiles[i];
+            tmpmetadata[fileproperty.file_name.replace("[]", "[" + String(i) + "]")] = file.name
+            tmpmetadata[fileproperty.file_url.replace("[]", "[" + String(i) + "]")] = "data/contentfiles/" + file.name
+            tmpmetadata[fileproperty.file_label.replace("[]", "[" + String(i) + "]")] = file.name
+            tmpmetadata[fileproperty.file_format.replace("[]", "[" + String(i) + "]")] = file.type
+            tmpmetadata[fileproperty.file_size.replace("[]", "[" + String(i) + "]")] = String(Math.round(file.size / 1024)) + " KB"
+        }
+        // 一時的なリストからレンダー
+        setcontentfiles(tmpfiles);
+        // tmpmetadataをsetすること
+        setmetadata(tmpmetadata)
     }
 
     return (
@@ -30,7 +62,9 @@ const FileProvider = ({ children }) => {
                         <metadataContext.Provider value={metadata}>
                             <setMetadataContext.Provider value={setmetadata}>
                                 <changeMetadataContext.Provider value={changemetadata}>
-                                    {children}
+                                    <addFileContext.Provider value={addfiles}>
+                                        {children}
+                                    </addFileContext.Provider>
                                 </changeMetadataContext.Provider>
                             </setMetadataContext.Provider>
                         </metadataContext.Provider>
@@ -48,25 +82,20 @@ const useThumbnailSetValue = () => useContext(setThumbnailContext);
 const useMetadataValue = () => useContext(metadataContext);
 const useMetadataSetValue = () => useContext(setMetadataContext);
 const useMetadataChangeValue = () => useContext(changeMetadataContext);
+const useAddFileValue = () => useContext(addFileContext);
 
-function PDFform() {
-    const contentfiles = useFilesValue();
-    const setcontentfiles = useFilesSetValue();
+function PDFform({schema}) {
     const [pdffile, setpdffile] = useState([]);
-    const contentfilenames = contentfiles.map(contentfile => contentfile.name);
-    function addfiles(files) {
-        // 一時的なリストをdeepcopyで生成
-        let tmpfiles = contentfiles.map(contentfile => contentfile)
-        // リストに名前が存在しないなら一時リストにプッシュ
+    const addfiles = useAddFileValue();
+
+    function addfilesforpdf(files, schema) {
         if (files.length > 0) {
             const firstFile = files[0];
             if (check_filesize_over_100MB(firstFile)) {
                 console.log("ファイルサイズが100MBを超えています。")
                 console.log(firstFile.name)
             } else if (firstFile.type === "application/pdf") {
-                if (!(contentfilenames.includes(firstFile.name))) {
-                    tmpfiles.push(firstFile)
-                }
+                addfiles([firstFile], schema)
                 if (pdffile.length === 0 || pdffile[0].name !== firstFile.name) {
                     setpdffile([firstFile])
                 }
@@ -76,7 +105,6 @@ function PDFform() {
         } else {
             console.log("ドロップされたファイルはありません");
         }
-        setcontentfiles(tmpfiles);
     }
 
     function deletefile(filename) {
@@ -87,9 +115,9 @@ function PDFform() {
             <div className="col-sm-12">
                 <p className="text-center">pdf自動入力フォーム</p>
                 <div className="files-upload-zone">
-                    <DropFileArea addfiles={addfiles} />
+                    <DropFileArea addfiles={addfilesforpdf} schema={schema}/>
                     <p className="text-center legend"><strong>— OR —</strong></p>
-                    <AddFileButton addfiles={addfiles} acceptfiletype={"application/pdf"} />
+                    <AddFileButton addfiles={addfilesforpdf} acceptfiletype={"application/pdf"} schema={schema}/>
                 </div>
                 <p className="text-center">登録可能なファイルは「pdf」のみ</p>
                 <p className="text-center">
@@ -143,7 +171,7 @@ function Datalist({ contentfiles, deletefile }) {
     )
 }
 
-function DropFileArea({ addfiles }) {
+function DropFileArea({ addfiles, schema }) {
 
     function dragOverHandler(event) {
         event.preventDefault()
@@ -165,7 +193,7 @@ function DropFileArea({ addfiles }) {
             isfiles = false;
         }
         if (isfiles === true) {
-            addfiles(event.dataTransfer.files)
+            addfiles(event.dataTransfer.files, schema)
         }
     }
 
@@ -177,7 +205,7 @@ function DropFileArea({ addfiles }) {
         </div>)
 }
 
-function AddFileButton({ addfiles, acceptfiletype }) {
+function AddFileButton({ addfiles, acceptfiletype, schema }) {
     const self = useRef();
     function fileaddaction() {
         self.current.click();
@@ -187,7 +215,7 @@ function AddFileButton({ addfiles, acceptfiletype }) {
             <button className="btn btn-primary" onClick={fileaddaction} >
                 Click to select
             </button>
-            <input ref={self} type="file" className="hidden" multiple accept={acceptfiletype} onChange={(e) => { addfiles(e.target.files); e.target.value = ""; }} />
+            <input ref={self} type="file" className="hidden" multiple accept={acceptfiletype} onChange={(e) => { addfiles(e.target.files, schema); e.target.value = ""; }} />
         </p>
     )
 }
@@ -195,41 +223,10 @@ function AddFileButton({ addfiles, acceptfiletype }) {
 function FileUploadForm({ addarray, deletearray, schema }) {
     const contentfiles = useFilesValue();
     const setcontentfiles = useFilesSetValue();
-    let metadata = useMetadataValue();
+    const metadata = useMetadataValue();
     const setmetadata = useMetadataSetValue();
-    const contentfilenames = contentfiles.map(contentfile => contentfile.name);
-    function addfiles(files) {
-        console.log(schema.file_info)
-        const fileproperty = schema.file_info
-        // 一時的なリストをdeepcopyで生成
-        let tmpfiles = contentfiles.map(contentfile => contentfile)
-        let tmpmetadata = structuredClone(metadata)
-        deletearray()
-        // リストに名前が存在しないなら一時リストにプッシュ
-        Array.from(files).forEach(file => {
-            if (check_filesize_over_100MB(file)) {
-                console.log("ファイルサイズが100MBを超えています。")
-                console.log(file.name)
-            } else if (!(contentfilenames.includes(file.name))) {
-                contentfilenames.push(file.name)
-                tmpfiles.push(file)
-            }
-        })
-        // ファイルを埋め込んだ時ファイルの名前、サイズ、mimetypeをtmpmetadataに埋め込む
-        for (let i = 0; i < tmpfiles.length; i++) {
-            let file = tmpfiles[i];
-            tmpmetadata[fileproperty.file_name.replace("[]", "[" + String(i) + "]")] = file.name
-            tmpmetadata[fileproperty.file_url.replace("[]", "[" + String(i) + "]")] = "data/contentfiles/" + file.name
-            tmpmetadata[fileproperty.file_label.replace("[]", "[" + String(i) + "]")] = file.name
-            tmpmetadata[fileproperty.file_format.replace("[]", "[" + String(i) + "]")] = file.type
-            tmpmetadata[fileproperty.file_size.replace("[]", "[" + String(i) + "]")] = String(Math.round(file.size / 1024)) + " KB"
-        }
-        // 一時的なリストからレンダー
-        setcontentfiles(tmpfiles);
-        // tmpmetadataをsetすること
-        setmetadata(tmpmetadata)
-        console.log(tmpmetadata)
-    }
+    const addfiles = useAddFileValue();
+
 
     function deletefile(filename) {
         const fileproperty = schema.file_info
@@ -262,9 +259,9 @@ function FileUploadForm({ addarray, deletearray, schema }) {
         <div className="row row-4 list-group-item">
             <div className="col-sm-12">
                 <div className="files-upload-zone">
-                    <DropFileArea addfiles={addfiles} />
+                    <DropFileArea addfiles={addfiles} schema={schema}/>
                     <p className="text-center legend"><strong>— OR —</strong></p>
-                    <AddFileButton addfiles={addfiles} />
+                    <AddFileButton addfiles={addfiles} schema={schema} />
                 </div>
                 {(contentfiles.length !== 0) && <Datalist contentfiles={contentfiles} deletefile={deletefile} />}
             </div>
@@ -561,7 +558,18 @@ function Panelform({ parent_id, form, schema }) {
     const [count, setcount] = useState(1);
     const [inputlists, setInputlists] = useState([<Inputlist form={form} count={count - 1} child_id={child_id} key={form.key + "[" + String(count - 1) + "]"} />]);
     const [toggle, settoggle] = useState(" hidden");
+    const files = useFilesValue()
     let isArray = false;
+    useEffect(() => {
+        if (form.type === "contentfile" && count !== files.length) {
+            let default_inputlists=[]
+            for (let i = 0; i<files.length; i++){
+                default_inputlists.push(<Inputlist form={form} count={i} child_id={child_id} key={form.key + "[" + String(i) + "]"} />)
+            }
+            setInputlists(default_inputlists)
+            setcount(files.length)
+        }
+    })
 
     if (form.add === "New") {
         isArray = true;
@@ -667,21 +675,26 @@ function SubmitButton() {
         console.log("request_python")
         console.log(dataforrequest)
         console.log(global_metadata)
-        return $.ajax({
-            url: "/item_register/register",
+        return fetch("/item_register/register", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            data: JSON.stringify(dataforrequest),
-            success: function (response) {
-                // リクエストが成功した場合の処理
-                console.log('Success!', response);
-                setdisabled(false);
-            },
-            error: function (status, error) {
-                // リクエストが失敗した場合の処理
-                setdisabled(false);
-            }
+            body: JSON.stringify(dataforrequest)
         })
+        // return $.ajax({
+        //     url: "/item_register/register",
+        //     method: "POST",
+        //     headers: { "Content-Type": "application/json" },
+        //     data: JSON.stringify(dataforrequest),
+        //     success: function (response) {
+        //         // リクエストが成功した場合の処理
+        //         console.log('Success!', response);
+        //         setdisabled(false);
+        //     },
+        //     error: function (status, error) {
+        //         // リクエストが失敗した場合の処理
+        //         setdisabled(false);
+        //     }
+        // })
     }
 
     function itemRegister() {
@@ -699,8 +712,15 @@ function SubmitButton() {
             console.log("thumb")
             thumb = thumbnail.map(base64thumbnail => base64thumbnail)
             return request_python(metadata, files, thumb)
+        }).then(response => {
+            console.log(response)
+            if (!response.ok) {
+                throw new Error(response.status + " " + response.statusText)
+            }
+            setdisabled(false);
         }).catch(error => {
-            console.error('Error:', error.responseJSON);
+            console.error(error);
+            setdisabled(false);
         }).finally(
             console.log("finally")
         );
@@ -726,6 +746,7 @@ function ItemRegisterPanel({ forms, schema }) {
     let count = 0;
     const input_forms = [];
     const copy_schema = structuredClone(schema)
+    console.log(copy_schema)
     forms.forEach(form => {
         if (!("system_prop" in schema.properties[form.key] && schema.properties[form.key].system_prop === true)) {
             input_forms.push(
@@ -738,7 +759,7 @@ function ItemRegisterPanel({ forms, schema }) {
     });
     return (
         <FileProvider>
-            <PDFform />
+            <PDFform schema={copy_schema}/>
             <hr />
             <div className="form">
                 {input_forms}

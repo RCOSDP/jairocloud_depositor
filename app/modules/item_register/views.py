@@ -39,15 +39,16 @@ def register():
     post_dataの例:
     {"item_metadata;{}, "contentfiles": [{"name":"file.png", "base64":"aaaaa"}, "thumbneil":[{"name":"thumb.png", "base64":"bbbb"}] ]}
     """
+    tmp_file_path = os.environ.get("TMPORARY_FILE_PATH")
     
     post_data = request.get_json()
     
     tmp_zip_name = str(uuid.uuid4())+".zip"
 
     # app/tmpディレクトリがないなら生成
-    if not(os.path.exists(os.path.join('./', 'tmp'))):
-        os.mkdir("./tmp")
-    with zipfile.ZipFile("tmp/"+tmp_zip_name, mode="w") as zipf:
+    if not(os.path.exists(tmp_file_path)):
+        os.mkdir(tmp_file_path)
+    with zipfile.ZipFile(tmp_file_path+tmp_zip_name, mode="w") as zipf:
         # xml書き出し
         xml_string = dicttoxmlforsword("jpcoar2.0", post_data.get("item_metadata"))
         zipf.writestr("data/metadata.xml", xml_string)
@@ -90,7 +91,7 @@ def register():
     }
 
     # 送信するファイル
-    files = {'file': open('tmp/'+tmp_zip_name, 'rb')}  # ファイルのパスを指定してファイルを開く
+    files = {'file': open(tmp_file_path+tmp_zip_name, 'rb')}  # ファイルのパスを指定してファイルを開く
 
     # POSTリクエストを送信
     # 該当リポジトリのswordapiにzipを投げる処理
@@ -105,7 +106,7 @@ def register():
         return jsonify({"error":str(ex)}), 504
     finally:
         current_app.logger.info("一時zipファイル削除:"+tmp_zip_name)
-        os.remove('tmp/'+tmp_zip_name)
+        os.remove(tmp_file_path+tmp_zip_name)
     # レスポンスを処理
     
     # ここまでエラーなしだった場合、successfullyを返す。
