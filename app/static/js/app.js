@@ -1,5 +1,6 @@
 import React, { useState, useRef, createContext, useContext, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
+import Modal from 'react-modal';
 // import { DatePicker } from 'react-datepicker';
 
 const contentFilesContext = createContext([]);
@@ -10,6 +11,13 @@ const metadataContext = createContext({});
 const setMetadataContext = createContext(null);
 const changeMetadataContext = createContext(null);
 const addFileContext = createContext(null);
+
+const modalIsOpenContext = createContext(false);
+const setModalIsOpenContext = createContext();
+const modalContentContext = createContext();
+const setModalContentContext = createContext();
+const modalHeaderContext = createContext();
+const setModalHeaderContext = createContext();
 
 const FileProvider = ({ children }) => {
     const [contentfiles, setcontentfiles] = useState([]);
@@ -22,8 +30,7 @@ const FileProvider = ({ children }) => {
         }));
     }
 
-    function addfiles(files, schema) {
-        console.log(schema.file_info)
+    function addfiles(files) {
         const fileproperty = schema.file_info
         const contentfilenames = contentfiles.map(contentfile => contentfile.name)
         // 一時的なリストをdeepcopyで生成
@@ -84,18 +91,93 @@ const useMetadataSetValue = () => useContext(setMetadataContext);
 const useMetadataChangeValue = () => useContext(changeMetadataContext);
 const useAddFileValue = () => useContext(addFileContext);
 
-function PDFform({schema}) {
+const ModalProvider = ({ children }) => {
+    const [modalIsOpen, setModalIsOpen] = useState(false);
+    const [content, setContent] = useState(""); //HTML
+    const [header, setHeader] = useState(""); //文字列
+    return (
+        <modalIsOpenContext.Provider value={modalIsOpen}>
+            <setModalIsOpenContext.Provider value={setModalIsOpen}>
+                <modalHeaderContext.Provider value={content}>
+                    <setModalHeaderContext.Provider value={setContent}>
+                        <modalContentContext.Provider value={header}>
+                            <setModalContentContext.Provider value={setHeader}>
+                                {children}
+                            </setModalContentContext.Provider>
+                        </modalContentContext.Provider>
+                    </setModalHeaderContext.Provider>
+                </modalHeaderContext.Provider>
+            </setModalIsOpenContext.Provider>
+        </modalIsOpenContext.Provider>)
+}
+
+const useModalIsOpenValue = () => useContext(modalIsOpenContext);
+const useModalIsOpenSetValue = () => useContext(setModalIsOpenContext);
+const useModalHeaderValue = () => useContext(modalHeaderContext);
+const useModalHeaderSetValue = () => useContext(setModalHeaderContext);
+const useModalContentValue = () => useContext(modalContentContext);
+const useModalContentSetValue = () => useContext(setModalContentContext);
+
+
+const customStyles = {
+    content: {
+        top: '50%',
+        left: '50%',
+        right: 'auto',
+        bottom: 'auto',
+        width: '50%',
+        height: '50%',
+        marginRight: '-50%',
+        transform: 'translate(-50%, -50%)'
+    },
+    header: {
+        backgroundColor: '#f2f2f2',
+        padding: '16px',
+    },
+    footer: {
+        backgroundColor: '#f2f2f2',
+        padding: '16px',
+        textAlign: 'right',
+    }
+};
+function MyModal() {
+    const modalIsOpen = useModalContentValue();
+    const setModalIsOpen = useModalContentSetValue();
+    const content = useModalContentValue();
+    const setContent = useModalContentSetValue(); //HTML
+    const header = useModalHeaderValue();
+    const setHeader = useModalHeaderSetValue();
+    return (
+        <div>
+            <Modal
+                isOpen={modalIsOpen ? true : false}
+                onRequestClose={() => setModalIsOpen(false)}
+                style={customStyles}
+                contentLabel="Example Modal">
+                <div className="modal-header">
+                    <h2>{header}</h2>
+                </div>
+                {content}
+                <div className="modal-footer">
+                    <button onClick={() => setModalIsOpen(false)}>Close Modal</button>
+                </div>
+            </Modal>
+        </div>
+    );
+}
+
+function PDFform({ }) {
     const [pdffile, setpdffile] = useState([]);
     const addfiles = useAddFileValue();
 
-    function addfilesforpdf(files, schema) {
+    function addfilesforpdf(files) {
         if (files.length > 0) {
             const firstFile = files[0];
             if (check_filesize_over_100MB(firstFile)) {
                 console.log("ファイルサイズが100MBを超えています。")
                 console.log(firstFile.name)
             } else if (firstFile.type === "application/pdf") {
-                addfiles([firstFile], schema)
+                addfiles([firstFile])
                 if (pdffile.length === 0 || pdffile[0].name !== firstFile.name) {
                     setpdffile([firstFile])
                 }
@@ -115,9 +197,9 @@ function PDFform({schema}) {
             <div className="col-sm-12">
                 <p className="text-center">pdf自動入力フォーム</p>
                 <div className="files-upload-zone">
-                    <DropFileArea addfiles={addfilesforpdf} schema={schema}/>
+                    <DropFileArea addfiles={addfilesforpdf} />
                     <p className="text-center legend"><strong>— OR —</strong></p>
-                    <AddFileButton addfiles={addfilesforpdf} acceptfiletype={"application/pdf"} schema={schema}/>
+                    <AddFileButton addfiles={addfilesforpdf} acceptfiletype={"application/pdf"} />
                 </div>
                 <p className="text-center">登録可能なファイルは「pdf」のみ</p>
                 <p className="text-center">
@@ -171,7 +253,7 @@ function Datalist({ contentfiles, deletefile }) {
     )
 }
 
-function DropFileArea({ addfiles, schema }) {
+function DropFileArea({ addfiles }) {
 
     function dragOverHandler(event) {
         event.preventDefault()
@@ -193,7 +275,7 @@ function DropFileArea({ addfiles, schema }) {
             isfiles = false;
         }
         if (isfiles === true) {
-            addfiles(event.dataTransfer.files, schema)
+            addfiles(event.dataTransfer.files)
         }
     }
 
@@ -205,7 +287,7 @@ function DropFileArea({ addfiles, schema }) {
         </div>)
 }
 
-function AddFileButton({ addfiles, acceptfiletype, schema }) {
+function AddFileButton({ addfiles, acceptfiletype }) {
     const self = useRef();
     function fileaddaction() {
         self.current.click();
@@ -215,12 +297,12 @@ function AddFileButton({ addfiles, acceptfiletype, schema }) {
             <button className="btn btn-primary" onClick={fileaddaction} >
                 Click to select
             </button>
-            <input ref={self} type="file" className="hidden" multiple accept={acceptfiletype} onChange={(e) => { addfiles(e.target.files, schema); e.target.value = ""; }} />
+            <input ref={self} type="file" className="hidden" multiple accept={acceptfiletype} onChange={(e) => { addfiles(e.target.files); e.target.value = ""; }} />
         </p>
     )
 }
 
-function FileUploadForm({ addarray, deletearray, schema }) {
+function FileUploadForm({ deletearray }) {
     const contentfiles = useFilesValue();
     const setcontentfiles = useFilesSetValue();
     const metadata = useMetadataValue();
@@ -259,9 +341,9 @@ function FileUploadForm({ addarray, deletearray, schema }) {
         <div className="row row-4 list-group-item">
             <div className="col-sm-12">
                 <div className="files-upload-zone">
-                    <DropFileArea addfiles={addfiles} schema={schema}/>
+                    <DropFileArea addfiles={addfiles} />
                     <p className="text-center legend"><strong>— OR —</strong></p>
-                    <AddFileButton addfiles={addfiles} schema={schema} />
+                    <AddFileButton addfiles={addfiles} />
                 </div>
                 {(contentfiles.length !== 0) && <Datalist contentfiles={contentfiles} deletefile={deletefile} />}
             </div>
@@ -314,7 +396,7 @@ function Metadatatitle({ item }) {
     let required = false;
     let title = ("title_i18n" in item) && ("ja" in item.title_i18n) ? item.title_i18n.ja : item.title
     let classvalue;
-    if (schema.required.includes(item.key)) {
+    if (schema.required.includes(item.key.split(".")[0].replace("[]", ""))) {
         required = true;
     }
     if (required) {
@@ -336,9 +418,9 @@ function Textform({ item, parent_id }) {
     let readonly = false;
 
     // とりあえず今はコメントアウト
-    // if ("readonly" in item && item.readonly === true) {
-    //     readonly = true;
-    // }
+    if ("readonly" in item && item.readonly === true) {
+        readonly = true;
+    }
     return (
         <div className="form-group schema-form-text">
             <Metadatatitle item={item} />
@@ -384,6 +466,15 @@ function Selectform({ parent_id, map, item }) {
     const changemetadata = useMetadataChangeValue();
     const titlemap = [];
     const form_id = parent_id + "." + item.key.split(".")[item.key.split(".").length - 1]
+    function selectonchange(form_id, value) {
+        // change select value
+        changemetadata(form_id, value);
+        // use onchange
+        if (item.hasOwnProperty("onChange")) {
+            const onchange = item.onChange
+            changemetadata(parent_id + "." + onchange.changekey, onchange.keyvalue[value])
+        }
+    }
     map.forEach(element => {
         titlemap.push(
             <option label={element.name} value={element.value} key={form_id + element.value}></option>
@@ -399,7 +490,7 @@ function Selectform({ parent_id, map, item }) {
                     name={item.key.split(".")[item.key.split(".").length - 1]}
                     defaultValue={""}
                     value={metadata[form_id]}
-                    onChange={(e) => changemetadata(form_id, e.target.value)}>
+                    onChange={(e) => selectonchange(form_id, e.target.value)}>
                     <option value=""></option>
                     {titlemap}
                 </select>
@@ -552,18 +643,23 @@ function Inputlist({ form, count, child_id }) {
     );
 }
 
-function Panelform({ parent_id, form, schema }) {
+function Panelform({ parent_id, form }) {
     let form_last_key = form.key.split(".")[form.key.split(".").length - 1]
     let child_id = parent_id !== undefined ? parent_id + "." + form_last_key : form_last_key
+    let isrequired = false
+    // ネスト１段目のidがrequiredに含まれるならパネルを畳まない
+    if (schema !== undefined && schema.required.includes(child_id)) {
+        isrequired = true
+    }
     const [count, setcount] = useState(1);
     const [inputlists, setInputlists] = useState([<Inputlist form={form} count={count - 1} child_id={child_id} key={form.key + "[" + String(count - 1) + "]"} />]);
-    const [toggle, settoggle] = useState(" hidden");
+    const [toggle, settoggle] = useState(isrequired ? "" : " hidden");
     const files = useFilesValue()
     let isArray = false;
     useEffect(() => {
         if (form.type === "contentfile" && count !== files.length) {
-            let default_inputlists=[]
-            for (let i = 0; i<files.length; i++){
+            let default_inputlists = []
+            for (let i = 0; i < files.length; i++) {
                 default_inputlists.push(<Inputlist form={form} count={i} child_id={child_id} key={form.key + "[" + String(i) + "]"} />)
             }
             setInputlists(default_inputlists)
@@ -607,12 +703,12 @@ function Panelform({ parent_id, form, schema }) {
             <div className="panel panel-default deposit-panel">
                 <div className="panel-heading"><a className="panel-toggle" onClick={() => togglepanel()}>
                     {("title_i18n" in form) && ("ja" in form.title_i18n) ? form.title_i18n.ja : form.title}
-                </a>
+                </a><div className="pull-right">{isrequired ? "Required" : "Optional"}</div>
                 </div>
                 <div className={"panel-body panel-body2 list-group" + toggle}>
                     <div className="schema-form-array">
                         <div className="col-sm-12">
-                            {(form.type === "contentfile") && <FileUploadForm addarray={addarray} deletearray={deletearray} schema={schema} />}
+                            {(form.type === "contentfile") && <FileUploadForm addarray={addarray} deletearray={deletearray} />}
                             {(form.type === "thumbnail") && <ThumbnailUploadForm addarray={addarray} deletearray={deletearray} />}
                             {inputlists.map((inputlist, index) => (
                                 <li className="list-group-item ui-sortable" id={child_id + "[" + index + "]"} key={inputlist.key}>
@@ -644,6 +740,10 @@ function SubmitButton() {
     const thumbnail = useThumbnailValue();
     const [disabled, setdisabled] = useState(false);
     const global_metadata = useMetadataValue();
+
+    const setmodalisopen = useModalIsOpenSetValue();
+    const setmodalcontent = useModalContentSetValue();
+    const setmodalheader = useModalHeaderSetValue();
     // ファイルをBase64にエンコードする関数
     function encodeFileToBase64(file) {
         return new Promise((resolve, reject) => {
@@ -671,59 +771,61 @@ function SubmitButton() {
 
     function request_python(metadata, files, thumb) {
         const dataforrequest = { "item_metadata": metadata, "contentfiles": files, "thumbnail": thumb }
-        // const dataforrequest = { "item_metadata": metadata, "contentfiles": [], "thumbnail": thumb }
         console.log("request_python")
         console.log(dataforrequest)
         console.log(global_metadata)
-        return fetch("/item_register/register", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(dataforrequest)
-        })
-        // return $.ajax({
-        //     url: "/item_register/register",
+        // return fetch("/item_register/register", {
         //     method: "POST",
         //     headers: { "Content-Type": "application/json" },
-        //     data: JSON.stringify(dataforrequest),
-        //     success: function (response) {
-        //         // リクエストが成功した場合の処理
-        //         console.log('Success!', response);
-        //         setdisabled(false);
-        //     },
-        //     error: function (status, error) {
-        //         // リクエストが失敗した場合の処理
-        //         setdisabled(false);
-        //     }
+        //     body: JSON.stringify(dataforrequest)
         // })
+        return $.ajax({
+            url: "/item_register/register",
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            data: JSON.stringify(dataforrequest),
+            success: function (response) {
+                // リクエストが成功した場合の処理
+                console.log('Success!', response);
+                setdisabled(false);
+            },
+            error: function (status) {
+                // リクエストが失敗した場合の処理
+                console.log(status)
+                setdisabled(false);
+            }
+        })
     }
 
     function itemRegister() {
+        const required_but_no_value = check_required(schema.required)
+        if (required_but_no_value.length !== 0) {
+            setmodalisopen(true)
+            setmodalheader("必須項目が入力されていません。")
+            setmodalcontent(<>
+                {required_but_no_value.map((e) => (
+                    <h4>{"・"+document.getElementById(e).querySelector('a.panel-toggle').textContent}</h4>
+                ))}</>
+            )
+            return 0
+        }
         setdisabled(true);
         let metadata = load_metadata();
-        console.log(metadata);
         let files = [];
         let thumb = null;
         encodeFilesToBase64(contentfiles).then(base64files => {
             files = base64files.map(base64file => base64file) // 全てのファイルのBase64データの配列が表示される
-            console.log("nnnnn")
-            console.log(files)
             return encodeFilesToBase64(thumbnail)
         }).then(thumbnail => {
-            console.log("thumb")
             thumb = thumbnail.map(base64thumbnail => base64thumbnail)
             return request_python(metadata, files, thumb)
-        }).then(response => {
-            console.log(response)
-            if (!response.ok) {
-                throw new Error(response.status + " " + response.statusText)
-            }
-            setdisabled(false);
         }).catch(error => {
             console.error(error);
+            setmodalisopen(true);
+            setmodalheader(error.status + " " + error.statusText);
+            setmodalcontent(<h4>{error.responseText}</h4>)
             setdisabled(false);
-        }).finally(
-            console.log("finally")
-        );
+        });
 
 
     }
@@ -742,30 +844,31 @@ function SubmitButton() {
 
 
 
-function ItemRegisterPanel({ forms, schema }) {
+function ItemRegisterPanel({ }) {
     let count = 0;
     const input_forms = [];
-    const copy_schema = structuredClone(schema)
-    console.log(copy_schema)
     forms.forEach(form => {
         if (!("system_prop" in schema.properties[form.key] && schema.properties[form.key].system_prop === true)) {
             input_forms.push(
                 <div className="form_metadata_property" key={form.key}>
-                    <Panelform form={form} schema={copy_schema} />
+                    <Panelform form={form} />
                 </div>
             )
             count++;
         }
     });
     return (
-        <FileProvider>
-            <PDFform schema={copy_schema}/>
-            <hr />
-            <div className="form">
-                {input_forms}
-            </div>
-            <SubmitButton />
-        </FileProvider>
+        <ModalProvider>
+            <FileProvider>
+                <MyModal />
+                <PDFform />
+                <hr />
+                <div className="form">
+                    {input_forms}
+                </div>
+                <SubmitButton />
+            </FileProvider>
+        </ModalProvider>
     )
 }
 
@@ -839,6 +942,19 @@ function load_metadata() {
     return item_metadata
 }
 
+function check_required(required_list) {
+    let required_but_no_value_list = new Set();
+    required_list.forEach(function (element) {
+        const required_panel = document.getElementById(element);
+        required_panel.querySelectorAll('.input-form.form-control').forEach(function (ele) {
+            if (ele.value === undefined || ele.value === "") {
+                required_but_no_value_list.add(element);
+            }
+        })
+    })
+    return Array.from(required_but_no_value_list);
+}
+
 function check_filesize_over_100MB(file) {
     /// ファイルサイズ取得
     const fileSize = file.size;
@@ -852,6 +968,7 @@ function check_filesize_over_100MB(file) {
 }
 
 const root = createRoot(document.getElementById('input_form_container'));
+Modal.setAppElement(document.getElementById('input_form_container'));
 let forms = null;
 let schema = null;
 
@@ -873,8 +990,7 @@ fetch('/static/json/form.json')
     })
     .then(data => {
         schema = JSON.parse(data);
-
-        root.render(<ItemRegisterPanel forms={forms} schema={schema} />);
+        root.render(<ItemRegisterPanel />);
     })
     .catch(error => {
         console.error('There was a problem with the fetch operation:', error);

@@ -70,7 +70,6 @@ def register():
     if aff_repository and not(aff_repository.repository_url=="" or aff_repository.access_token==""):
         repository_url=aff_repository.repository_url
         access_token=aff_repository.access_token
-    # 設定されていない場合デフォルトURLをとる。いまはしらない。
     else:
         aff_repository = Affiliation_Repository().get_aff_repository_by_affiliation_name("default")
         repository_url=aff_repository.repository_url
@@ -100,9 +99,14 @@ def register():
         # current_app.logger.info(data)
         # current_app.logger.info(headers)
         # current_app.logger.info(files)
-        response = requests.post(url=sword_api_url, data=data, headers=headers, files=files)
+        response = requests.post(url=sword_api_url, data=data, headers=headers, files=files, verify=False)
+        print(response.status_code)
+        if response.status_code == 404:
+            print(response.text)
+            return response.text, 404
+        return jsonify(response.json()), 200
     except requests.exceptions.RequestException as ex:
-        current_app.logger.info(ex)
+        current_app.logger.info(str(ex))
         return jsonify({"error":str(ex)}), 504
     finally:
         current_app.logger.info("一時zipファイル削除:"+tmp_zip_name)
