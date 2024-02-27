@@ -3,8 +3,7 @@
     "$schema": "http://json-schema.org/draft-04/schema#",
     "required": [
         "dc:title",
-        "dc:type",
-        "jpcoar:identifier"
+        "dc:type"
     ],
     "file_info": {
         "property_name": "jpcoar:file",

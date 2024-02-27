@@ -23,6 +23,7 @@ const FileProvider = ({ children }) => {
     const [contentfiles, setcontentfiles] = useState([]);
     const [thumbnail, setthumbnail] = useState([]);
     const [metadata, setmetadata] = useState({})
+    
 
     function changemetadata(key, value) {
         setmetadata((prevState) => ({
@@ -30,7 +31,7 @@ const FileProvider = ({ children }) => {
         }));
     }
 
-    function addfiles(files) {
+    function addfiles(files, addarray) {
         const fileproperty = schema.file_info
         const contentfilenames = contentfiles.map(contentfile => contentfile.name)
         // 一時的なリストをdeepcopyで生成
@@ -55,10 +56,12 @@ const FileProvider = ({ children }) => {
             tmpmetadata[fileproperty.file_format.replace("[]", "[" + String(i) + "]")] = file.type
             tmpmetadata[fileproperty.file_size.replace("[]", "[" + String(i) + "]")] = String(Math.round(file.size / 1024)) + " KB"
         }
+        
         // 一時的なリストからレンダー
         setcontentfiles(tmpfiles);
-        // tmpmetadataをsetすること
         setmetadata(tmpmetadata)
+        // console.log(tmpfiles.length-contentfiles.length)
+        // setTimeout(addarray(tmpfiles.length-contentfiles.length))
     }
 
     return (
@@ -125,8 +128,8 @@ const customStyles = {
         left: '50%',
         right: 'auto',
         bottom: 'auto',
-        width: '50%',
-        height: '50%',
+        width: 'auto',
+        height: 'auto',
         marginRight: '-50%',
         transform: 'translate(-50%, -50%)',
         backgroundColor: 'rgba(0, 0, 0, 0)',
@@ -302,7 +305,7 @@ function DropFileArea({ addfiles }) {
         </div>)
 }
 
-function AddFileButton({ addfiles, acceptfiletype }) {
+function AddFileButton({ addfiles, acceptfiletype, addarray }) {
     const self = useRef();
     function fileaddaction() {
         self.current.click();
@@ -312,12 +315,12 @@ function AddFileButton({ addfiles, acceptfiletype }) {
             <button className="btn btn-primary" onClick={fileaddaction} >
                 Click to select
             </button>
-            <input ref={self} type="file" className="hidden" multiple accept={acceptfiletype} onChange={(e) => { addfiles(e.target.files); e.target.value = ""; }} />
+            <input ref={self} type="file" className="hidden" multiple accept={acceptfiletype} onChange={(e) => { addfiles(e.target.files, addarray); e.target.value = ""; }} />
         </p>
     )
 }
 
-function FileUploadForm({ deletearray }) {
+function FileUploadForm({ addarray, deletearray }) {
     const contentfiles = useFilesValue();
     const setcontentfiles = useFilesSetValue();
     const metadata = useMetadataValue();
@@ -325,7 +328,7 @@ function FileUploadForm({ deletearray }) {
     const addfiles = useAddFileValue();
 
 
-    function deletefile(filename) {
+    function deleteFile(filename) {
         const fileproperty = schema.file_info
         let tmpfiles = contentfiles.map(contentfile => contentfile).filter(file => file.name !== filename)
         let tmpmetadata = structuredClone(metadata)
@@ -358,9 +361,9 @@ function FileUploadForm({ deletearray }) {
                 <div className="files-upload-zone">
                     <DropFileArea addfiles={addfiles} />
                     <p className="text-center legend"><strong>— OR —</strong></p>
-                    <AddFileButton addfiles={addfiles} />
+                    <AddFileButton addarray={addarray} addfiles={addfiles} />
                 </div>
-                {(contentfiles.length !== 0) && <Datalist contentfiles={contentfiles} deletefile={deletefile} />}
+                {(contentfiles.length !== 0) && <Datalist contentfiles={contentfiles} deletefile={deleteFile} />}
             </div>
         </div>
 
@@ -696,7 +699,7 @@ function Panelform({ parent_id, form }) {
 
     function reducearray(key) {
         setInputlists(prevItems => prevItems.filter(inputlist => inputlist.key !== key));
-        setcount(count - 1);
+        // setcount(count - 1);
     }
 
     function deletearray() {
@@ -802,6 +805,11 @@ function SubmitButton() {
             success: function (response) {
                 // リクエストが成功した場合の処理
                 console.log('Success!', response);
+                setmodalisopen(true);
+                setmodalheader("登録成功");
+                setmodalcontent(<>
+                登録先URL：<a href={response.links[0]["@id"]}>{response.links[0]["@id"]}</a>
+                </>) //現在は仮の辞書でやってる
                 setdisabled(false);
             },
             error: function (status) {
@@ -845,7 +853,7 @@ function SubmitButton() {
 
     }
     return (
-        <div class="row row-4">
+        <div className="row row-4">
             <div className="col-sm-12">
                 <div className="col-sm-offset-3 col-sm-6">
                     <div className="list-inline text-center">
