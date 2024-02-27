@@ -128,17 +128,13 @@ const customStyles = {
         width: '50%',
         height: '50%',
         marginRight: '-50%',
-        transform: 'translate(-50%, -50%)'
+        transform: 'translate(-50%, -50%)',
+        backgroundColor: 'rgba(0, 0, 0, 0)',
+        border: '0px'
     },
-    header: {
-        backgroundColor: '#f2f2f2',
-        padding: '16px',
-    },
-    footer: {
-        backgroundColor: '#f2f2f2',
-        padding: '16px',
-        textAlign: 'right',
-    }
+    overlay: {
+        backgroundColor: 'rgba(0, 0, 0, 0.5)' // モーダルの背景色を半透明に設定
+      }
 };
 function MyModal() {
     const modalIsOpen = useModalContentValue();
@@ -154,12 +150,31 @@ function MyModal() {
                 onRequestClose={() => setModalIsOpen(false)}
                 style={customStyles}
                 contentLabel="Example Modal">
-                <div className="modal-header">
-                    <h2>{header}</h2>
-                </div>
-                {content}
-                <div className="modal-footer">
-                    <button onClick={() => setModalIsOpen(false)}>Close Modal</button>
+                <div className="modal-dialog modelWidth modal-lg" role="document">
+                    <div className="modal-content">
+                        <div className="modal-body">
+                            <div className="panel panel-default">
+                                <div className="panel-heading clearfix">
+                                    <h3 className="panel-title">{header}</h3>
+                                </div>
+                                <div className="panel-body">
+                                    <div className="panel-body">
+                                        <div className="row">
+                                            <div className="col-sm-12 col-md-12 col-left">
+                                                {content}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <br />
+                        </div>
+                        <div className="modal-footer">
+                            <button type="button" className="btn btn-info close-button" id="btnModalClose" onClick={() => setModalIsOpen(false)}>
+                                閉じる
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </Modal>
         </div>
@@ -804,7 +819,7 @@ function SubmitButton() {
             setmodalheader("必須項目が入力されていません。")
             setmodalcontent(<>
                 {required_but_no_value.map((e) => (
-                    <h4>{"・"+document.getElementById(e).querySelector('a.panel-toggle').textContent}</h4>
+                    <h4>{"・" + document.getElementById(e).querySelector('a.panel-toggle').textContent}</h4>
                 ))}</>
             )
             return 0
@@ -830,13 +845,15 @@ function SubmitButton() {
 
     }
     return (
-        <div className="col-sm-12">
-            <div className="col-sm-offset-3 col-sm-6">
-                <div className="list-inline text-center">
+        <div class="row row-4">
+            <div className="col-sm-12">
+                <div className="col-sm-offset-3 col-sm-6">
+                    <div className="list-inline text-center">
 
-                    <button id="submit_button" className="btn btn-info next-button" disabled={disabled} onClick={itemRegister}>
-                        送信
-                    </button>
+                        <button id="submit_button" className="btn btn-info next-button" disabled={disabled} onClick={itemRegister}>
+                            送信
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>)

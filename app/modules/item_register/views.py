@@ -104,7 +104,7 @@ def register():
         if response.status_code == 404:
             print(response.text)
             return response.text, 404
-        return jsonify(response.json()), 200
+        return jsonify(response.json()), response.status_code
     except requests.exceptions.RequestException as ex:
         current_app.logger.info(str(ex))
         return jsonify({"error":str(ex)}), 504
