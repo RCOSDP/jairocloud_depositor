@@ -2,8 +2,11 @@ import base64
 import zipfile
 import io
 import os
+import shutil
+import time
 import uuid
 import requests
+import xml.etree.ElementTree as ET
 from flask import Flask, render_template, redirect, url_for, request, flash, session ,current_app, jsonify, Blueprint
 from flask_login import login_user, current_user, logout_user
 from flask_security import LoginForm, url_for_security
@@ -14,6 +17,7 @@ from modules.models import User as _User
 from modules.models import Affiliation_Id as _Affiliation_Id
 from modules.api import Affiliation_Repository, User
 from .utils import dicttoxmlforsword # zip_folder
+from modules.grobid_client.grobid_client import GrobidClient
 
 blueprint = Blueprint(
     "item_register",
@@ -125,4 +129,103 @@ def register():
     current_app.logger.info(response)
 
     return jsonify(response)
- 
+
+@blueprint.route("/pdf_reader", methods=['POST'])
+def pdf_reader():
+    XMLNS="{http://www.tei-c.org/ns/1.0}"
+    
+    def read_title(data, root):
+        for child in root:
+            if child.tag.endswith("titleStmt"):
+                data["title"] = child.find(f"{XMLNS}title").text
+            else:
+                read_title(data, child)
+        return
+    
+    def read_date(data, root):
+        for child in root:
+            if child.tag.endswith("publicationStmt"):
+                data["date"] = {}
+                data["date"]["type"] = "Available"
+                data["date"]["value"] = child.find(f"{XMLNS}date").attrib["when"]
+            else:
+                read_date(data, child)
+        return
+    
+    def read_lang(data, root):
+        for child in root:
+            if child.tag.endswith("text"):
+                for key, value in child.attrib.items():
+                    if key.endswith("lang"):
+                        data["lang"] = value
+                        break
+            else:
+                read_lang(data, child)
+        return
+      
+    def read_publisher(data, root):
+        for child in root:
+            if child.tag.endswith("publicationStmt"):
+                data["publisher"] = child.find(f"{XMLNS}publisher").text
+            else:
+                read_publisher(data, child)
+        return
+      
+    def read_author(data, root):
+        for child in root:
+            if child.tag.endswith("author"):
+                name = child.find(f"{XMLNS}persName")
+                if name:
+                    author_data = {
+                        "familyName":name.find(f"{XMLNS}surname").text,
+                        "givenName":name.find(f"{XMLNS}forename").text
+                    }
+                    author_data["creatorName"] = author_data["familyName"] + " " + author_data["givenName"]
+                    data["author"].append(author_data)
+            else:
+                read_author(data, child)
+        return
+      
+    if current_user.is_anonymous:
+        return redirect(url_for('login.index_login'))
+    current_app.logger.info(current_user.affiliation_id)
+    # get and save PDF
+    post_data = request.get_json()
+    file_uuid = str(uuid.uuid4())
+    file_name = None
+    file_path = os.path.join("tmp", file_uuid)
+    output_path = os.path.join(file_path, "output")
+    
+    # seetup PDF from json
+    os.mkdir(file_path)
+    with zipfile.ZipFile(os.path.join(file_path, "contents.zip"), mode="w") as zipf:
+        for file in post_data.get("contentfiles"):
+            if file.get("name","").endswith(".pdf"):
+                file_name = file.get("name","").replace(".pdf", ".grobid.tei.xml")
+                binary_data = base64.b64decode(file.get("base64", ""))
+                zipf.writestr(f"{file.get("name","")}", binary_data)
+                break
+    with zipfile.ZipFile(os.path.join(file_path, "contents.zip")) as zf:
+        zf.extractall(f"{file_path}/data")
+        
+    # PDF to XML by Grobid
+    client = GrobidClient(config_path="./config.json")
+    client.process("processHeaderDocument", file_path, output=output_path, consolidate_citations=True, tei_coordinates=True, force=True)
+    
+    # read XML
+    tree = ET.parse(f"{output_path}/data/{file_name}")
+    root = tree.getroot()
+    data = {}
+    data["author"] = []
+    read_title(data, root)
+    read_lang(data, root)
+    read_date(data, root)
+    read_publisher(data, root)
+    read_author(data, root)
+    print(data)
+    
+    # remove tmp file
+    shutil.rmtree(file_path)
+    
+    form = FlaskForm(request.form)
+    return render_template("item_register/item_index.html", form = form, metadata = data)
