@@ -5,8 +5,8 @@
 <body itemscope="" itemtype="http://schema.org/WebPage" data-spy="scroll" data-target=".scrollspy-target">
   {{ form.csrf_token }}
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://unpkg.com/react@18/umd/react.development.js" type="text/babel"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" type="text/babel"></script>
+  <!--<script src="https://unpkg.com/react@18/umd/react.development.js" type="text/babel"></script> -->
+  <!--<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" type="text/babel"></script>-->
   <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4="
     crossorigin="anonymous"></script>
   <!-- <script src="{{ url_for('static', filename='js/react/react-datepicker-min.js') }}" type="text/babel" data-type="module"></script> -->
@@ -16,20 +16,22 @@
       "imports": {
         "react": "https://esm.sh/react?dev",
         "react-dom":"https://esm.sh/react-dom?dev",
-        "react-dom/client": "https://esm.sh/react-dom/client?dev"
+        "react-dom/client": "https://esm.sh/react-dom/client?dev",
+        "react-modal":"https://esm.sh/react-modal?dev"
       }
     }
   </script>
-  <script src="{{ url_for('static', filename='json/form.json') }}"></script>
+  <!-- <script src="static/js/app.js" data-type="module" type="text/babel"></script> -->
   <script src="{{ url_for('static', filename='js/app.js') }}" type="text/babel" data-type="module"></script>
-  <!-- <script src="{{ url_for('static', filename='json/form.json') }}" type="text/json" id="form-json"></script> -->
+  
   <link href={{url_for('static', filename='css/deposit.css' )}} rel="stylesheet">
   <link href={{url_for('static', filename='css/theme.css' )}} rel="stylesheet">
   <link href={{url_for('static', filename='css/styles.css' )}} rel="stylesheet">
   <link href={{url_for('static', filename='css/buttons.css' )}} rel="stylesheet">
   <link href={{url_for('static', filename='css/widget.css' )}} rel="stylesheet">
   <link href={{url_for('static', filename='css/admin.css' )}} rel="stylesheet">
-  <link href={{url_for('static', filename='css/item_register.css' )}} rel="stylesheet">
+    <!--<link href={{url_for('static', filename='css/item_register.css' )}} rel="stylesheet">-->
+  
   <!--[if lt IE 8]>
       <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
     <![endif]-->

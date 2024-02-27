@@ -26,7 +26,6 @@ blueprint = Blueprint(
 def index_item():
     if current_user.is_anonymous:
         return redirect(url_for('login.index_login'))
-    current_app.logger.info(current_user.affiliation_id)
     form = FlaskForm(request.form)
     return render_template("item_register/item_index.html", form = form)
 
@@ -40,56 +39,41 @@ def register():
     post_dataの例:
     {"item_metadata;{}, "contentfiles": [{"name":"file.png", "base64":"aaaaa"}, "thumbneil":[{"name":"thumb.png", "base64":"bbbb"}] ]}
     """
-    current_app.logger.info("はじまり")
-    # current_app.logger.info(request)
+    tmp_file_path = os.environ.get("TMPORARY_FILE_PATH")
     
     post_data = request.get_json()
     
-    current_app.logger.info("jsonのowari")
     tmp_zip_name = str(uuid.uuid4())+".zip"
-    # current_app.logger.info(post_data)
-    
-    # メモリー内にzipファイルを作る処理
-    current_app.logger.info("mem_zip")
-        # zipファイル確認のため"test.zip"だが本来はmem_zipバッファ内でzip持ってるとファイル名を決められないのでやめます。
-        # ex: with zipfile.ZipFile(mem_zip, mode="w") as zipf
-    with zipfile.ZipFile("tmp/"+tmp_zip_name, mode="w") as zipf:
-        current_app.logger.info("zipf")
+
+    # app/tmpディレクトリがないなら生成
+    if not(os.path.exists(tmp_file_path)):
+        os.mkdir(tmp_file_path)
+    with zipfile.ZipFile(tmp_file_path+tmp_zip_name, mode="w") as zipf:
         # xml書き出し
-        current_app.logger.info("xmlの始まり")
         xml_string = dicttoxmlforsword("jpcoar2.0", post_data.get("item_metadata"))
         zipf.writestr("data/metadata.xml", xml_string)
-        current_app.logger.info("xml終わり")
         
         # コンテンツファイル書き込み
-        current_app.logger.info("コンテンツファイル始まり")
         for file in post_data.get("contentfiles"):
             binary_data = base64.b64decode(file.get("base64", ""))
             zipf.writestr("data/contentfiles/"+file.get("name",""), binary_data)
-        current_app.logger.info("コンテンツファイル終わり")
             
         # サムネイル書き込み
-        current_app.logger.info("サムネイル始まり")
         for file in post_data.get("thumbnail"):
             binary_data = base64.b64decode(file.get("base64", ""))
             zipf.writestr("data/thumbnail/"+file.get("name",""), binary_data)
-        current_app.logger.info("サムネイル終わり")
             
     # current_userよりaffiliation_idをとってaffiliaiton_repositoryテーブルからリポジトリURLをとる処理
     current_affiliation_id = current_user.affiliation_id
     aff_repository = Affiliation_Repository().get_aff_repository_by_affiliation_id(current_affiliation_id)
     #　設定されている場合
-    if aff_repository:
+    if aff_repository and not(aff_repository.repository_url=="" or aff_repository.access_token==""):
         repository_url=aff_repository.repository_url
         access_token=aff_repository.access_token
-    # 設定されていない場合デフォルトURLをとる。いまはしらない。
     else:
-        aff_repository = Affiliation_Repository().get_affiliation_id_by_affiliation_name("default")
-        # 現在はまだデフォルトが何も決まっていないのでモックする。
-        repository_url="https://repository.repo.nii.ac.jp"
-        access_token="accessToken"
-        # repository_url=aff_repository.repository_url
-        # access_token=aff_repository.access_token
+        aff_repository = Affiliation_Repository().get_aff_repository_by_affiliation_name("default")
+        repository_url=aff_repository.repository_url
+        access_token=aff_repository.access_token
     
     sword_api_url = repository_url+"/sword/service-document"
     
@@ -101,28 +85,36 @@ def register():
     # ヘッダーを定義
     headers = {
         'Authorization': 'Bearer '+access_token,
-        'Content-Disposition': 'attachment; filename='+tmp_zip_name
+        'Content-Disposition': 'attachment; filename='+tmp_zip_name,
+        "Packaging":"http://purl.org/net/sword/3.0/package/SimpleZip",
     }
 
     # 送信するファイル
-    files = {'file': open('tmp/'+tmp_zip_name, 'rb')}  # ファイルのパスを指定してファイルを開く
+    files = {'file': open(tmp_file_path+tmp_zip_name, 'rb')}  # ファイルのパスを指定してファイルを開く
 
-    # # POSTリクエストを送信
+    # POSTリクエストを送信
+    # 該当リポジトリのswordapiにzipを投げる処理
     try:
         # current_app.logger.info(sword_api_url)
         # current_app.logger.info(data)
         # current_app.logger.info(headers)
         # current_app.logger.info(files)
-        response = requests.post(url=sword_api_url, data=data, headers=headers, files=files)
+        response = requests.post(url=sword_api_url, data=data, headers=headers, files=files, verify=False)
+        print(response.status_code)
+        if response.status_code == 404:
+            print(response.text)
+            return response.text, 404
+        return jsonify(response.json()), response.status_code
     except requests.exceptions.RequestException as ex:
-        current_app.logger.info(ex)
-        response = 400
+        current_app.logger.info(str(ex))
+        return jsonify({"error":str(ex)}), 504
+    finally:
+        current_app.logger.info("一時zipファイル削除:"+tmp_zip_name)
+        os.remove(tmp_file_path+tmp_zip_name)
     # レスポンスを処理
     
-    # 該当リポジトリのswordapiにzipとユーザー情報？を投げる処理
     # ここまでエラーなしだった場合、successfullyを返す。
     # エラーが起きたら、failedを返す。
-    current_app.logger.info(response)
 
-    return jsonify(response)
+    return jsonify(response.json())
  

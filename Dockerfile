@@ -1,4 +1,3 @@
-# pythonのバージョンは任意
 FROM python:3.12-slim-bookworm
 WORKDIR /code
 ENV FLASK_APP=app
@@ -18,6 +17,10 @@ ENV INVENIO_POSTGRESQL_DBUSER=invenio
 ENV INVENIO_POSTGRESQL_DBPASS=dbpass123
 ENV INVENIO_WORKER_HOST=127.0.0.1
 ENV INVENIO_DB_POOL_CLASS=QueuePool
+
+# 一時ファイルを置くフォルダのパス、コンテナ内のフォルダを参照しているため絶対パスで指定するとコンテナ内でのみ一時フォルダが生成される。
+# マウントされている位置のパスを指定するとローカルにも保存される。
+ENV TMPORARY_FILE_PATH=./tmp/
 
 RUN apt-get update
 RUN apt-get -y install libpq-dev
