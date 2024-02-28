@@ -203,24 +203,36 @@ const useModalHeaderSetValue = () => useContext(setModalHeaderContext);
 const useModalContentValue = () => useContext(modalContentContext);
 const useModalContentSetValue = () => useContext(setModalContentContext);
 
+function ItemRegisterPanel({ }) {
+    let count = 0;
+    const input_forms = [];
+    forms.forEach(form => {
+        if (!("system_prop" in schema.properties[form.key] && schema.properties[form.key].system_prop === true)) {
+            input_forms.push(
+                <div className="form_metadata_property" key={form.key}>
+                    <Panelform form={form} />
+                </div>
+            )
+            count++;
+        }
+    });
+    return (
+        <ModalProvider>
+            <FileProvider>
+                <MyModal />
+                <PDFform />
+                <hr />
+                <div className="form">
+                    {input_forms}
+                </div>
+                <SubmitButton />
+            </FileProvider>
+        </ModalProvider>
+    )
+}
 
-const customStyles = {
-    content: {
-        top: '50%',
-        left: '50%',
-        right: 'auto',
-        bottom: 'auto',
-        width: 'auto',
-        height: 'auto',
-        marginRight: '-50%',
-        transform: 'translate(-50%, -50%)',
-        backgroundColor: 'rgba(0, 0, 0, 0)',
-        border: '0px'
-    },
-    overlay: {
-        backgroundColor: 'rgba(0, 0, 0, 0.5)' // モーダルの背景色を半透明に設定
-    }
-};
+
+
 function MyModal() {
     const modalIsOpen = useModalContentValue();
     const setModalIsOpen = useModalContentSetValue();
@@ -228,6 +240,25 @@ function MyModal() {
     const setContent = useModalContentSetValue(); //HTML
     const header = useModalHeaderValue();
     const setHeader = useModalHeaderSetValue();
+    
+    const customStyles = {
+        content: {
+            top: '50%',
+            left: '50%',
+            right: 'auto',
+            bottom: 'auto',
+            width: 'auto',
+            height: 'auto',
+            marginRight: '-50%',
+            transform: 'translate(-50%, -50%)',
+            backgroundColor: 'rgba(0, 0, 0, 0)',
+            border: '0px'
+        },
+        overlay: {
+            backgroundColor: 'rgba(0, 0, 0, 0.5)' // モーダルの背景色を半透明に設定
+        }
+    };
+
     return (
         <div>
             <Modal
@@ -328,91 +359,111 @@ function PDFform({ }) {
     )
 }
 
-function Datalistform({ parent_id, order, value, item }) {
-    return (
-        <Textform value={""} order={order} item={item} parent_id={parent_id} />
-    )
-}
+function SubmitButton() {
+    const contentfiles = useFilesValue();
+    const thumbnail = useThumbnailValue();
+    const [disabled, setdisabled] = useState(false);
 
-function Datalist({ contentfiles, deletefile }) {
+    const setmodalisopen = useModalIsOpenSetValue();
+    const setmodalcontent = useModalContentSetValue();
+    const setmodalheader = useModalHeaderSetValue();
+    // ファイルをBase64にエンコードする関数
+    function encodeFileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const base64Data = event.target.result.split(",")[1];
+                // console.log(file.name + ":" + base64Data.length)
+                resolve({ "name": file.name, "base64": base64Data });
+            };
+            reader.onerror = function (error) {
+                reject(error);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // 複数のファイルをBase64にエンコードする関数
+    function encodeFilesToBase64(files) {
+        const promises = files.map(file => {
+            return encodeFileToBase64(file)
+        });
+        return Promise.all(promises);
+    }
+
+
+    function request_python(metadata, files, thumb) {
+        const dataforrequest = { "item_metadata": metadata, "contentfiles": files, "thumbnail": thumb }
+        console.log("request_python")
+        console.log(dataforrequest)
+        return $.ajax({
+            url: "/item_register/register",
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            data: JSON.stringify(dataforrequest),
+            success: function (response) {
+                // リクエストが成功した場合の処理
+                console.log('Success!', response);
+                setmodalisopen(true);
+                setmodalheader("登録成功");
+                setmodalcontent(<>
+                    登録先URL：<a href={response.links[0]["@id"]}>{response.links[0]["@id"]}</a>
+                </>)
+                setdisabled(false);
+            },
+            error: function (status) {
+                // リクエストが失敗した場合の処理
+                console.log(status)
+                setdisabled(false);
+            }
+        })
+    }
+
+    function itemRegister() {
+        const required_but_no_value = check_required(schema.required)
+        if (required_but_no_value.length !== 0) {
+            setmodalisopen(true)
+            setmodalheader("必須項目が入力されていません。")
+            setmodalcontent(<>
+                {required_but_no_value.map((e) => (
+                    <h4>{"・" + document.getElementById(e).querySelector('a.panel-toggle').textContent}</h4>
+                ))}</>
+            )
+            return 0
+        }
+        setdisabled(true);
+        let metadata = load_metadata();
+        let files = [];
+        let thumb = null;
+        encodeFilesToBase64(contentfiles).then(base64files => {
+            files = base64files.map(base64file => base64file) // 全てのファイルのBase64データの配列が表示される
+            return encodeFilesToBase64(thumbnail)
+        }).then(thumbnail => {
+            thumb = thumbnail.map(base64thumbnail => base64thumbnail)
+            return request_python(metadata, files, thumb)
+        }).catch(error => {
+            console.error(error);
+            setmodalisopen(true);
+            setmodalheader(error.status + " " + error.statusText);
+            setmodalcontent(<h4>{error.responseText}</h4>)
+            setdisabled(false);
+        });
+
+
+    }
     return (
-        <div className="panel panel-default">
-            <div className="panel-heading">
-                <div className="row">
-                    <div className="col-sm-6">
+        <div className="row row-4">
+            <div className="col-sm-12">
+                <div className="col-sm-offset-3 col-sm-6">
+                    <div className="list-inline text-center">
+
+                        <button id="submit_button" className="btn btn-info next-button" disabled={disabled} onClick={itemRegister}>
+                            送信
+                        </button>
                     </div>
                 </div>
             </div>
-            <table className="table">
-                <tbody><tr>
-                    <th>Filename</th>
-                    <th>Size</th>
-                    <th className="text-center">Actions</th>
-                </tr>
-                    {contentfiles.map((file, index) => (
-                        (<tr key={file.name}>
-                            <td>{file.name}</td>
-                            <td>{Math.round(file.size / 1024)}KB</td>
-                            <td className="text-center">
-                                <a onClick={() => deletefile(file.name, index)}>
-                                    削除
-                                </a>
-                            </td>
-                        </tr>)
-                    ))}
-                </tbody></table>
-            <div className="panel-footer"></div>
-        </div>
-    )
-}
-
-function DropFileArea({ addfiles }) {
-
-    function dragOverHandler(event) {
-        event.preventDefault()
-    }
-
-    function dropFile(event) {
-        event.preventDefault();
-        let isfiles = true;
-        if (event.dataTransfer.files) {
-            [...event.dataTransfer.items].forEach((item) => {
-                // ドロップしたものがファイルでない場合は拒否する
-                if (item.kind !== "file") {
-                    console.log("not file");
-                    isfiles = false;
-                }
-            })
-        } else {
-            console.log("no files");
-            isfiles = false;
-        }
-        if (isfiles === true) {
-            addfiles(event.dataTransfer.files)
-        }
-    }
-
-    return (
-        <div className="well" onDragOver={(e) => { dragOverHandler(e) }} onDrop={(e) => { dropFile(e) }}>
-            <center>
-                Drop files or folders here
-            </center>
         </div>)
-}
-
-function AddFileButton({ addfiles, acceptfiletype, addarray }) {
-    const self = useRef();
-    function fileaddaction() {
-        self.current.click();
-    }
-    return (
-        <p className="text-center">
-            <button className="btn btn-primary" onClick={fileaddaction} >
-                Click to select
-            </button>
-            <input ref={self} type="file" className="hidden" multiple accept={acceptfiletype} onChange={(e) => { addfiles(e.target.files, addarray); e.target.value = ""; }} />
-        </p>
-    )
 }
 
 function FileUploadForm({ addarray, deletearray }) {
@@ -499,249 +550,92 @@ function ThumbnailUploadForm() {
     )
 }
 
-function Metadatatitle({ item }) {
-    let required = false;
-    let title = ("title_i18n" in item) && ("ja" in item.title_i18n) ? item.title_i18n.ja : item.title
-    let classvalue;
-    if (schema.required.includes(item.key.split(".")[0].replace("[]", ""))) {
-        required = true;
-    }
-    if (required) {
-        classvalue = "col-sm-3 control-label field-required";
-    } else {
-        classvalue = "col-sm-3 control-label";
-    }
+
+function Datalistform({ parent_id, order, value, item }) {
     return (
-        <label className={classvalue}>
-            {title}
-        </label>
+        <Textform value={""} order={order} item={item} parent_id={parent_id} />
     )
 }
 
-function Textform({ item, parent_id }) {
-    const changemetadata = useMetadataChangeValue();
-    const getmetadata = useMetadataGetValue();
-    const form_id = parent_id + "." + item.key.split(".")[item.key.split(".").length - 1]
-    let readonly = false;
-
-    // とりあえず今はコメントアウト
-    if ("readonly" in item && item.readonly === true) {
-        readonly = true;
-    }
+function Datalist({ contentfiles, deletefile }) {
     return (
-        <div className="form-group schema-form-text">
-            <Metadatatitle item={item} />
-            <div className="col-sm-9">
-                <input type="text"
-                    className="form-control input-form"
-                    id={form_id}
-                    name={item.key.split(".")[item.key.split(".").length - 1]}
-                    schema-validate="form"
-                    disabled={readonly}
-                    defaultValue={getmetadata(form_id)}
-                    onBlur={(e) => changemetadata(form_id, e.target.value)}
-                ></input>
-            </div>
-        </div>
-    );
-}
-
-
-function Textareaform({ parent_id, item }) {
-    const changemetadata = useMetadataChangeValue();
-    const getmetadata = useMetadataGetValue();
-    const form_id = parent_id + "." + item.key.split(".")[item.key.split(".").length - 1]
-    return (
-        <div className="form-group schema-form-textarea">
-            <Metadatatitle item={item} />
-            <div className="col-sm-9">
-                <textarea className="form-control input-form"
-                    id={form_id}
-                    name={item.key.split(".")[item.key.split(".").length - 1]}
-                    schema-validate="form"
-                    defaultValue={getmetadata(form_id)}
-                    onBlur={(e) => changemetadata(form_id, e.target.value)}
-                ></textarea>
-            </div>
-        </div>
-    );
-}
-
-
-function Selectform({ parent_id, map, item }) {
-    const changemetadata = useMetadataChangeValue();
-    const getmetadata = useMetadataGetValue();
-    const titlemap = [];
-    const form_id = parent_id + "." + item.key.split(".")[item.key.split(".").length - 1]
-    function selectonchange(form_id, value) {
-        // change select value
-        changemetadata(form_id, value);
-        // use onchange
-        if (item.hasOwnProperty("onChange")) {
-            const onchange = item.onChange
-            changemetadata(parent_id + "." + onchange.changekey, onchange.keyvalue[value])
-        }
-    }
-    map.forEach(element => {
-        titlemap.push(
-            <option label={element.name} value={element.value} key={form_id + element.value}></option>
-        );
-    })
-    return (
-        <div className="form-group schema-form-select">
-            <Metadatatitle item={item} />
-            <div className="col-sm-9">
-                <select className="form-control input-form"
-                    schema-validate="form"
-                    id={form_id}
-                    name={item.key.split(".")[item.key.split(".").length - 1]}
-                    defaultValue={getmetadata(form_id) || ""}
-                    onChange={(e) => selectonchange(form_id, e.target.value)}>
-                    <option value=""></option>
-                    {titlemap}
-                </select>
-            </div>
-        </div>
-
-    )
-}
-
-// 未完成jpcoar2.0では使わない
-function Radioform({ parent_id, map, order, value, item }) {
-    const titlemap = [];
-    map.forEach(element => {
-        titlemap.push(
-            <div className="radio">
-                <label>
-                    <input type="radio"
-                        id={parent_id + "." + item.key.split(".")[item.key.split(".").length - 1]}
-                        name={item.key.replaceAll("[]", "[" + String(order) + "]")}
-                        value={element.value} />
-                    <span ng-bind-html="item.name">{element.name_i18n.ja}</span>
-                </label>
-            </div >
-        );
-    })
-
-    return (
-        <div className="form-group schema-form-radios">
-            <Metadatatitle item={item} />
-            <div className="col-sm-9">
-                {titlemap}
-            </div>
-        </div>
-    )
-}
-
-
-// いまはとりあえず　input date型である。
-function Datepickerform({ parent_id, value, item }) {
-    const changemetadata = useMetadataChangeValue();
-    const getmetadata = useMetadataGetValue();
-    const form_id = parent_id + "." + item.key.split(".")[item.key.split(".").length - 1]
-    return (
-        <div className="form-group schema-form-datepicker">
-            <Metadatatitle item={item} />
-
-            <div className="col-sm-9">
-                <input type="date"
-                    className="form-control input-form"
-                    id={form_id}
-                    name={item.key.split(".")[item.key.split(".").length - 1]}
-                    schema-validate="form"
-                    defaultValue={getmetadata(form_id)}
-                    onBlur={(e) => changemetadata(form_id, e.target.value)}
-                ></input>
-            </div>
-        </div>
-    )
-}
-
-
-// 未完成jpcoar2.0では使わない
-function Checkboxesform({ parent_id, order, value, item }) {
-    const titlemap = [];
-    map = item.titleMap
-    map.forEach(element => {
-        titlemap.push(
-            <label className="checkbox col-sm-4 checkbox-input">
-                <input type="checkbox" className="touched" schema-vaidate="form" />
-                <span style="overflow-wrap: break-word;">{element.name}</span>
-            </label>
-        );
-    })
-    return (
-        <div className="form-group schema-form-select">
-            <Metadatatitle item={item} />
-            <div className="col-sm-9">
-                <div className="checkbox">
-                    <select sf-changed="form" className="form-control" schema-validate="form" id={parent_id + "." + item.key.split(".")[item.key.split(".").length - 1]} defaultValue={value}>
-                        <option className value=""></option>
-                        {titlemap}
-                    </select>
+        <div className="panel panel-default">
+            <div className="panel-heading">
+                <div className="row">
+                    <div className="col-sm-6">
+                    </div>
                 </div>
             </div>
+            <table className="table">
+                <tbody><tr>
+                    <th>Filename</th>
+                    <th>Size</th>
+                    <th className="text-center">Actions</th>
+                </tr>
+                    {contentfiles.map((file, index) => (
+                        (<tr key={file.name}>
+                            <td>{file.name}</td>
+                            <td>{Math.round(file.size / 1024)}KB</td>
+                            <td className="text-center">
+                                <a onClick={() => deletefile(file.name, index)}>
+                                    削除
+                                </a>
+                            </td>
+                        </tr>)
+                    ))}
+                </tbody></table>
+            <div className="panel-footer"></div>
         </div>
     )
 }
 
+function DropFileArea({ addfiles }) {
 
-function Inputlist({ form, count, child_id }) {
-    // TODO　各入力formにchild_id_with_numberを引数に入れ、きれいにidが作られること
-    const input_field = [];
-    let child_id_with_number = child_id + "[" + count + "]"
-    if (!("items" in form)) {
-        input_field.push(<Datepickerform order={count} item={form} key={form.key} />);
-    } else {
-        form.items.forEach(item => {
-            if ("type" in item) {
-                if (item.type === "text") {
-                    input_field.push(
-                        <Textform value={""} parent_id={child_id_with_number} order={count} item={item} key={item.key} />
-                    );
-                } else if (item.type === "textarea") {
-                    input_field.push(
-                        <Textareaform parent_id={child_id_with_number} value={""} order={count} item={item} key={item.key} />
-                    );
-                } else if (item.type === "select") {
-                    input_field.push(
-                        <Selectform map={item.titleMap} parent_id={child_id_with_number} value={""} order={count} item={item} key={item.key} />
-                    );
-                } else if (item.type === "radios") {
-                    input_field.push(
-                        <Radioform map={item.titleMap} parent_id={child_id_with_number} value={""} order={count} item={item} key={item.key} />
-                    );
-                } else if (item.type === "fieldset") {
-                    input_field.push(<Panelform form={item} parent_id={child_id_with_number} key={item.key} />);
-                } else if (item.type === "contentfile" || item.type === "thumbnail") {
-                    input_field.push(<Panelform form={item} parent_id={child_id_with_number} key={item.key} />);
-                } else if (item.type === "template") {
-                    if ("templateUrl" in item) {
-                        let template = item.templateUrl.split('/').pop()
-                        if (template === "datepicker.html" || template === "datepicker_multi_format.html") {
-                            input_field.push(<Datepickerform order={count} parent_id={child_id_with_number} item={item} key={item.key} />);
-                        } else if (template === "datalist.html") {
-                            input_field.push(<Datalistform order={count} parent_id={child_id_with_number} item={item} key={item.key} />);
-                        } else if (template === "checkboxes.html") {
-                            input_field.push(<Checkboxesform order={count} parent_id={child_id_with_number} item={item} map={item.titleMap} key={item.key} />)
-                        }
-                    } else if ("template" in item) {
-                        input_field.push(<div></div>);
-                    }
-                } else {
-                    input_field.push(<div></div>);
+    function dragOverHandler(event) {
+        event.preventDefault()
+    }
+
+    function dropFile(event) {
+        event.preventDefault();
+        let isfiles = true;
+        if (event.dataTransfer.files) {
+            [...event.dataTransfer.items].forEach((item) => {
+                // ドロップしたものがファイルでない場合は拒否する
+                if (item.kind !== "file") {
+                    console.log("not file");
+                    isfiles = false;
                 }
+            })
+        } else {
+            console.log("no files");
+            isfiles = false;
+        }
+        if (isfiles === true) {
+            addfiles(event.dataTransfer.files)
+        }
+    }
 
-            } else {
-                input_field.push(<Panelform form={item} parent_id={child_id_with_number} key={item.key} />);
-            }
-        })
-    };
     return (
-        <div className="list-group">
-            {input_field}
-        </div>
-    );
+        <div className="well" onDragOver={(e) => { dragOverHandler(e) }} onDrop={(e) => { dropFile(e) }}>
+            <center>
+                Drop files or folders here
+            </center>
+        </div>)
+}
+
+function AddFileButton({ addfiles, acceptfiletype, addarray }) {
+    const self = useRef();
+    function fileaddaction() {
+        self.current.click();
+    }
+    return (
+        <p className="text-center">
+            <button className="btn btn-primary" onClick={fileaddaction} >
+                Click to select
+            </button>
+            <input ref={self} type="file" className="hidden" multiple accept={acceptfiletype} onChange={(e) => { addfiles(e.target.files, addarray); e.target.value = ""; }} />
+        </p>
+    )
 }
 
 function Panelform({ parent_id, form }) {
@@ -886,141 +780,249 @@ function Panelform({ parent_id, form }) {
     )
 }
 
+function Inputlist({ form, count, child_id }) {
+    // TODO　各入力formにchild_id_with_numberを引数に入れ、きれいにidが作られること
+    const input_field = [];
+    let child_id_with_number = child_id + "[" + count + "]"
+    if (!("items" in form)) {
+        input_field.push(<Datepickerform order={count} item={form} key={form.key} />);
+    } else {
+        form.items.forEach(item => {
+            if ("type" in item) {
+                if (item.type === "text") {
+                    input_field.push(
+                        <Textform value={""} parent_id={child_id_with_number} order={count} item={item} key={item.key} />
+                    );
+                } else if (item.type === "textarea") {
+                    input_field.push(
+                        <Textareaform parent_id={child_id_with_number} value={""} order={count} item={item} key={item.key} />
+                    );
+                } else if (item.type === "select") {
+                    input_field.push(
+                        <Selectform map={item.titleMap} parent_id={child_id_with_number} value={""} order={count} item={item} key={item.key} />
+                    );
+                } else if (item.type === "radios") {
+                    input_field.push(
+                        <Radioform map={item.titleMap} parent_id={child_id_with_number} value={""} order={count} item={item} key={item.key} />
+                    );
+                } else if (item.type === "fieldset") {
+                    input_field.push(<Panelform form={item} parent_id={child_id_with_number} key={item.key} />);
+                } else if (item.type === "contentfile" || item.type === "thumbnail") {
+                    input_field.push(<Panelform form={item} parent_id={child_id_with_number} key={item.key} />);
+                } else if (item.type === "template") {
+                    if ("templateUrl" in item) {
+                        let template = item.templateUrl.split('/').pop()
+                        if (template === "datepicker.html" || template === "datepicker_multi_format.html") {
+                            input_field.push(<Datepickerform order={count} parent_id={child_id_with_number} item={item} key={item.key} />);
+                        } else if (template === "datalist.html") {
+                            input_field.push(<Datalistform order={count} parent_id={child_id_with_number} item={item} key={item.key} />);
+                        } else if (template === "checkboxes.html") {
+                            input_field.push(<Checkboxesform order={count} parent_id={child_id_with_number} item={item} map={item.titleMap} key={item.key} />)
+                        }
+                    } else if ("template" in item) {
+                        input_field.push(<div></div>);
+                    }
+                } else {
+                    input_field.push(<div></div>);
+                }
 
-function SubmitButton() {
-    const contentfiles = useFilesValue();
-    const thumbnail = useThumbnailValue();
-    const [disabled, setdisabled] = useState(false);
-
-    const setmodalisopen = useModalIsOpenSetValue();
-    const setmodalcontent = useModalContentSetValue();
-    const setmodalheader = useModalHeaderSetValue();
-    // ファイルをBase64にエンコードする関数
-    function encodeFileToBase64(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = function (event) {
-                const base64Data = event.target.result.split(",")[1];
-                // console.log(file.name + ":" + base64Data.length)
-                resolve({ "name": file.name, "base64": base64Data });
-            };
-            reader.onerror = function (error) {
-                reject(error);
-            };
-            reader.readAsDataURL(file);
-        });
-    }
-
-    // 複数のファイルをBase64にエンコードする関数
-    function encodeFilesToBase64(files) {
-        const promises = files.map(file => {
-            return encodeFileToBase64(file)
-        });
-        return Promise.all(promises);
-    }
-
-
-    function request_python(metadata, files, thumb) {
-        const dataforrequest = { "item_metadata": metadata, "contentfiles": files, "thumbnail": thumb }
-        console.log("request_python")
-        console.log(dataforrequest)
-        return $.ajax({
-            url: "/item_register/register",
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            data: JSON.stringify(dataforrequest),
-            success: function (response) {
-                // リクエストが成功した場合の処理
-                console.log('Success!', response);
-                setmodalisopen(true);
-                setmodalheader("登録成功");
-                setmodalcontent(<>
-                    登録先URL：<a href={response.links[0]["@id"]}>{response.links[0]["@id"]}</a>
-                </>)
-                setdisabled(false);
-            },
-            error: function (status) {
-                // リクエストが失敗した場合の処理
-                console.log(status)
-                setdisabled(false);
+            } else {
+                input_field.push(<Panelform form={item} parent_id={child_id_with_number} key={item.key} />);
             }
         })
+    };
+    return (
+        <div className="list-group">
+            {input_field}
+        </div>
+    );
+}
+
+function Metadatatitle({ item }) {
+    let required = false;
+    let title = ("title_i18n" in item) && ("ja" in item.title_i18n) ? item.title_i18n.ja : item.title
+    let classvalue;
+    if (schema.required.includes(item.key.split(".")[0].replace("[]", ""))) {
+        required = true;
     }
-
-    function itemRegister() {
-        const required_but_no_value = check_required(schema.required)
-        if (required_but_no_value.length !== 0) {
-            setmodalisopen(true)
-            setmodalheader("必須項目が入力されていません。")
-            setmodalcontent(<>
-                {required_but_no_value.map((e) => (
-                    <h4>{"・" + document.getElementById(e).querySelector('a.panel-toggle').textContent}</h4>
-                ))}</>
-            )
-            return 0
-        }
-        setdisabled(true);
-        let metadata = load_metadata();
-        let files = [];
-        let thumb = null;
-        encodeFilesToBase64(contentfiles).then(base64files => {
-            files = base64files.map(base64file => base64file) // 全てのファイルのBase64データの配列が表示される
-            return encodeFilesToBase64(thumbnail)
-        }).then(thumbnail => {
-            thumb = thumbnail.map(base64thumbnail => base64thumbnail)
-            return request_python(metadata, files, thumb)
-        }).catch(error => {
-            console.error(error);
-            setmodalisopen(true);
-            setmodalheader(error.status + " " + error.statusText);
-            setmodalcontent(<h4>{error.responseText}</h4>)
-            setdisabled(false);
-        });
-
-
+    if (required) {
+        classvalue = "col-sm-3 control-label field-required";
+    } else {
+        classvalue = "col-sm-3 control-label";
     }
     return (
-        <div className="row row-4">
-            <div className="col-sm-12">
-                <div className="col-sm-offset-3 col-sm-6">
-                    <div className="list-inline text-center">
+        <label className={classvalue}>
+            {title}
+        </label>
+    )
+}
 
-                        <button id="submit_button" className="btn btn-info next-button" disabled={disabled} onClick={itemRegister}>
-                            送信
-                        </button>
-                    </div>
-                </div>
+function Textform({ item, parent_id }) {
+    const changemetadata = useMetadataChangeValue();
+    const getmetadata = useMetadataGetValue();
+    const form_id = parent_id + "." + item.key.split(".")[item.key.split(".").length - 1]
+    let readonly = false;
+
+    // とりあえず今はコメントアウト
+    if ("readonly" in item && item.readonly === true) {
+        readonly = true;
+    }
+    return (
+        <div className="form-group schema-form-text">
+            <Metadatatitle item={item} />
+            <div className="col-sm-9">
+                <input type="text"
+                    className="form-control input-form"
+                    id={form_id}
+                    name={item.key.split(".")[item.key.split(".").length - 1]}
+                    schema-validate="form"
+                    disabled={readonly}
+                    defaultValue={getmetadata(form_id)}
+                    onBlur={(e) => changemetadata(form_id, e.target.value)}
+                ></input>
             </div>
-        </div>)
+        </div>
+    );
+}
+
+
+function Selectform({ parent_id, map, item }) {
+    const changemetadata = useMetadataChangeValue();
+    const getmetadata = useMetadataGetValue();
+    const titlemap = [];
+    const form_id = parent_id + "." + item.key.split(".")[item.key.split(".").length - 1]
+    function selectonchange(form_id, value) {
+        // change select value
+        changemetadata(form_id, value);
+        // use onchange
+        if (item.hasOwnProperty("onChange")) {
+            const onchange = item.onChange
+            changemetadata(parent_id + "." + onchange.changekey, onchange.keyvalue[value])
+        }
+    }
+    map.forEach(element => {
+        titlemap.push(
+            <option label={element.name} value={element.value} key={form_id + element.value}></option>
+        );
+    })
+    return (
+        <div className="form-group schema-form-select">
+            <Metadatatitle item={item} />
+            <div className="col-sm-9">
+                <select className="form-control input-form"
+                    schema-validate="form"
+                    id={form_id}
+                    name={item.key.split(".")[item.key.split(".").length - 1]}
+                    defaultValue={getmetadata(form_id) || ""}
+                    onChange={(e) => selectonchange(form_id, e.target.value)}>
+                    <option value=""></option>
+                    {titlemap}
+                </select>
+            </div>
+        </div>
+
+    )
+}
+
+// いまはとりあえず　input date型である。
+function Datepickerform({ parent_id, value, item }) {
+    const changemetadata = useMetadataChangeValue();
+    const getmetadata = useMetadataGetValue();
+    const form_id = parent_id + "." + item.key.split(".")[item.key.split(".").length - 1]
+    return (
+        <div className="form-group schema-form-datepicker">
+            <Metadatatitle item={item} />
+
+            <div className="col-sm-9">
+                <input type="date"
+                    className="form-control input-form"
+                    id={form_id}
+                    name={item.key.split(".")[item.key.split(".").length - 1]}
+                    schema-validate="form"
+                    defaultValue={getmetadata(form_id)}
+                    onBlur={(e) => changemetadata(form_id, e.target.value)}
+                ></input>
+            </div>
+        </div>
+    )
+}
+
+function Textareaform({ parent_id, item }) {
+    const changemetadata = useMetadataChangeValue();
+    const getmetadata = useMetadataGetValue();
+    const form_id = parent_id + "." + item.key.split(".")[item.key.split(".").length - 1]
+    return (
+        <div className="form-group schema-form-textarea">
+            <Metadatatitle item={item} />
+            <div className="col-sm-9">
+                <textarea className="form-control input-form"
+                    id={form_id}
+                    name={item.key.split(".")[item.key.split(".").length - 1]}
+                    schema-validate="form"
+                    defaultValue={getmetadata(form_id)}
+                    onBlur={(e) => changemetadata(form_id, e.target.value)}
+                ></textarea>
+            </div>
+        </div>
+    );
 }
 
 
 
-function ItemRegisterPanel({ }) {
-    let count = 0;
-    const input_forms = [];
-    forms.forEach(form => {
-        if (!("system_prop" in schema.properties[form.key] && schema.properties[form.key].system_prop === true)) {
-            input_forms.push(
-                <div className="form_metadata_property" key={form.key}>
-                    <Panelform form={form} />
-                </div>
-            )
-            count++;
-        }
-    });
+// 未完成jpcoar2.0では使わない
+function Radioform({ parent_id, map, order, value, item }) {
+    const titlemap = [];
+    map.forEach(element => {
+        titlemap.push(
+            <div className="radio">
+                <label>
+                    <input type="radio"
+                        id={parent_id + "." + item.key.split(".")[item.key.split(".").length - 1]}
+                        name={item.key.replaceAll("[]", "[" + String(order) + "]")}
+                        value={element.value} />
+                    <span ng-bind-html="item.name">{element.name_i18n.ja}</span>
+                </label>
+            </div >
+        );
+    })
+
     return (
-        <ModalProvider>
-            <FileProvider>
-                <MyModal />
-                <PDFform />
-                <hr />
-                <div className="form">
-                    {input_forms}
+        <div className="form-group schema-form-radios">
+            <Metadatatitle item={item} />
+            <div className="col-sm-9">
+                {titlemap}
+            </div>
+        </div>
+    )
+}
+
+
+
+
+// 未完成jpcoar2.0では使わない
+function Checkboxesform({ parent_id, order, value, item }) {
+    const titlemap = [];
+    map = item.titleMap
+    map.forEach(element => {
+        titlemap.push(
+            <label className="checkbox col-sm-4 checkbox-input">
+                <input type="checkbox" className="touched" schema-vaidate="form" />
+                <span style="overflow-wrap: break-word;">{element.name}</span>
+            </label>
+        );
+    })
+    return (
+        <div className="form-group schema-form-select">
+            <Metadatatitle item={item} />
+            <div className="col-sm-9">
+                <div className="checkbox">
+                    <select sf-changed="form" className="form-control" schema-validate="form" id={parent_id + "." + item.key.split(".")[item.key.split(".").length - 1]} defaultValue={value}>
+                        <option className value=""></option>
+                        {titlemap}
+                    </select>
                 </div>
-                <SubmitButton />
-            </FileProvider>
-        </ModalProvider>
+            </div>
+        </div>
     )
 }
 
