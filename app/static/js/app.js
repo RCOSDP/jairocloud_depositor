@@ -9,6 +9,7 @@ const thumbnailContext = createContext([]);
 const setThumbnailContext = createContext(null);
 const metadataContext = createContext({});
 const setMetadataContext = createContext(null);
+const getMetadataContext = createContext(null);
 const changeMetadataContext = createContext(null);
 const addFileContext = createContext(null);
 
@@ -23,12 +24,87 @@ const FileProvider = ({ children }) => {
     const [contentfiles, setcontentfiles] = useState([]);
     const [thumbnail, setthumbnail] = useState([]);
     const [metadata, setmetadata] = useState({})
-    
+    const setmodalisopen = useModalIsOpenSetValue();
+    const setmodalcontent = useModalContentSetValue();
+    const setmodalheader = useModalHeaderSetValue();
+
+    function getmetadata(key) {
+        let keylist = key.split(".")
+        let tmpmeta = metadata
+        try {
+            for (let i = 0; i < keylist.length; i++) {
+                // リスト最後の場合
+                if (i === keylist.length - 1) {
+                    return tmpmeta[keylist[i]]
+                } else {
+                    let [tmp_id, tmpid_index] = keylist[i].split("[")
+                    tmpid_index = tmpid_index.replace("]", "")
+                    tmpmeta = tmpmeta[tmp_id][tmpid_index]
+                }
+            }
+        } catch (error) {
+            return undefined
+        }
+        return tmpmeta
+    }
 
     function changemetadata(key, value) {
-        setmetadata((prevState) => ({
-            ...prevState, [key]: value
-        }));
+
+        let tmpmetadata = structuredClone(metadata)
+        let keylist = key.split(".")
+        let meta = tmpmetadata
+        for (let i = 0; i < keylist.length; i++) {
+            // リスト最後の場合
+            console.log(meta)
+            if (i === keylist.length - 1) {
+                meta[keylist[i]] = value
+                // それ以外
+            } else {
+                let tmpid = keylist[i].split("[")[0]
+                let tmpid_index = keylist[i].split("[")[1].replace("]", "")
+                // metadataにキーが存在しない場合
+                if (!meta.hasOwnProperty(tmpid)) {
+                    meta[tmpid] = []
+                }
+                // オブジェクトを参照
+                meta = meta[tmpid]
+
+                // tmpid_index番目の配列がないなら作る
+                if (meta.length < tmpid_index - 1 || meta[tmpid_index] === undefined) {
+                    meta[tmpid_index] = {}
+                }
+                meta = meta[tmpid_index]
+            }
+        }
+        setmetadata(tmpmetadata)
+    }
+
+    function edit_metadata(tmpmetadata, key, value) {
+        let keylist = key.split(".")
+        let meta = tmpmetadata
+        for (let i = 0; i < keylist.length; i++) {
+            // リスト最後の場合
+            console.log(meta)
+            if (i === keylist.length - 1) {
+                meta[keylist[i]] = value
+                // それ以外
+            } else {
+                let tmpid = keylist[i].split("[")[0]
+                let tmpid_index = keylist[i].split("[")[1].replace("]", "")
+                // metadataにキーが存在しない場合
+                if (!meta.hasOwnProperty(tmpid)) {
+                    meta[tmpid] = []
+                }
+                // オブジェクトを参照
+                meta = meta[tmpid]
+
+                // tmpid_index番目の配列がないなら作る
+                if (meta.length < tmpid_index - 1 || meta[tmpid_index] === undefined) {
+                    meta[tmpid_index] = {}
+                }
+                meta = meta[tmpid_index]
+            }
+        }
     }
 
     function addfiles(files, addarray) {
@@ -42,6 +118,11 @@ const FileProvider = ({ children }) => {
             if (check_filesize_over_100MB(file)) {
                 console.log("ファイルサイズが100MBを超えています。")
                 console.log(file.name)
+                setmodalisopen(true);
+                setmodalheader("ファイルサイズが100MBを超えています。");
+                setmodalcontent(<h4>
+                    ファイル名：{file.name}
+                </h4>) //現在は仮の辞書でやってる
             } else if (!(contentfilenames.includes(file.name))) {
                 contentfilenames.push(file.name)
                 tmpfiles.push(file)
@@ -50,18 +131,16 @@ const FileProvider = ({ children }) => {
         // ファイルを埋め込んだ時ファイルの名前、サイズ、mimetypeをtmpmetadataに埋め込む
         for (let i = 0; i < tmpfiles.length; i++) {
             let file = tmpfiles[i];
-            tmpmetadata[fileproperty.file_name.replace("[]", "[" + String(i) + "]")] = file.name
-            tmpmetadata[fileproperty.file_url.replace("[]", "[" + String(i) + "]")] = "data/contentfiles/" + file.name
-            tmpmetadata[fileproperty.file_label.replace("[]", "[" + String(i) + "]")] = file.name
-            tmpmetadata[fileproperty.file_format.replace("[]", "[" + String(i) + "]")] = file.type
-            tmpmetadata[fileproperty.file_size.replace("[]", "[" + String(i) + "]")] = String(Math.round(file.size / 1024)) + " KB"
+            edit_metadata(tmpmetadata, fileproperty.file_name.replace("[]", "[" + String(i) + "]"), file.name)
+            edit_metadata(tmpmetadata, fileproperty.file_url.replace("[]", "[" + String(i) + "]"), "data/contentfiles/" + file.name)
+            edit_metadata(tmpmetadata, fileproperty.file_label.replace("[]", "[" + String(i) + "]"), file.name)
+            edit_metadata(tmpmetadata, fileproperty.file_format.replace("[]", "[" + String(i) + "]"), file.type)
+            edit_metadata(tmpmetadata, fileproperty.file_size.replace("[]", "[" + String(i) + "]"), String(Math.round(file.size / 1024)) + " KB")
+            edit_metadata(tmpmetadata, fileproperty.file_type.replace("[]", "[" + String(i) + "]"), "other")
         }
-        
         // 一時的なリストからレンダー
         setcontentfiles(tmpfiles);
         setmetadata(tmpmetadata)
-        // console.log(tmpfiles.length-contentfiles.length)
-        // setTimeout(addarray(tmpfiles.length-contentfiles.length))
     }
 
     return (
@@ -71,11 +150,13 @@ const FileProvider = ({ children }) => {
                     <setThumbnailContext.Provider value={setthumbnail}>
                         <metadataContext.Provider value={metadata}>
                             <setMetadataContext.Provider value={setmetadata}>
-                                <changeMetadataContext.Provider value={changemetadata}>
-                                    <addFileContext.Provider value={addfiles}>
-                                        {children}
-                                    </addFileContext.Provider>
-                                </changeMetadataContext.Provider>
+                                <getMetadataContext.Provider value={getmetadata}>
+                                    <changeMetadataContext.Provider value={changemetadata}>
+                                        <addFileContext.Provider value={addfiles}>
+                                            {children}
+                                        </addFileContext.Provider>
+                                    </changeMetadataContext.Provider>
+                                </getMetadataContext.Provider>
                             </setMetadataContext.Provider>
                         </metadataContext.Provider>
                     </setThumbnailContext.Provider>
@@ -93,6 +174,7 @@ const useMetadataValue = () => useContext(metadataContext);
 const useMetadataSetValue = () => useContext(setMetadataContext);
 const useMetadataChangeValue = () => useContext(changeMetadataContext);
 const useAddFileValue = () => useContext(addFileContext);
+const useMetadataGetValue = () => useContext(getMetadataContext);
 
 const ModalProvider = ({ children }) => {
     const [modalIsOpen, setModalIsOpen] = useState(false);
@@ -137,7 +219,7 @@ const customStyles = {
     },
     overlay: {
         backgroundColor: 'rgba(0, 0, 0, 0.5)' // モーダルの背景色を半透明に設定
-      }
+    }
 };
 function MyModal() {
     const modalIsOpen = useModalContentValue();
@@ -187,6 +269,9 @@ function MyModal() {
 function PDFform({ }) {
     const [pdffile, setpdffile] = useState([]);
     const addfiles = useAddFileValue();
+    const setmodalisopen = useModalIsOpenSetValue();
+    const setmodalcontent = useModalContentSetValue();
+    const setmodalheader = useModalHeaderSetValue();
 
     function addfilesforpdf(files) {
         if (files.length > 0) {
@@ -194,6 +279,11 @@ function PDFform({ }) {
             if (check_filesize_over_100MB(firstFile)) {
                 console.log("ファイルサイズが100MBを超えています。")
                 console.log(firstFile.name)
+                setmodalisopen(true);
+                setmodalheader("ファイルサイズが100MBを超えています。");
+                setmodalcontent(<h4>
+                    ファイル名：{firstFile.name}
+                </h4>)
             } else if (firstFile.type === "application/pdf") {
                 addfiles([firstFile])
                 if (pdffile.length === 0 || pdffile[0].name !== firstFile.name) {
@@ -201,6 +291,11 @@ function PDFform({ }) {
                 }
             } else {
                 console.log("PDFファイルではありません。")
+                setmodalisopen(true);
+                setmodalheader("PDFファイルではありません。");
+                setmodalcontent(<h4>
+                    ファイル名：{firstFile.name}
+                </h4>)
             }
         } else {
             console.log("ドロップされたファイルはありません");
@@ -254,12 +349,12 @@ function Datalist({ contentfiles, deletefile }) {
                     <th>Size</th>
                     <th className="text-center">Actions</th>
                 </tr>
-                    {contentfiles.map(file => (
+                    {contentfiles.map((file, index) => (
                         (<tr key={file.name}>
                             <td>{file.name}</td>
                             <td>{Math.round(file.size / 1024)}KB</td>
                             <td className="text-center">
-                                <a onClick={() => deletefile(file.name)}>
+                                <a onClick={() => deletefile(file.name, index)}>
                                     削除
                                 </a>
                             </td>
@@ -328,29 +423,13 @@ function FileUploadForm({ addarray, deletearray }) {
     const addfiles = useAddFileValue();
 
 
-    function deleteFile(filename) {
+    function deleteFile(filename, index) {
         const fileproperty = schema.file_info
         let tmpfiles = contentfiles.map(contentfile => contentfile).filter(file => file.name !== filename)
         let tmpmetadata = structuredClone(metadata)
+        tmpmetadata[fileproperty.property_name].splice(index, 1)
         deletearray()
-        for (let i = 0; i < tmpfiles.length; i++) {
-            let file = tmpfiles[i];
-            tmpmetadata[fileproperty.file_name.replace("[]", "[" + String(i) + "]")] = file.name
-            tmpmetadata[fileproperty.file_url.replace("[]", "[" + String(i) + "]")] = "data/contentfiles/" + file.name
-            tmpmetadata[fileproperty.file_label.replace("[]", "[" + String(i) + "]")] = file.name
-            tmpmetadata[fileproperty.file_format.replace("[]", "[" + String(i) + "]")] = file.type
-            tmpmetadata[fileproperty.file_size.replace("[]", "[" + String(i) + "]")] = String(Math.round(file.size / 1024)) + " KB"
-        }
-        console.log(tmpmetadata)
-        for (let i = tmpfiles.length; i < contentfiles.length; i++) {
-            delete tmpmetadata[fileproperty.file_name.replace("[]", "[" + String(i) + "]")]
-            delete tmpmetadata[fileproperty.file_url.replace("[]", "[" + String(i) + "]")]
-            delete tmpmetadata[fileproperty.file_label.replace("[]", "[" + String(i) + "]")]
-            delete tmpmetadata[fileproperty.file_format.replace("[]", "[" + String(i) + "]")]
-            delete tmpmetadata[fileproperty.file_size.replace("[]", "[" + String(i) + "]")]
-        }
         // 一時的なリストからレンダー
-        console.log(tmpmetadata)
         setcontentfiles(tmpfiles);
         setmetadata(tmpmetadata)
     }
@@ -381,8 +460,18 @@ function ThumbnailUploadForm() {
             const firstFile = files[0];
             if (check_filesize_over_100MB(firstFile)) {
                 console.log("ファイルサイズが100MBを超えています。")
+                setmodalisopen(true);
+                setmodalheader("ファイルサイズが100MBを超えています。");
+                setmodalcontent(<h4>
+                    ファイル名：{firstFile.name}
+                </h4>)
             } else if (!(firstFile.type.startsWith('image/'))) {
                 console.log("画像ファイルではありません。")
+                setmodalisopen(true);
+                setmodalheader("画像ファイルではありません。");
+                setmodalcontent(<h4>
+                    ファイル名：{firstFile.name}
+                </h4>)
             } else {
                 setthumbnail([firstFile]);
             }
@@ -430,8 +519,8 @@ function Metadatatitle({ item }) {
 }
 
 function Textform({ item, parent_id }) {
-    const metadata = useMetadataValue();
     const changemetadata = useMetadataChangeValue();
+    const getmetadata = useMetadataGetValue();
     const form_id = parent_id + "." + item.key.split(".")[item.key.split(".").length - 1]
     let readonly = false;
 
@@ -449,7 +538,7 @@ function Textform({ item, parent_id }) {
                     name={item.key.split(".")[item.key.split(".").length - 1]}
                     schema-validate="form"
                     disabled={readonly}
-                    defaultValue={metadata[form_id]}
+                    defaultValue={getmetadata(form_id)}
                     onBlur={(e) => changemetadata(form_id, e.target.value)}
                 ></input>
             </div>
@@ -459,8 +548,8 @@ function Textform({ item, parent_id }) {
 
 
 function Textareaform({ parent_id, item }) {
-    const metadata = useMetadataValue();
     const changemetadata = useMetadataChangeValue();
+    const getmetadata = useMetadataGetValue();
     const form_id = parent_id + "." + item.key.split(".")[item.key.split(".").length - 1]
     return (
         <div className="form-group schema-form-textarea">
@@ -470,7 +559,7 @@ function Textareaform({ parent_id, item }) {
                     id={form_id}
                     name={item.key.split(".")[item.key.split(".").length - 1]}
                     schema-validate="form"
-                    defaultValue={metadata[form_id]}
+                    defaultValue={getmetadata(form_id)}
                     onBlur={(e) => changemetadata(form_id, e.target.value)}
                 ></textarea>
             </div>
@@ -480,8 +569,8 @@ function Textareaform({ parent_id, item }) {
 
 
 function Selectform({ parent_id, map, item }) {
-    const metadata = useMetadataValue();
     const changemetadata = useMetadataChangeValue();
+    const getmetadata = useMetadataGetValue();
     const titlemap = [];
     const form_id = parent_id + "." + item.key.split(".")[item.key.split(".").length - 1]
     function selectonchange(form_id, value) {
@@ -506,8 +595,7 @@ function Selectform({ parent_id, map, item }) {
                     schema-validate="form"
                     id={form_id}
                     name={item.key.split(".")[item.key.split(".").length - 1]}
-                    defaultValue={""}
-                    value={metadata[form_id]}
+                    defaultValue={getmetadata(form_id) || ""}
                     onChange={(e) => selectonchange(form_id, e.target.value)}>
                     <option value=""></option>
                     {titlemap}
@@ -548,8 +636,8 @@ function Radioform({ parent_id, map, order, value, item }) {
 
 // いまはとりあえず　input date型である。
 function Datepickerform({ parent_id, value, item }) {
-    const metadata = useMetadataValue();
-    const changemetadata = useMetadataSetValue();
+    const changemetadata = useMetadataChangeValue();
+    const getmetadata = useMetadataGetValue();
     const form_id = parent_id + "." + item.key.split(".")[item.key.split(".").length - 1]
     return (
         <div className="form-group schema-form-datepicker">
@@ -561,7 +649,7 @@ function Datepickerform({ parent_id, value, item }) {
                     id={form_id}
                     name={item.key.split(".")[item.key.split(".").length - 1]}
                     schema-validate="form"
-                    defaultValue={metadata[form_id]}
+                    defaultValue={getmetadata(form_id)}
                     onBlur={(e) => changemetadata(form_id, e.target.value)}
                 ></input>
             </div>
@@ -573,7 +661,6 @@ function Datepickerform({ parent_id, value, item }) {
 // 未完成jpcoar2.0では使わない
 function Checkboxesform({ parent_id, order, value, item }) {
     const titlemap = [];
-    let metadatatitle = ("title_i18n" in item) && ("ja" in item.title_i18n) ? item.title_i18n.ja : item.title
     map = item.titleMap
     map.forEach(element => {
         titlemap.push(
@@ -598,10 +685,6 @@ function Checkboxesform({ parent_id, order, value, item }) {
     )
 }
 
-function HTMLpicker({ html }) {
-
-    return (<div>{html}</div>);
-}
 
 function Inputlist({ form, count, child_id }) {
     // TODO　各入力formにchild_id_with_numberを引数に入れ、きれいにidが作られること
@@ -673,9 +756,11 @@ function Panelform({ parent_id, form }) {
     const [inputlists, setInputlists] = useState([<Inputlist form={form} count={count - 1} child_id={child_id} key={form.key + "[" + String(count - 1) + "]"} />]);
     const [toggle, settoggle] = useState(isrequired ? "" : " hidden");
     const files = useFilesValue()
+    const metadata = useMetadataValue();
+    const setmetadata = useMetadataSetValue();
     let isArray = false;
     useEffect(() => {
-        if (form.type === "contentfile" && count !== files.length) {
+        if (form.type === "contentfile") {
             let default_inputlists = []
             for (let i = 0; i < files.length; i++) {
                 default_inputlists.push(<Inputlist form={form} count={i} child_id={child_id} key={form.key + "[" + String(i) + "]"} />)
@@ -683,7 +768,36 @@ function Panelform({ parent_id, form }) {
             setInputlists(default_inputlists)
             setcount(files.length)
         }
-    })
+    }, [])
+    useEffect(() => {
+        let tmpmetadata = structuredClone(metadata)
+        let keylist = child_id.split(".")
+        let tmpmeta = tmpmetadata
+        try {
+            for (let i = 0; i < keylist.length; i++) {
+                // リスト最後の場合
+                if (i === keylist.length - 1) {
+                    tmpmeta = tmpmeta[keylist[i]]
+                } else {
+                    let [tmp_id, tmpid_index] = keylist[i].split("[")
+                    tmpid_index = tmpid_index.replace("]", "")
+                    tmpmeta = tmpmeta[tmp_id][tmpid_index]
+                }
+            }
+            if (tmpmeta.length > inputlists.length) {
+                let default_inputlists = []
+                for (let i = 0; i < tmpmeta.length; i++) {
+                    if (tmpmeta[i] !== undefined) {
+                        default_inputlists.push(<Inputlist form={form} count={i} child_id={child_id} key={form.key + "[" + String(i) + "]"} />)
+                    }
+                }
+                setInputlists(default_inputlists)
+                setcount(tmpmeta.length)
+            }
+        } catch (error) {
+        }
+
+    }, [metadata])
 
     if (form.add === "New") {
         isArray = true;
@@ -698,8 +812,28 @@ function Panelform({ parent_id, form }) {
     }
 
     function reducearray(key) {
-        setInputlists(prevItems => prevItems.filter(inputlist => inputlist.key !== key));
-        // setcount(count - 1);
+        let tmpmetadata = structuredClone(metadata)
+        let keylist = child_id.split(".")
+        let tmpmeta = tmpmetadata
+        try {
+            for (let i = 0; i < keylist.length; i++) {
+                // リスト最後の場合
+                if (i === keylist.length - 1) {
+                    tmpmeta = tmpmeta[keylist[i]]
+                } else {
+                    let [tmp_id, tmpid_index] = keylist[i].split("[")
+                    tmpid_index = tmpid_index.replace("]", "")
+                    tmpmeta = tmpmeta[tmp_id][tmpid_index]
+                }
+            }
+            delete tmpmeta[key.split("[")[key.split("[").length - 1].replace("]", "")]
+            setmetadata(tmpmetadata)
+        } catch (error) {
+
+        } finally {
+            // setTimeout(setInputlists(prevItems => prevItems.filter(inputlist => inputlist.key !== key)),0)
+            setInputlists(prevItems => prevItems.filter(inputlist => inputlist.key !== key))
+        }
     }
 
     function deletearray() {
@@ -757,7 +891,6 @@ function SubmitButton() {
     const contentfiles = useFilesValue();
     const thumbnail = useThumbnailValue();
     const [disabled, setdisabled] = useState(false);
-    const global_metadata = useMetadataValue();
 
     const setmodalisopen = useModalIsOpenSetValue();
     const setmodalcontent = useModalContentSetValue();
@@ -768,7 +901,7 @@ function SubmitButton() {
             const reader = new FileReader();
             reader.onload = function (event) {
                 const base64Data = event.target.result.split(",")[1];
-                console.log(file.name + ":" + base64Data.length)
+                // console.log(file.name + ":" + base64Data.length)
                 resolve({ "name": file.name, "base64": base64Data });
             };
             reader.onerror = function (error) {
@@ -791,12 +924,6 @@ function SubmitButton() {
         const dataforrequest = { "item_metadata": metadata, "contentfiles": files, "thumbnail": thumb }
         console.log("request_python")
         console.log(dataforrequest)
-        console.log(global_metadata)
-        // return fetch("/item_register/register", {
-        //     method: "POST",
-        //     headers: { "Content-Type": "application/json" },
-        //     body: JSON.stringify(dataforrequest)
-        // })
         return $.ajax({
             url: "/item_register/register",
             method: "POST",
@@ -808,8 +935,8 @@ function SubmitButton() {
                 setmodalisopen(true);
                 setmodalheader("登録成功");
                 setmodalcontent(<>
-                登録先URL：<a href={response.links[0]["@id"]}>{response.links[0]["@id"]}</a>
-                </>) //現在は仮の辞書でやってる
+                    登録先URL：<a href={response.links[0]["@id"]}>{response.links[0]["@id"]}</a>
+                </>)
                 setdisabled(false);
             },
             error: function (status) {
