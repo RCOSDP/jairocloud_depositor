@@ -178,7 +178,7 @@ def pdf_reader():
             else:
                 read_author(data, child)
         return
-      
+    print("pdf read")
     if current_user.is_anonymous:
         return redirect(url_for('login.index_login'))
     current_app.logger.info(current_user.affiliation_id)
@@ -220,5 +220,4 @@ def pdf_reader():
     # remove tmp file
     shutil.rmtree(file_path)
     
-    form = FlaskForm(request.form)
-    return render_template("item_register/item_index.html", form = form, metadata = data)
+    return jsonify(data)

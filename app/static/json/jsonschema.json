@@ -13,6 +13,9 @@
         "file_format": "jpcoar:file[].jpcoar:mimeType",
         "file_size": "jpcoar:file[].jpcoar:extent[0].jpcoar:extent"
     },
+    "pdf_info": {
+        "title": "dc:title[].dc:title"
+    },
     "properties": {
         "system_file": {
             "type": "object",

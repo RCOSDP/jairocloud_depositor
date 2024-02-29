@@ -192,6 +192,11 @@ function PDFform({ }) {
     const thumbnail = useThumbnailValue();
     const [disabled, setdisabled] = useState(false);
     const contentfilenames = contentfiles.map(contentfile => contentfile.name);
+    const fileproperty = schema.pdf_info
+    const metadata = useMetadataValue();
+    const setmetadata = useMetadataSetValue();
+    
+
     function addfilesforpdf(files) {
         if (files.length > 0) {
             const firstFile = files[0];
@@ -240,7 +245,6 @@ function PDFform({ }) {
     }
 
     function pdf_reader() {
-      console.log("aaaaaaaaa")
       let metadata = load_metadata()
       console.log(metadata)
       let files = [];
@@ -266,10 +270,29 @@ function PDFform({ }) {
       // const dataforrequest = { "item_metadata": metadata, "contentfiles": [], "thumbnail": thumb }
       console.log("request_python")
       console.log(dataforrequest)
-      return fetch("/item_register/pdf_reader", {
+
+      return $.ajax({
+          url: "/item_register/pdf_reader",
           method: "POST",
-          headers: {"Content-Type":"application/json"},
-          body: JSON.stringify(dataforrequest)
+          headers: { "Content-Type": "application/json" },
+          data: JSON.stringify(dataforrequest),
+          success: function (response) {
+              // リクエストが成功した場合の処理
+              console.log('Success!', response);
+              let tmpmetadata = structuredClone(metadata)
+              tmpmetadata["dc:title[0].dc:title"] = response["title"]
+              setmetadata(tmpmetadata)
+              setmodalisopen(true);
+              setmodalheader("登録成功");
+              setmodalcontent(<>
+              </>) //現在は仮の辞書でやってる
+              setdisabled(false);
+          },
+          error: function (status) {
+              // リクエストが失敗した場合の処理
+              console.log(status)
+              setdisabled(false);
+          }
       })
     }
 
