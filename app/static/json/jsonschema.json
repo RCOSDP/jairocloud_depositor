@@ -11,7 +11,8 @@
         "file_url": "jpcoar:file[].jpcoar:URI[0].jpcoar:URI",
         "file_label": "jpcoar:file[].jpcoar:URI[0].label",
         "file_format": "jpcoar:file[].jpcoar:mimeType",
-        "file_size": "jpcoar:file[].jpcoar:extent[0].jpcoar:extent"
+        "file_size": "jpcoar:file[].jpcoar:extent[0].jpcoar:extent",
+        "file_type":"jpcoar:file[].jpcoar:URI[0].objectType"
     },
     "properties": {
         "system_file": {
