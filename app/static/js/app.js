@@ -9,6 +9,7 @@ const thumbnailContext = createContext([]);
 const setThumbnailContext = createContext(null);
 const metadataContext = createContext({});
 const setMetadataContext = createContext(null);
+const getMetadataContext = createContext(null);
 const changeMetadataContext = createContext(null);
 const addFileContext = createContext(null);
 
@@ -23,12 +24,87 @@ const FileProvider = ({ children }) => {
     const [contentfiles, setcontentfiles] = useState([]);
     const [thumbnail, setthumbnail] = useState([]);
     const [metadata, setmetadata] = useState({})
-    
+    const setmodalisopen = useModalIsOpenSetValue();
+    const setmodalcontent = useModalContentSetValue();
+    const setmodalheader = useModalHeaderSetValue();
+
+    function getmetadata(key) {
+        let keylist = key.split(".")
+        let tmpmeta = metadata
+        try {
+            for (let i = 0; i < keylist.length; i++) {
+                // リスト最後の場合
+                if (i === keylist.length - 1) {
+                    return tmpmeta[keylist[i]]
+                } else {
+                    let [tmp_id, tmpid_index] = keylist[i].split("[")
+                    tmpid_index = tmpid_index.replace("]", "")
+                    tmpmeta = tmpmeta[tmp_id][tmpid_index]
+                }
+            }
+        } catch (error) {
+            return undefined
+        }
+        return tmpmeta
+    }
 
     function changemetadata(key, value) {
-        setmetadata((prevState) => ({
-            ...prevState, [key]: value
-        }));
+
+        let tmpmetadata = structuredClone(metadata)
+        let keylist = key.split(".")
+        let meta = tmpmetadata
+        for (let i = 0; i < keylist.length; i++) {
+            // リスト最後の場合
+            console.log(meta)
+            if (i === keylist.length - 1) {
+                meta[keylist[i]] = value
+                // それ以外
+            } else {
+                let tmpid = keylist[i].split("[")[0]
+                let tmpid_index = keylist[i].split("[")[1].replace("]", "")
+                // metadataにキーが存在しない場合
+                if (!meta.hasOwnProperty(tmpid)) {
+                    meta[tmpid] = []
+                }
+                // オブジェクトを参照
+                meta = meta[tmpid]
+
+                // tmpid_index番目の配列がないなら作る
+                if (meta.length < tmpid_index - 1 || meta[tmpid_index] === undefined) {
+                    meta[tmpid_index] = {}
+                }
+                meta = meta[tmpid_index]
+            }
+        }
+        setmetadata(tmpmetadata)
+    }
+
+    function edit_metadata(tmpmetadata, key, value) {
+        let keylist = key.split(".")
+        let meta = tmpmetadata
+        for (let i = 0; i < keylist.length; i++) {
+            // リスト最後の場合
+            console.log(meta)
+            if (i === keylist.length - 1) {
+                meta[keylist[i]] = value
+                // それ以外
+            } else {
+                let tmpid = keylist[i].split("[")[0]
+                let tmpid_index = keylist[i].split("[")[1].replace("]", "")
+                // metadataにキーが存在しない場合
+                if (!meta.hasOwnProperty(tmpid)) {
+                    meta[tmpid] = []
+                }
+                // オブジェクトを参照
+                meta = meta[tmpid]
+
+                // tmpid_index番目の配列がないなら作る
+                if (meta.length < tmpid_index - 1 || meta[tmpid_index] === undefined) {
+                    meta[tmpid_index] = {}
+                }
+                meta = meta[tmpid_index]
+            }
+        }
     }
 
     function addfiles(files, addarray) {
@@ -42,6 +118,11 @@ const FileProvider = ({ children }) => {
             if (check_filesize_over_100MB(file)) {
                 console.log("ファイルサイズが100MBを超えています。")
                 console.log(file.name)
+                setmodalisopen(true);
+                setmodalheader("ファイルサイズが100MBを超えています。");
+                setmodalcontent(<h4>
+                    ファイル名：{file.name}
+                </h4>) //現在は仮の辞書でやってる
             } else if (!(contentfilenames.includes(file.name))) {
                 contentfilenames.push(file.name)
                 tmpfiles.push(file)
@@ -50,18 +131,16 @@ const FileProvider = ({ children }) => {
         // ファイルを埋め込んだ時ファイルの名前、サイズ、mimetypeをtmpmetadataに埋め込む
         for (let i = 0; i < tmpfiles.length; i++) {
             let file = tmpfiles[i];
-            tmpmetadata[fileproperty.file_name.replace("[]", "[" + String(i) + "]")] = file.name
-            tmpmetadata[fileproperty.file_url.replace("[]", "[" + String(i) + "]")] = "data/contentfiles/" + file.name
-            tmpmetadata[fileproperty.file_label.replace("[]", "[" + String(i) + "]")] = file.name
-            tmpmetadata[fileproperty.file_format.replace("[]", "[" + String(i) + "]")] = file.type
-            tmpmetadata[fileproperty.file_size.replace("[]", "[" + String(i) + "]")] = String(Math.round(file.size / 1024)) + " KB"
+            edit_metadata(tmpmetadata, fileproperty.file_name.replace("[]", "[" + String(i) + "]"), file.name)
+            edit_metadata(tmpmetadata, fileproperty.file_url.replace("[]", "[" + String(i) + "]"), "data/contentfiles/" + file.name)
+            edit_metadata(tmpmetadata, fileproperty.file_label.replace("[]", "[" + String(i) + "]"), file.name)
+            edit_metadata(tmpmetadata, fileproperty.file_format.replace("[]", "[" + String(i) + "]"), file.type)
+            edit_metadata(tmpmetadata, fileproperty.file_size.replace("[]", "[" + String(i) + "]"), String(Math.round(file.size / 1024)) + " KB")
+            edit_metadata(tmpmetadata, fileproperty.file_type.replace("[]", "[" + String(i) + "]"), "other")
         }
-        
         // 一時的なリストからレンダー
         setcontentfiles(tmpfiles);
         setmetadata(tmpmetadata)
-        // console.log(tmpfiles.length-contentfiles.length)
-        // setTimeout(addarray(tmpfiles.length-contentfiles.length))
     }
 
     return (
@@ -71,11 +150,13 @@ const FileProvider = ({ children }) => {
                     <setThumbnailContext.Provider value={setthumbnail}>
                         <metadataContext.Provider value={metadata}>
                             <setMetadataContext.Provider value={setmetadata}>
-                                <changeMetadataContext.Provider value={changemetadata}>
-                                    <addFileContext.Provider value={addfiles}>
-                                        {children}
-                                    </addFileContext.Provider>
-                                </changeMetadataContext.Provider>
+                                <getMetadataContext.Provider value={getmetadata}>
+                                    <changeMetadataContext.Provider value={changemetadata}>
+                                        <addFileContext.Provider value={addfiles}>
+                                            {children}
+                                        </addFileContext.Provider>
+                                    </changeMetadataContext.Provider>
+                                </getMetadataContext.Provider>
                             </setMetadataContext.Provider>
                         </metadataContext.Provider>
                     </setThumbnailContext.Provider>
@@ -93,6 +174,7 @@ const useMetadataValue = () => useContext(metadataContext);
 const useMetadataSetValue = () => useContext(setMetadataContext);
 const useMetadataChangeValue = () => useContext(changeMetadataContext);
 const useAddFileValue = () => useContext(addFileContext);
+const useMetadataGetValue = () => useContext(getMetadataContext);
 
 const ModalProvider = ({ children }) => {
     const [modalIsOpen, setModalIsOpen] = useState(false);
@@ -121,24 +203,36 @@ const useModalHeaderSetValue = () => useContext(setModalHeaderContext);
 const useModalContentValue = () => useContext(modalContentContext);
 const useModalContentSetValue = () => useContext(setModalContentContext);
 
+function ItemRegisterPanel({ }) {
+    let count = 0;
+    const input_forms = [];
+    forms.forEach(form => {
+        if (!("system_prop" in schema.properties[form.key] && schema.properties[form.key].system_prop === true)) {
+            input_forms.push(
+                <div className="form_metadata_property" key={form.key}>
+                    <Panelform form={form} />
+                </div>
+            )
+            count++;
+        }
+    });
+    return (
+        <ModalProvider>
+            <FileProvider>
+                <MyModal />
+                <PDFform />
+                <hr />
+                <div className="form">
+                    {input_forms}
+                </div>
+                <SubmitButton />
+            </FileProvider>
+        </ModalProvider>
+    )
+}
 
-const customStyles = {
-    content: {
-        top: '50%',
-        left: '50%',
-        right: 'auto',
-        bottom: 'auto',
-        width: 'auto',
-        height: 'auto',
-        marginRight: '-50%',
-        transform: 'translate(-50%, -50%)',
-        backgroundColor: 'rgba(0, 0, 0, 0)',
-        border: '0px'
-    },
-    overlay: {
-        backgroundColor: 'rgba(0, 0, 0, 0.5)' // モーダルの背景色を半透明に設定
-      }
-};
+
+
 function MyModal() {
     const modalIsOpen = useModalContentValue();
     const setModalIsOpen = useModalContentSetValue();
@@ -146,6 +240,25 @@ function MyModal() {
     const setContent = useModalContentSetValue(); //HTML
     const header = useModalHeaderValue();
     const setHeader = useModalHeaderSetValue();
+    
+    const customStyles = {
+        content: {
+            top: '50%',
+            left: '50%',
+            right: 'auto',
+            bottom: 'auto',
+            width: 'auto',
+            height: 'auto',
+            marginRight: '-50%',
+            transform: 'translate(-50%, -50%)',
+            backgroundColor: 'rgba(0, 0, 0, 0)',
+            border: '0px'
+        },
+        overlay: {
+            backgroundColor: 'rgba(0, 0, 0, 0.5)' // モーダルの背景色を半透明に設定
+        }
+    };
+
     return (
         <div>
             <Modal
@@ -195,6 +308,9 @@ function PDFform({ }) {
     const fileproperty = schema.pdf_info
     const metadata = useMetadataValue();
     const setmetadata = useMetadataSetValue();
+    const setmodalisopen = useModalIsOpenSetValue();
+    const setmodalcontent = useModalContentSetValue();
+    const setmodalheader = useModalHeaderSetValue();
     
 
     function addfilesforpdf(files) {
@@ -203,6 +319,11 @@ function PDFform({ }) {
             if (check_filesize_over_100MB(firstFile)) {
                 console.log("ファイルサイズが100MBを超えています。")
                 console.log(firstFile.name)
+                setmodalisopen(true);
+                setmodalheader("ファイルサイズが100MBを超えています。");
+                setmodalcontent(<h4>
+                    ファイル名：{firstFile.name}
+                </h4>)
             } else if (firstFile.type === "application/pdf") {
                 addfiles([firstFile])
                 if (pdffile.length === 0 || pdffile[0].name !== firstFile.name) {
@@ -210,6 +331,11 @@ function PDFform({ }) {
                 }
             } else {
                 console.log("PDFファイルではありません。")
+                setmodalisopen(true);
+                setmodalheader("PDFファイルではありません。");
+                setmodalcontent(<h4>
+                    ファイル名：{firstFile.name}
+                </h4>)
             }
         } else {
             console.log("ドロップされたファイルはありません");
@@ -319,6 +445,198 @@ function PDFform({ }) {
     )
 }
 
+function SubmitButton() {
+    const contentfiles = useFilesValue();
+    const thumbnail = useThumbnailValue();
+    const [disabled, setdisabled] = useState(false);
+
+    const setmodalisopen = useModalIsOpenSetValue();
+    const setmodalcontent = useModalContentSetValue();
+    const setmodalheader = useModalHeaderSetValue();
+    // ファイルをBase64にエンコードする関数
+    function encodeFileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const base64Data = event.target.result.split(",")[1];
+                // console.log(file.name + ":" + base64Data.length)
+                resolve({ "name": file.name, "base64": base64Data });
+            };
+            reader.onerror = function (error) {
+                reject(error);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // 複数のファイルをBase64にエンコードする関数
+    function encodeFilesToBase64(files) {
+        const promises = files.map(file => {
+            return encodeFileToBase64(file)
+        });
+        return Promise.all(promises);
+    }
+
+
+    function request_python(metadata, files, thumb) {
+        const dataforrequest = { "item_metadata": metadata, "contentfiles": files, "thumbnail": thumb }
+        console.log("request_python")
+        console.log(dataforrequest)
+        return $.ajax({
+            url: "/item_register/register",
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            data: JSON.stringify(dataforrequest),
+            success: function (response) {
+                // リクエストが成功した場合の処理
+                console.log('Success!', response);
+                setmodalisopen(true);
+                setmodalheader("登録成功");
+                setmodalcontent(<>
+                    登録先URL：<a href={response.links[0]["@id"]}>{response.links[0]["@id"]}</a>
+                </>)
+                setdisabled(false);
+            },
+            error: function (status) {
+                // リクエストが失敗した場合の処理
+                console.log(status)
+                setdisabled(false);
+            }
+        })
+    }
+
+    function itemRegister() {
+        const required_but_no_value = check_required(schema.required)
+        if (required_but_no_value.length !== 0) {
+            setmodalisopen(true)
+            setmodalheader("必須項目が入力されていません。")
+            setmodalcontent(<>
+                {required_but_no_value.map((e) => (
+                    <h4>{"・" + document.getElementById(e).querySelector('a.panel-toggle').textContent}</h4>
+                ))}</>
+            )
+            return 0
+        }
+        setdisabled(true);
+        let metadata = load_metadata();
+        let files = [];
+        let thumb = null;
+        encodeFilesToBase64(contentfiles).then(base64files => {
+            files = base64files.map(base64file => base64file) // 全てのファイルのBase64データの配列が表示される
+            return encodeFilesToBase64(thumbnail)
+        }).then(thumbnail => {
+            thumb = thumbnail.map(base64thumbnail => base64thumbnail)
+            return request_python(metadata, files, thumb)
+        }).catch(error => {
+            console.error(error);
+            setmodalisopen(true);
+            setmodalheader(error.status + " " + error.statusText);
+            setmodalcontent(<h4>{error.responseText}</h4>)
+            setdisabled(false);
+        });
+
+
+    }
+    return (
+        <div className="row row-4">
+            <div className="col-sm-12">
+                <div className="col-sm-offset-3 col-sm-6">
+                    <div className="list-inline text-center">
+
+                        <button id="submit_button" className="btn btn-info next-button" disabled={disabled} onClick={itemRegister}>
+                            送信
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>)
+}
+
+function FileUploadForm({ addarray, deletearray }) {
+    const contentfiles = useFilesValue();
+    const setcontentfiles = useFilesSetValue();
+    const metadata = useMetadataValue();
+    const setmetadata = useMetadataSetValue();
+    const addfiles = useAddFileValue();
+
+
+    function deleteFile(filename, index) {
+        const fileproperty = schema.file_info
+        let tmpfiles = contentfiles.map(contentfile => contentfile).filter(file => file.name !== filename)
+        let tmpmetadata = structuredClone(metadata)
+        tmpmetadata[fileproperty.property_name].splice(index, 1)
+        deletearray()
+        // 一時的なリストからレンダー
+        setcontentfiles(tmpfiles);
+        setmetadata(tmpmetadata)
+    }
+
+    return (
+        <div className="row row-4 list-group-item">
+            <div className="col-sm-12">
+                <div className="files-upload-zone">
+                    <DropFileArea addfiles={addfiles} />
+                    <p className="text-center legend"><strong>— OR —</strong></p>
+                    <AddFileButton addarray={addarray} addfiles={addfiles} />
+                </div>
+                {(contentfiles.length !== 0) && <Datalist contentfiles={contentfiles} deletefile={deleteFile} />}
+            </div>
+        </div>
+
+    )
+}
+
+//jpcoar2.0では使わない
+function ThumbnailUploadForm() {
+    const thumbnail = useThumbnailValue();
+    const setthumbnail = useThumbnailSetValue();
+    const files = useFilesValue();
+    console.log(files)
+    function addfiles(files) {
+        if (files.length > 0) {
+            const firstFile = files[0];
+            if (check_filesize_over_100MB(firstFile)) {
+                console.log("ファイルサイズが100MBを超えています。")
+                setmodalisopen(true);
+                setmodalheader("ファイルサイズが100MBを超えています。");
+                setmodalcontent(<h4>
+                    ファイル名：{firstFile.name}
+                </h4>)
+            } else if (!(firstFile.type.startsWith('image/'))) {
+                console.log("画像ファイルではありません。")
+                setmodalisopen(true);
+                setmodalheader("画像ファイルではありません。");
+                setmodalcontent(<h4>
+                    ファイル名：{firstFile.name}
+                </h4>)
+            } else {
+                setthumbnail([firstFile]);
+            }
+        } else {
+            console.log("ドロップされたファイルはありません");
+        }
+    }
+    function deletefile(filename) {
+        setthumbnail([]);
+    }
+
+    return (
+        <div className="row row-4 list-group-item">
+            <div className="col-sm-12">
+                <div className="files-upload-zone">
+                    <DropFileArea addfiles={addfiles} />
+                    <p className="text-center legend"><strong>— OR —</strong></p>
+                    <AddFileButton addfiles={addfiles} acceptfiletype={"image/*"} />
+                </div>
+                <p className="text-center">登録可能なファイルは「gif, jpg, jpe, jpeg, png, bmp」</p>
+                {(thumbnail.length !== 0) && <Datalist contentfiles={thumbnail} deletefile={deletefile} />}
+            </div>
+        </div>
+
+    )
+}
+
+
 function Datalistform({ parent_id, order, value, item }) {
     return (
         <Textform value={""} order={order} item={item} parent_id={parent_id} />
@@ -340,12 +658,12 @@ function Datalist({ contentfiles, deletefile }) {
                     <th>Size</th>
                     <th className="text-center">Actions</th>
                 </tr>
-                    {contentfiles.map(file => (
+                    {contentfiles.map((file, index) => (
                         (<tr key={file.name}>
                             <td>{file.name}</td>
                             <td>{Math.round(file.size / 1024)}KB</td>
                             <td className="text-center">
-                                <a onClick={() => deletefile(file.name)}>
+                                <a onClick={() => deletefile(file.name, index)}>
                                     削除
                                 </a>
                             </td>
@@ -406,287 +724,146 @@ function AddFileButton({ addfiles, acceptfiletype, addarray }) {
     )
 }
 
-function FileUploadForm({ addarray, deletearray }) {
-    const contentfiles = useFilesValue();
-    const setcontentfiles = useFilesSetValue();
+function Panelform({ parent_id, form }) {
+    let form_last_key = form.key.split(".")[form.key.split(".").length - 1]
+    let child_id = parent_id !== undefined ? parent_id + "." + form_last_key : form_last_key
+    let isrequired = false
+    // ネスト１段目のidがrequiredに含まれるならパネルを畳まない
+    if (schema !== undefined && schema.required.includes(child_id)) {
+        isrequired = true
+    }
+    const [count, setcount] = useState(1);
+    const [inputlists, setInputlists] = useState([<Inputlist form={form} count={count - 1} child_id={child_id} key={form.key + "[" + String(count - 1) + "]"} />]);
+    const [toggle, settoggle] = useState(isrequired ? "" : " hidden");
+    const files = useFilesValue()
     const metadata = useMetadataValue();
     const setmetadata = useMetadataSetValue();
-    const addfiles = useAddFileValue();
-
-
-    function deleteFile(filename) {
-        const fileproperty = schema.file_info
-        let tmpfiles = contentfiles.map(contentfile => contentfile).filter(file => file.name !== filename)
-        let tmpmetadata = structuredClone(metadata)
-        deletearray()
-        for (let i = 0; i < tmpfiles.length; i++) {
-            let file = tmpfiles[i];
-            tmpmetadata[fileproperty.file_name.replace("[]", "[" + String(i) + "]")] = file.name
-            tmpmetadata[fileproperty.file_url.replace("[]", "[" + String(i) + "]")] = "data/contentfiles/" + file.name
-            tmpmetadata[fileproperty.file_label.replace("[]", "[" + String(i) + "]")] = file.name
-            tmpmetadata[fileproperty.file_format.replace("[]", "[" + String(i) + "]")] = file.type
-            tmpmetadata[fileproperty.file_size.replace("[]", "[" + String(i) + "]")] = String(Math.round(file.size / 1024)) + " KB"
-        }
-        console.log(tmpmetadata)
-        for (let i = tmpfiles.length; i < contentfiles.length; i++) {
-            delete tmpmetadata[fileproperty.file_name.replace("[]", "[" + String(i) + "]")]
-            delete tmpmetadata[fileproperty.file_url.replace("[]", "[" + String(i) + "]")]
-            delete tmpmetadata[fileproperty.file_label.replace("[]", "[" + String(i) + "]")]
-            delete tmpmetadata[fileproperty.file_format.replace("[]", "[" + String(i) + "]")]
-            delete tmpmetadata[fileproperty.file_size.replace("[]", "[" + String(i) + "]")]
-        }
-        // 一時的なリストからレンダー
-        console.log(tmpmetadata)
-        setcontentfiles(tmpfiles);
-        setmetadata(tmpmetadata)
-    }
-
-    return (
-        <div className="row row-4 list-group-item">
-            <div className="col-sm-12">
-                <div className="files-upload-zone">
-                    <DropFileArea addfiles={addfiles} />
-                    <p className="text-center legend"><strong>— OR —</strong></p>
-                    <AddFileButton addarray={addarray} addfiles={addfiles} />
-                </div>
-                {(contentfiles.length !== 0) && <Datalist contentfiles={contentfiles} deletefile={deleteFile} />}
-            </div>
-        </div>
-
-    )
-}
-
-//jpcoar2.0では使わない
-function ThumbnailUploadForm() {
-    const thumbnail = useThumbnailValue();
-    const setthumbnail = useThumbnailSetValue();
-    const files = useFilesValue();
-    console.log(files)
-    function addfiles(files) {
-        if (files.length > 0) {
-            const firstFile = files[0];
-            if (check_filesize_over_100MB(firstFile)) {
-                console.log("ファイルサイズが100MBを超えています。")
-            } else if (!(firstFile.type.startsWith('image/'))) {
-                console.log("画像ファイルではありません。")
-            } else {
-                setthumbnail([firstFile]);
+    let isArray = false;
+    useEffect(() => {
+        if (form.type === "contentfile") {
+            let default_inputlists = []
+            for (let i = 0; i < files.length; i++) {
+                default_inputlists.push(<Inputlist form={form} count={i} child_id={child_id} key={form.key + "[" + String(i) + "]"} />)
             }
+            setInputlists(default_inputlists)
+            setcount(files.length)
+        }
+    }, [])
+    useEffect(() => {
+        let tmpmetadata = structuredClone(metadata)
+        let keylist = child_id.split(".")
+        let tmpmeta = tmpmetadata
+        try {
+            for (let i = 0; i < keylist.length; i++) {
+                // リスト最後の場合
+                if (i === keylist.length - 1) {
+                    tmpmeta = tmpmeta[keylist[i]]
+                } else {
+                    let [tmp_id, tmpid_index] = keylist[i].split("[")
+                    tmpid_index = tmpid_index.replace("]", "")
+                    tmpmeta = tmpmeta[tmp_id][tmpid_index]
+                }
+            }
+            if (tmpmeta.length > inputlists.length) {
+                let default_inputlists = []
+                for (let i = 0; i < tmpmeta.length; i++) {
+                    if (tmpmeta[i] !== undefined) {
+                        default_inputlists.push(<Inputlist form={form} count={i} child_id={child_id} key={form.key + "[" + String(i) + "]"} />)
+                    }
+                }
+                setInputlists(default_inputlists)
+                setcount(tmpmeta.length)
+            }
+        } catch (error) {
+        }
+
+    }, [metadata])
+
+    if (form.add === "New") {
+        isArray = true;
+    }
+
+
+    function addarray() {
+        setInputlists(prevComponents => [...prevComponents,
+        (<Inputlist form={form} count={count} child_id={child_id} key={form.key + "[" + String(count) + "]"} />
+        )]);
+        setcount(count + 1);
+    }
+
+    function reducearray(key) {
+        let tmpmetadata = structuredClone(metadata)
+        let keylist = child_id.split(".")
+        let tmpmeta = tmpmetadata
+        try {
+            for (let i = 0; i < keylist.length; i++) {
+                // リスト最後の場合
+                if (i === keylist.length - 1) {
+                    tmpmeta = tmpmeta[keylist[i]]
+                } else {
+                    let [tmp_id, tmpid_index] = keylist[i].split("[")
+                    tmpid_index = tmpid_index.replace("]", "")
+                    tmpmeta = tmpmeta[tmp_id][tmpid_index]
+                }
+            }
+            delete tmpmeta[key.split("[")[key.split("[").length - 1].replace("]", "")]
+            setmetadata(tmpmetadata)
+        } catch (error) {
+
+        } finally {
+            // setTimeout(setInputlists(prevItems => prevItems.filter(inputlist => inputlist.key !== key)),0)
+            setInputlists(prevItems => prevItems.filter(inputlist => inputlist.key !== key))
+        }
+    }
+
+    function deletearray() {
+        setcount(0)
+        setInputlists([])
+
+    }
+
+    function togglepanel() {
+        if (toggle === " hidden") {
+            settoggle("")
         } else {
-            console.log("ドロップされたファイルはありません");
+            settoggle(" hidden")
         }
     }
-    function deletefile(filename) {
-        setthumbnail([]);
-    }
 
     return (
-        <div className="row row-4 list-group-item">
-            <div className="col-sm-12">
-                <div className="files-upload-zone">
-                    <DropFileArea addfiles={addfiles} />
-                    <p className="text-center legend"><strong>— OR —</strong></p>
-                    <AddFileButton addfiles={addfiles} acceptfiletype={"image/*"} />
+        <fieldset className="schema-form-fieldset flexbox" id={child_id} name={form.key.split(".")[form.key.split(".").length - 1]}>
+            <div className="panel panel-default deposit-panel">
+                <div className="panel-heading"><a className="panel-toggle" onClick={() => togglepanel()}>
+                    {("title_i18n" in form) && ("ja" in form.title_i18n) ? form.title_i18n.ja : form.title}
+                </a><div className="pull-right">{isrequired ? "Required" : "Optional"}</div>
                 </div>
-                <p className="text-center">登録可能なファイルは「gif, jpg, jpe, jpeg, png, bmp」</p>
-                {(thumbnail.length !== 0) && <Datalist contentfiles={thumbnail} deletefile={deletefile} />}
-            </div>
-        </div>
-
-    )
-}
-
-function Metadatatitle({ item }) {
-    let required = false;
-    let title = ("title_i18n" in item) && ("ja" in item.title_i18n) ? item.title_i18n.ja : item.title
-    let classvalue;
-    if (schema.required.includes(item.key.split(".")[0].replace("[]", ""))) {
-        required = true;
-    }
-    if (required) {
-        classvalue = "col-sm-3 control-label field-required";
-    } else {
-        classvalue = "col-sm-3 control-label";
-    }
-    return (
-        <label className={classvalue}>
-            {title}
-        </label>
-    )
-}
-
-function Textform({ item, parent_id }) {
-    const metadata = useMetadataValue();
-    const changemetadata = useMetadataChangeValue();
-    const form_id = parent_id + "." + item.key.split(".")[item.key.split(".").length - 1]
-    let readonly = false;
-
-    // とりあえず今はコメントアウト
-    if ("readonly" in item && item.readonly === true) {
-        readonly = true;
-    }
-    return (
-        <div className="form-group schema-form-text">
-            <Metadatatitle item={item} />
-            <div className="col-sm-9">
-                <input type="text"
-                    className="form-control input-form"
-                    id={form_id}
-                    name={item.key.split(".")[item.key.split(".").length - 1]}
-                    schema-validate="form"
-                    disabled={readonly}
-                    defaultValue={metadata[form_id]}
-                    onBlur={(e) => changemetadata(form_id, e.target.value)}
-                ></input>
-            </div>
-        </div>
-    );
-}
-
-
-function Textareaform({ parent_id, item }) {
-    const metadata = useMetadataValue();
-    const changemetadata = useMetadataChangeValue();
-    const form_id = parent_id + "." + item.key.split(".")[item.key.split(".").length - 1]
-    return (
-        <div className="form-group schema-form-textarea">
-            <Metadatatitle item={item} />
-            <div className="col-sm-9">
-                <textarea className="form-control input-form"
-                    id={form_id}
-                    name={item.key.split(".")[item.key.split(".").length - 1]}
-                    schema-validate="form"
-                    defaultValue={metadata[form_id]}
-                    onBlur={(e) => changemetadata(form_id, e.target.value)}
-                ></textarea>
-            </div>
-        </div>
-    );
-}
-
-
-function Selectform({ parent_id, map, item }) {
-    const metadata = useMetadataValue();
-    const changemetadata = useMetadataChangeValue();
-    const titlemap = [];
-    const form_id = parent_id + "." + item.key.split(".")[item.key.split(".").length - 1]
-    function selectonchange(form_id, value) {
-        // change select value
-        changemetadata(form_id, value);
-        // use onchange
-        if (item.hasOwnProperty("onChange")) {
-            const onchange = item.onChange
-            changemetadata(parent_id + "." + onchange.changekey, onchange.keyvalue[value])
-        }
-    }
-    map.forEach(element => {
-        titlemap.push(
-            <option label={element.name} value={element.value} key={form_id + element.value}></option>
-        );
-    })
-    return (
-        <div className="form-group schema-form-select">
-            <Metadatatitle item={item} />
-            <div className="col-sm-9">
-                <select className="form-control input-form"
-                    schema-validate="form"
-                    id={form_id}
-                    name={item.key.split(".")[item.key.split(".").length - 1]}
-                    defaultValue={""}
-                    value={metadata[form_id]}
-                    onChange={(e) => selectonchange(form_id, e.target.value)}>
-                    <option value=""></option>
-                    {titlemap}
-                </select>
-            </div>
-        </div>
-
-    )
-}
-
-// 未完成jpcoar2.0では使わない
-function Radioform({ parent_id, map, order, value, item }) {
-    const titlemap = [];
-    map.forEach(element => {
-        titlemap.push(
-            <div className="radio">
-                <label>
-                    <input type="radio"
-                        id={parent_id + "." + item.key.split(".")[item.key.split(".").length - 1]}
-                        name={item.key.replaceAll("[]", "[" + String(order) + "]")}
-                        value={element.value} />
-                    <span ng-bind-html="item.name">{element.name_i18n.ja}</span>
-                </label>
-            </div >
-        );
-    })
-
-    return (
-        <div className="form-group schema-form-radios">
-            <Metadatatitle item={item} />
-            <div className="col-sm-9">
-                {titlemap}
-            </div>
-        </div>
-    )
-}
-
-
-// いまはとりあえず　input date型である。
-function Datepickerform({ parent_id, value, item }) {
-    const metadata = useMetadataValue();
-    const changemetadata = useMetadataSetValue();
-    const form_id = parent_id + "." + item.key.split(".")[item.key.split(".").length - 1]
-    return (
-        <div className="form-group schema-form-datepicker">
-            <Metadatatitle item={item} />
-
-            <div className="col-sm-9">
-                <input type="date"
-                    className="form-control input-form"
-                    id={form_id}
-                    name={item.key.split(".")[item.key.split(".").length - 1]}
-                    schema-validate="form"
-                    defaultValue={metadata[form_id]}
-                    onBlur={(e) => changemetadata(form_id, e.target.value)}
-                ></input>
-            </div>
-        </div>
-    )
-}
-
-
-// 未完成jpcoar2.0では使わない
-function Checkboxesform({ parent_id, order, value, item }) {
-    const titlemap = [];
-    let metadatatitle = ("title_i18n" in item) && ("ja" in item.title_i18n) ? item.title_i18n.ja : item.title
-    map = item.titleMap
-    map.forEach(element => {
-        titlemap.push(
-            <label className="checkbox col-sm-4 checkbox-input">
-                <input type="checkbox" className="touched" schema-vaidate="form" />
-                <span style="overflow-wrap: break-word;">{element.name}</span>
-            </label>
-        );
-    })
-    return (
-        <div className="form-group schema-form-select">
-            <Metadatatitle item={item} />
-            <div className="col-sm-9">
-                <div className="checkbox">
-                    <select sf-changed="form" className="form-control" schema-validate="form" id={parent_id + "." + item.key.split(".")[item.key.split(".").length - 1]} defaultValue={value}>
-                        <option className value=""></option>
-                        {titlemap}
-                    </select>
+                <div className={"panel-body panel-body2 list-group" + toggle}>
+                    <div className="schema-form-array">
+                        <div className="col-sm-12">
+                            {(form.type === "contentfile") && <FileUploadForm addarray={addarray} deletearray={deletearray} />}
+                            {(form.type === "thumbnail") && <ThumbnailUploadForm addarray={addarray} deletearray={deletearray} />}
+                            {inputlists.map((inputlist, index) => (
+                                <li className="list-group-item ui-sortable" id={child_id + "[" + index + "]"} key={inputlist.key}>
+                                    {isArray &&
+                                        (<div className="close-container clear-form">
+                                            <button type="button" className={"close pull-right"} onClick={() => reducearray(inputlist.key)}>
+                                                <span aria-hidden="true">×</span>
+                                            </button>
+                                        </div>)}
+                                    {inputlist}
+                                </li>
+                            ))}
+                        </div>
+                        {isArray &&
+                            (<button onClick={() => addarray()} type="button" className={"btn btn-success pull-right"}>
+                                <i className="glyphicon glyphicon-plus"></i>
+                                New
+                            </button>)}
+                    </div>
                 </div>
             </div>
-        </div>
+        </fieldset >
     )
-}
-
-function HTMLpicker({ html }) {
-
-    return (<div>{html}</div>);
 }
 
 function Inputlist({ form, count, child_id }) {
@@ -747,239 +924,191 @@ function Inputlist({ form, count, child_id }) {
     );
 }
 
-function Panelform({ parent_id, form }) {
-    let form_last_key = form.key.split(".")[form.key.split(".").length - 1]
-    let child_id = parent_id !== undefined ? parent_id + "." + form_last_key : form_last_key
-    let isrequired = false
-    // ネスト１段目のidがrequiredに含まれるならパネルを畳まない
-    if (schema !== undefined && schema.required.includes(child_id)) {
-        isrequired = true
+function Metadatatitle({ item }) {
+    let required = false;
+    let title = ("title_i18n" in item) && ("ja" in item.title_i18n) ? item.title_i18n.ja : item.title
+    let classvalue;
+    if (schema.required.includes(item.key.split(".")[0].replace("[]", ""))) {
+        required = true;
     }
-    const [count, setcount] = useState(1);
-    const [inputlists, setInputlists] = useState([<Inputlist form={form} count={count - 1} child_id={child_id} key={form.key + "[" + String(count - 1) + "]"} />]);
-    const [toggle, settoggle] = useState(isrequired ? "" : " hidden");
-    const files = useFilesValue()
-    let isArray = false;
-    useEffect(() => {
-        if (form.type === "contentfile" && count !== files.length) {
-            let default_inputlists = []
-            for (let i = 0; i < files.length; i++) {
-                default_inputlists.push(<Inputlist form={form} count={i} child_id={child_id} key={form.key + "[" + String(i) + "]"} />)
-            }
-            setInputlists(default_inputlists)
-            setcount(files.length)
+    if (required) {
+        classvalue = "col-sm-3 control-label field-required";
+    } else {
+        classvalue = "col-sm-3 control-label";
+    }
+    return (
+        <label className={classvalue}>
+            {title}
+        </label>
+    )
+}
+
+function Textform({ item, parent_id }) {
+    const changemetadata = useMetadataChangeValue();
+    const getmetadata = useMetadataGetValue();
+    const form_id = parent_id + "." + item.key.split(".")[item.key.split(".").length - 1]
+    let readonly = false;
+
+    // とりあえず今はコメントアウト
+    if ("readonly" in item && item.readonly === true) {
+        readonly = true;
+    }
+    return (
+        <div className="form-group schema-form-text">
+            <Metadatatitle item={item} />
+            <div className="col-sm-9">
+                <input type="text"
+                    className="form-control input-form"
+                    id={form_id}
+                    name={item.key.split(".")[item.key.split(".").length - 1]}
+                    schema-validate="form"
+                    disabled={readonly}
+                    defaultValue={getmetadata(form_id)}
+                    onBlur={(e) => changemetadata(form_id, e.target.value)}
+                ></input>
+            </div>
+        </div>
+    );
+}
+
+
+function Selectform({ parent_id, map, item }) {
+    const changemetadata = useMetadataChangeValue();
+    const getmetadata = useMetadataGetValue();
+    const titlemap = [];
+    const form_id = parent_id + "." + item.key.split(".")[item.key.split(".").length - 1]
+    function selectonchange(form_id, value) {
+        // change select value
+        changemetadata(form_id, value);
+        // use onchange
+        if (item.hasOwnProperty("onChange")) {
+            const onchange = item.onChange
+            changemetadata(parent_id + "." + onchange.changekey, onchange.keyvalue[value])
         }
+    }
+    map.forEach(element => {
+        titlemap.push(
+            <option label={element.name} value={element.value} key={form_id + element.value}></option>
+        );
+    })
+    return (
+        <div className="form-group schema-form-select">
+            <Metadatatitle item={item} />
+            <div className="col-sm-9">
+                <select className="form-control input-form"
+                    schema-validate="form"
+                    id={form_id}
+                    name={item.key.split(".")[item.key.split(".").length - 1]}
+                    defaultValue={getmetadata(form_id) || ""}
+                    onChange={(e) => selectonchange(form_id, e.target.value)}>
+                    <option value=""></option>
+                    {titlemap}
+                </select>
+            </div>
+        </div>
+
+    )
+}
+
+// いまはとりあえず　input date型である。
+function Datepickerform({ parent_id, value, item }) {
+    const changemetadata = useMetadataChangeValue();
+    const getmetadata = useMetadataGetValue();
+    const form_id = parent_id + "." + item.key.split(".")[item.key.split(".").length - 1]
+    return (
+        <div className="form-group schema-form-datepicker">
+            <Metadatatitle item={item} />
+
+            <div className="col-sm-9">
+                <input type="date"
+                    className="form-control input-form"
+                    id={form_id}
+                    name={item.key.split(".")[item.key.split(".").length - 1]}
+                    schema-validate="form"
+                    defaultValue={getmetadata(form_id)}
+                    onBlur={(e) => changemetadata(form_id, e.target.value)}
+                ></input>
+            </div>
+        </div>
+    )
+}
+
+function Textareaform({ parent_id, item }) {
+    const changemetadata = useMetadataChangeValue();
+    const getmetadata = useMetadataGetValue();
+    const form_id = parent_id + "." + item.key.split(".")[item.key.split(".").length - 1]
+    return (
+        <div className="form-group schema-form-textarea">
+            <Metadatatitle item={item} />
+            <div className="col-sm-9">
+                <textarea className="form-control input-form"
+                    id={form_id}
+                    name={item.key.split(".")[item.key.split(".").length - 1]}
+                    schema-validate="form"
+                    defaultValue={getmetadata(form_id)}
+                    onBlur={(e) => changemetadata(form_id, e.target.value)}
+                ></textarea>
+            </div>
+        </div>
+    );
+}
+
+
+
+// 未完成jpcoar2.0では使わない
+function Radioform({ parent_id, map, order, value, item }) {
+    const titlemap = [];
+    map.forEach(element => {
+        titlemap.push(
+            <div className="radio">
+                <label>
+                    <input type="radio"
+                        id={parent_id + "." + item.key.split(".")[item.key.split(".").length - 1]}
+                        name={item.key.replaceAll("[]", "[" + String(order) + "]")}
+                        value={element.value} />
+                    <span ng-bind-html="item.name">{element.name_i18n.ja}</span>
+                </label>
+            </div >
+        );
     })
 
-    if (form.add === "New") {
-        isArray = true;
-    }
-
-
-    function addarray() {
-        setInputlists(prevComponents => [...prevComponents,
-        (<Inputlist form={form} count={count} child_id={child_id} key={form.key + "[" + String(count) + "]"} />
-        )]);
-        setcount(count + 1);
-    }
-
-    function reducearray(key) {
-        setInputlists(prevItems => prevItems.filter(inputlist => inputlist.key !== key));
-        // setcount(count - 1);
-    }
-
-    function deletearray() {
-        setcount(0)
-        setInputlists([])
-
-    }
-
-    function togglepanel() {
-        if (toggle === " hidden") {
-            settoggle("")
-        } else {
-            settoggle(" hidden")
-        }
-    }
-
     return (
-        <fieldset className="schema-form-fieldset flexbox" id={child_id} name={form.key.split(".")[form.key.split(".").length - 1]}>
-            <div className="panel panel-default deposit-panel">
-                <div className="panel-heading"><a className="panel-toggle" onClick={() => togglepanel()}>
-                    {("title_i18n" in form) && ("ja" in form.title_i18n) ? form.title_i18n.ja : form.title}
-                </a><div className="pull-right">{isrequired ? "Required" : "Optional"}</div>
-                </div>
-                <div className={"panel-body panel-body2 list-group" + toggle}>
-                    <div className="schema-form-array">
-                        <div className="col-sm-12">
-                            {(form.type === "contentfile") && <FileUploadForm addarray={addarray} deletearray={deletearray} />}
-                            {(form.type === "thumbnail") && <ThumbnailUploadForm addarray={addarray} deletearray={deletearray} />}
-                            {inputlists.map((inputlist, index) => (
-                                <li className="list-group-item ui-sortable" id={child_id + "[" + index + "]"} key={inputlist.key}>
-                                    {isArray &&
-                                        (<div className="close-container clear-form">
-                                            <button type="button" className={"close pull-right"} onClick={() => reducearray(inputlist.key)}>
-                                                <span aria-hidden="true">×</span>
-                                            </button>
-                                        </div>)}
-                                    {inputlist}
-                                </li>
-                            ))}
-                        </div>
-                        {isArray &&
-                            (<button onClick={() => addarray()} type="button" className={"btn btn-success pull-right"}>
-                                <i className="glyphicon glyphicon-plus"></i>
-                                New
-                            </button>)}
-                    </div>
-                </div>
+        <div className="form-group schema-form-radios">
+            <Metadatatitle item={item} />
+            <div className="col-sm-9">
+                {titlemap}
             </div>
-        </fieldset >
+        </div>
     )
 }
 
 
-function SubmitButton() {
-    const contentfiles = useFilesValue();
-    const thumbnail = useThumbnailValue();
-    const [disabled, setdisabled] = useState(false);
-    const global_metadata = useMetadataValue();
-
-    const setmodalisopen = useModalIsOpenSetValue();
-    const setmodalcontent = useModalContentSetValue();
-    const setmodalheader = useModalHeaderSetValue();
-    // ファイルをBase64にエンコードする関数
-    function encodeFileToBase64(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = function (event) {
-                const base64Data = event.target.result.split(",")[1];
-                console.log(file.name + ":" + base64Data.length)
-                resolve({ "name": file.name, "base64": base64Data });
-            };
-            reader.onerror = function (error) {
-                reject(error);
-            };
-            reader.readAsDataURL(file);
-        });
-    }
-
-    // 複数のファイルをBase64にエンコードする関数
-    function encodeFilesToBase64(files) {
-        const promises = files.map(file => {
-            return encodeFileToBase64(file)
-        });
-        return Promise.all(promises);
-    }
 
 
-    function request_python(metadata, files, thumb) {
-        const dataforrequest = { "item_metadata": metadata, "contentfiles": files, "thumbnail": thumb }
-        console.log("request_python")
-        console.log(dataforrequest)
-        console.log(global_metadata)
-        // return fetch("/item_register/register", {
-        //     method: "POST",
-        //     headers: { "Content-Type": "application/json" },
-        //     body: JSON.stringify(dataforrequest)
-        // })
-        return $.ajax({
-            url: "/item_register/register",
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            data: JSON.stringify(dataforrequest),
-            success: function (response) {
-                // リクエストが成功した場合の処理
-                console.log('Success!', response);
-                setmodalisopen(true);
-                setmodalheader("登録成功");
-                setmodalcontent(<>
-                登録先URL：<a href={response.links[0]["@id"]}>{response.links[0]["@id"]}</a>
-                </>) //現在は仮の辞書でやってる
-                setdisabled(false);
-            },
-            error: function (status) {
-                // リクエストが失敗した場合の処理
-                console.log(status)
-                setdisabled(false);
-            }
-        })
-    }
-
-    function itemRegister() {
-        const required_but_no_value = check_required(schema.required)
-        if (required_but_no_value.length !== 0) {
-            setmodalisopen(true)
-            setmodalheader("必須項目が入力されていません。")
-            setmodalcontent(<>
-                {required_but_no_value.map((e) => (
-                    <h4>{"・" + document.getElementById(e).querySelector('a.panel-toggle').textContent}</h4>
-                ))}</>
-            )
-            return 0
-        }
-        setdisabled(true);
-        let metadata = load_metadata();
-        let files = [];
-        let thumb = null;
-        encodeFilesToBase64(contentfiles).then(base64files => {
-            files = base64files.map(base64file => base64file) // 全てのファイルのBase64データの配列が表示される
-            return encodeFilesToBase64(thumbnail)
-        }).then(thumbnail => {
-            thumb = thumbnail.map(base64thumbnail => base64thumbnail)
-            return request_python(metadata, files, thumb)
-        }).catch(error => {
-            console.error(error);
-            setmodalisopen(true);
-            setmodalheader(error.status + " " + error.statusText);
-            setmodalcontent(<h4>{error.responseText}</h4>)
-            setdisabled(false);
-        });
-
-
-    }
+// 未完成jpcoar2.0では使わない
+function Checkboxesform({ parent_id, order, value, item }) {
+    const titlemap = [];
+    map = item.titleMap
+    map.forEach(element => {
+        titlemap.push(
+            <label className="checkbox col-sm-4 checkbox-input">
+                <input type="checkbox" className="touched" schema-vaidate="form" />
+                <span style="overflow-wrap: break-word;">{element.name}</span>
+            </label>
+        );
+    })
     return (
-        <div className="row row-4">
-            <div className="col-sm-12">
-                <div className="col-sm-offset-3 col-sm-6">
-                    <div className="list-inline text-center">
-
-                        <button id="submit_button" className="btn btn-info next-button" disabled={disabled} onClick={itemRegister}>
-                            送信
-                        </button>
-                    </div>
+        <div className="form-group schema-form-select">
+            <Metadatatitle item={item} />
+            <div className="col-sm-9">
+                <div className="checkbox">
+                    <select sf-changed="form" className="form-control" schema-validate="form" id={parent_id + "." + item.key.split(".")[item.key.split(".").length - 1]} defaultValue={value}>
+                        <option className value=""></option>
+                        {titlemap}
+                    </select>
                 </div>
             </div>
-        </div>)
-}
-
-
-
-function ItemRegisterPanel({ }) {
-    let count = 0;
-    const input_forms = [];
-    forms.forEach(form => {
-        if (!("system_prop" in schema.properties[form.key] && schema.properties[form.key].system_prop === true)) {
-            input_forms.push(
-                <div className="form_metadata_property" key={form.key}>
-                    <Panelform form={form} />
-                </div>
-            )
-            count++;
-        }
-    });
-    return (
-        <ModalProvider>
-            <FileProvider>
-                <MyModal />
-                <PDFform />
-                <hr />
-                <div className="form">
-                    {input_forms}
-                </div>
-                <SubmitButton />
-            </FileProvider>
-        </ModalProvider>
+        </div>
     )
 }
 
