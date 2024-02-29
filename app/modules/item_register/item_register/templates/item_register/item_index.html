@@ -5,12 +5,12 @@
 <body itemscope="" itemtype="http://schema.org/WebPage" data-spy="scroll" data-target=".scrollspy-target">
   {{ form.csrf_token }}
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <!--<script src="https://unpkg.com/react@18/umd/react.development.js" type="text/babel"></script> -->
+  <!-- <script src="https://unpkg.com/react@18/umd/react.production.min.js" type="text/babel"></script> -->
   <!--<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" type="text/babel"></script>-->
-  <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4="
-    crossorigin="anonymous"></script>
+  <script src="{{ url_for('static', filename='js/jquery/jquery-3.7.1.js') }}"></script>
   <!-- <script src="{{ url_for('static', filename='js/react/react-datepicker-min.js') }}" type="text/babel" data-type="module"></script> -->
   <!-- <script async src="https://ga.jspm.io/npm:es-module-shims@1.7.0/dist/es-module-shims.js"></script> -->
+  <!-- "/static/js/react/react.production.min.js" -->
   <script type="importmap">
     {
       "imports": {
@@ -21,8 +21,8 @@
       }
     }
   </script>
-  <!-- <script src="static/js/app.js" data-type="module" type="text/babel"></script> -->
-  <script src="{{ url_for('static', filename='js/app.js') }}" type="text/babel" data-type="module"></script>
+  <script src="static/js/app.js" data-type="module" type="text/babel"></script>
+  <!-- <script src="{{ url_for('static', filename='js/app.js') }}" type="text/babel" data-type="module"></script> -->
   
   <link href={{url_for('static', filename='css/deposit.css' )}} rel="stylesheet">
   <link href={{url_for('static', filename='css/theme.css' )}} rel="stylesheet">
@@ -36,29 +36,8 @@
       <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
     <![endif]-->
   <div id="page_body" class="grid-stack" style="display: block;">
-    <!-- ここからヘッダー -->
-    <div id="header">
-      <nav class="navbar-default navbar-static-top full-height">
-        <div class="container-fluid container-fluid2" id="fixed_header">
-          <div class="navbar-header">
-          </div>
-          <ul class="nav navbar-nav">
-          </ul>
-          <div class="navbar-form navbar-right navbar-form2">
-            <div class="btn-group">
-              <a class="btn btn-default btn-primary bg-transparent">
-                <input id="current_user_email" type="hidden" value="{{current_user.user_id}}">
-                {{current_user.user_id}}
-              </a>
-              <a class="btn btn-default btn-primary bg-transparent" href="{{ url_for('login.logout') }}"> ログアウト</a>
-            </div>
-          </div>
-          <div class="navbar-form navbar-right navbar-form2">
-          </div>
-          <!--     <input hidden id ="weko_show_index_for_authenticated_user" value="False"> -->
-        </div>
-      </nav>
-    </div>
+    <!-- ここからヘッダー なぜか知らないけど、admin_setting/templatesからインクルードできる。flaskは不思議-->
+    {% include "header.html" %}
     <!-- ここまでヘッダー -->
     <div id="main_contents">
       <div class="container-fluid container-fluid2">
@@ -128,9 +107,9 @@
           </div>
           <div class="row">
             <div class="col-xs-12 col-sm-12 text-center-xs">
-              <p></a></p>
+              <p></p>
               <p>
-                <a class="button is-success" onclick="return klaro.show();">　　　</a>
+                <br/>
               </p>
             </div>
           </div>

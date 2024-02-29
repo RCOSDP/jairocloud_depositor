@@ -1,13 +1,10 @@
-from datetime import datetime
 from flask import current_app
-from flask_security import RoleMixin, UserMixin
-from sqlalchemy.dialects import mysql, postgresql
 from sqlalchemy import Column, Integer, String, Float, DateTime,  and_, asc, desc, func, or_
 from db_setting import Engine, Base, db
 
-from modules.models import User as _User
-from modules.models import Affiliation_Id as _Affiliation_Id
-from modules.models import Affiliation_Repository as _Affiliation_Repository
+from .models import User as _User
+from .models import Affiliation_Id as _Affiliation_Id
+from .models import Affiliation_Repository as _Affiliation_Repository
 
 class Affiliation_Repository(object):
     """operated on the Affiliation repository"""

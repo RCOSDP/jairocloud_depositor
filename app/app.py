@@ -1,19 +1,14 @@
 
-import random
-import string
 import logging
-import json
 import sys
 import os
-from flask import Flask, render_template, redirect, url_for, request, flash, session ,current_app, jsonify
-from flask_login import login_user, LoginManager
-from flask_wtf import FlaskForm
-from modules.config import MOCK_SHIB_DATA
+from flask import Flask
+from flask_login import LoginManager
 from db_setting import init_db
-from modules.login.ext import LoginApp
-from modules.admin_setting.ext import AdminSettingApp
-from modules.item_register.ext import ItemRegisterApp
-from modules.api import User
+from modules.login.login.ext import LoginApp
+from modules.admin_setting.admin_setting.ext import AdminSettingApp
+from modules.item_register.item_register.ext import ItemRegisterApp
+from modules.models.models.api import User
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = "secret"

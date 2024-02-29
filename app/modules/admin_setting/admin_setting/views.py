@@ -1,14 +1,8 @@
 from flask import Flask, render_template, redirect, url_for, request, flash, session ,current_app, jsonify, Blueprint, json
 from flask_login import login_user, current_user, logout_user, login_required
-from flask_security import LoginForm, url_for_security
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField ,PasswordField
-from modules.config import MOCK_SHIB_DATA
-from modules.models import User as _User
-from modules.models import Affiliation_Id as _Affiliation_Id
-from modules.models import Affiliation_Repository as _Affiliation_Repository
-from modules.api import Affiliation_Id, Affiliation_Repository
-from modules.login.views import index_login
+from modules.models.models.api import Affiliation_Id, Affiliation_Repository
+from modules.login.login.views import index_login
 
 blueprint = Blueprint(
     "admin_setting",

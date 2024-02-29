@@ -9,15 +9,13 @@ import requests
 import xml.etree.ElementTree as ET
 from flask import Flask, render_template, redirect, url_for, request, flash, session ,current_app, jsonify, Blueprint
 from flask_login import login_user, current_user, logout_user
-from flask_security import LoginForm, url_for_security
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField ,PasswordField
 from modules.config import MOCK_SHIB_DATA
-from modules.models import User as _User
-from modules.models import Affiliation_Id as _Affiliation_Id
-from modules.api import Affiliation_Repository, User
+from modules.models.models.models import User as _User
+from modules.models.models.models import Affiliation_Id as _Affiliation_Id
+from modules.models.models.api import Affiliation_Repository, User
 from .utils import dicttoxmlforsword # zip_folder
-from modules.grobid_client.grobid_client import GrobidClient
+from modules.grobid_client.grobid_client.grobid_client import GrobidClient
 
 blueprint = Blueprint(
     "item_register",
@@ -125,6 +123,7 @@ def register():
 
 @blueprint.route("/pdf_reader", methods=['POST'])
 def pdf_reader():
+    tmp_file_path = os.environ.get("TMPORARY_FILE_PATH")
     XMLNS="{http://www.tei-c.org/ns/1.0}"
     
     def read_title(data, root):
@@ -190,6 +189,8 @@ def pdf_reader():
     output_path = os.path.join(file_path, "output")
     
     # seetup PDF from json
+    if not(os.path.exists(tmp_file_path)):
+        os.mkdir(tmp_file_path)
     os.mkdir(file_path)
     with zipfile.ZipFile(os.path.join(file_path, "contents.zip"), mode="w") as zipf:
         for file in post_data.get("contentfiles"):
