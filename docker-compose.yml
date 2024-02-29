@@ -42,6 +42,16 @@ services:
         limits:
           memory: 300m
 
+
+  grobid:
+    image: lfoppiano/grobid:0.8.0
+    ports:
+      - "8070:8070"
+    ulimits:
+      core: 0
+    init: true
+    restart: always
+    
 volumes:
   static_data:
   pgsql-data:

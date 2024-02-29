@@ -300,9 +300,18 @@ function MyModal() {
 function PDFform({ }) {
     const [pdffile, setpdffile] = useState([]);
     const addfiles = useAddFileValue();
+    const contentfiles = useFilesValue();
+    const setcontentfiles = useFilesSetValue();
+    const thumbnail = useThumbnailValue();
+    const [disabled, setdisabled] = useState(false);
+    const contentfilenames = contentfiles.map(contentfile => contentfile.name);
+    const fileproperty = schema.pdf_info
+    const metadata = useMetadataValue();
+    const setmetadata = useMetadataSetValue();
     const setmodalisopen = useModalIsOpenSetValue();
     const setmodalcontent = useModalContentSetValue();
     const setmodalheader = useModalHeaderSetValue();
+    
 
     function addfilesforpdf(files) {
         if (files.length > 0) {
@@ -336,6 +345,83 @@ function PDFform({ }) {
     function deletefile(filename) {
         setpdffile([]);
     }
+
+    // ファイルをBase64にエンコードする関数
+    function encodeFileToBase64(file) {
+      return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = function (event) {
+              const base64Data = event.target.result.split(",")[1];
+              console.log(file.name+":"+base64Data.length)
+              resolve({ "name": file.name, "base64": base64Data });
+          };
+          reader.onerror = function (error) {
+              reject(error);
+          };
+          reader.readAsDataURL(file);
+      });
+    }
+
+    // 複数のファイルをBase64にエンコードする関数
+    function encodeFilesToBase64(files) {
+        const promises = files.map(file => {
+            return encodeFileToBase64(file)
+        });
+        return Promise.all(promises);
+    }
+
+    function pdf_reader() {
+      let metadata = load_metadata()
+      console.log(metadata)
+      let files = [];
+      let thumb = null;
+      encodeFilesToBase64(contentfiles).then(base64files => {
+              files = base64files.map(base64file => base64file) // 全てのファイルのBase64データの配列が表示される
+              console.log("nnnnn")
+              console.log(files)
+              return encodeFilesToBase64(thumbnail)
+          }).then(thumbnail => {
+              console.log("thumb")
+              thumb = thumbnail.map(base64thumbnail => base64thumbnail)
+              return request_python(metadata, files, thumb)
+          }).catch(error => {
+              console.error('Error encoding files:', error);
+          }).finally(
+              console.log("finally")
+          );
+    }
+
+    function request_python(metadata, files, thumb) {
+      const dataforrequest = { "item_metadata": metadata, "contentfiles": files, "thumbnail": thumb }
+      // const dataforrequest = { "item_metadata": metadata, "contentfiles": [], "thumbnail": thumb }
+      console.log("request_python")
+      console.log(dataforrequest)
+
+      return $.ajax({
+          url: "/item_register/pdf_reader",
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          data: JSON.stringify(dataforrequest),
+          success: function (response) {
+              // リクエストが成功した場合の処理
+              console.log('Success!', response);
+              let tmpmetadata = structuredClone(metadata)
+              tmpmetadata["dc:title[0].dc:title"] = response["title"]
+              setmetadata(tmpmetadata)
+              setmodalisopen(true);
+              setmodalheader("登録成功");
+              setmodalcontent(<>
+              </>) //現在は仮の辞書でやってる
+              setdisabled(false);
+          },
+          error: function (status) {
+              // リクエストが失敗した場合の処理
+              console.log(status)
+              setdisabled(false);
+          }
+      })
+    }
+
     return (
         <div className="row row-4">
             <div className="col-sm-12">
@@ -347,7 +433,7 @@ function PDFform({ }) {
                 </div>
                 <p className="text-center">登録可能なファイルは「pdf」のみ</p>
                 <p className="text-center">
-                    <button className="btn btn-success">
+                    <button className="btn btn-success" onClick={pdf_reader}>
                         <span className="glyphicon glyphicon-plus"></span>&nbsp;
                         PDFからメタデータの自動入力
                     </button>
