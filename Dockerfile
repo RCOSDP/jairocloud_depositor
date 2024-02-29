@@ -21,6 +21,17 @@ ENV INVENIO_DB_POOL_CLASS=QueuePool
 # 一時ファイルを置くフォルダのパス、コンテナ内のフォルダを参照しているため絶対パスで指定するとコンテナ内でのみ一時フォルダが生成される。
 # マウントされている位置のパスを指定するとローカルにも保存される。
 ENV TMPORARY_FILE_PATH=./tmp/
+# RUN set +o errexit && \
+#     set +o nounset && \
+#     sudo pip install -U setuptools pip && \
+#     sudo pip install -U virtualenvwrapper && \
+#     if ! grep -q virtualenvwrapper ~/.bashrc; then \
+#         mkdir -p "$HOME/.virtualenvs" && \
+#         echo "export WORKON_HOME=$HOME/.virtualenvs" >> "$HOME/.bashrc" && \
+#         echo "source $(which virtualenvwrapper.sh)" >> "$HOME/.bashrc"; \
+#     fi && \
+#     export WORKON_HOME=$HOME/.virtualenvs && \
+#     source "$(which virtualenvwrapper.sh)"
 
 RUN apt-get update
 RUN apt-get -y install libpq-dev

@@ -6,7 +6,7 @@ from flask_login import login_user, current_user, logout_user
 from flask_security import LoginForm, url_for_security
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField ,PasswordField
-from modules.config import MOCK_SHIB_DATA
+from .config import MOCK_SHIB_DATA
 from modules.models.models.models import User as _User
 from modules.models.models.api import User
 from modules.models.models.api import Affiliation_Id
