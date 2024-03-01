@@ -99,9 +99,7 @@ def register():
         # current_app.logger.info(headers)
         # current_app.logger.info(files)
         response = requests.post(url=sword_api_url, data=data, headers=headers, files=files, verify=False)
-        print(response.status_code)
         if response.status_code == 404:
-            print(response.text)
             return response.text, 404
         return jsonify(response.json()), response.status_code
     except requests.exceptions.RequestException as ex:

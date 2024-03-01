@@ -28,9 +28,6 @@ def top():
 
 @blueprint.route("/login", methods=['GET'])
 def index_login():
-    import sys
-
-    print(sys.path)
     if not current_user.is_anonymous:
         return redirect(url_for('item_register.index_item'))
     csrf_random = generate_random_str(length=64)
