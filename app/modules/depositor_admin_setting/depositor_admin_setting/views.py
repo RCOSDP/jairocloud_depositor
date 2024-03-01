@@ -21,9 +21,9 @@ def index_affili():
         repository_url = request.json.get("repository_url")
         access_token = request.json.get("access_token")
         if current_user.role == "管理者":
-            affiliation_id_info = Affiliation_Id_manager().get_affiliation_id_by_id(affiliation_name)
+            affiliation_id_info = Affiliation_Id_manager.get_affiliation_id_by_id(affiliation_name)
         else:
-            affiliation_id_info = Affiliation_Id_manager().get_affiliation_id_by_affiliation_name(affiliation_name)
+            affiliation_id_info = Affiliation_Id_manager.get_affiliation_id_by_affiliation_name(affiliation_name)
         if affiliation_id_info:
             affiliation_repository_info = Affiliation_Repository_manager().get_aff_repository_by_affiliation_id(affiliation_id_info.id)
             if affiliation_repository_info:
@@ -52,19 +52,19 @@ def index_affili():
             access_token = ""
             if role == "管理者":
                 affiliation_name = "default"
-                affiliation_id_info = Affiliation_Id_manager().get_affiliation_id_by_affiliation_name(affiliation_name)
+                affiliation_id_info = Affiliation_Id_manager.get_affiliation_id_by_affiliation_name(affiliation_name)
                 affiliation_repository_info = Affiliation_Repository_manager().get_aff_repository_by_affiliation_id(affiliation_id_info.id)
                 if affiliation_repository_info:
                     repository_url = affiliation_repository_info.repository_url
                     access_token = affiliation_repository_info.access_token
             else:
-                affiliation_id_info = Affiliation_Id_manager().get_affiliation_id_by_id(current_user.affiliation_id)
+                affiliation_id_info = Affiliation_Id_manager.get_affiliation_id_by_id(current_user.affiliation_id)
                 affiliation_name = affiliation_id_info.affiliation_name
                 affiliation_repository_info = Affiliation_Repository_manager().get_aff_repository_by_affiliation_id(affiliation_id_info.id)
                 if affiliation_repository_info:
                     repository_url = affiliation_repository_info.repository_url
                     access_token = affiliation_repository_info.access_token
-            affiliation_id_list = Affiliation_Id_manager().get_affiliation_id_list()
+            affiliation_id_list = Affiliation_Id_manager.get_affiliation_id_list()
             affiliation_repository_list = Affiliation_Repository_manager().get_affiliation_repository_list()
             aff_repository_dict = {}
             for affiliation_repository in affiliation_repository_list:
@@ -88,10 +88,10 @@ def add_affili():
     if request.method == "POST":
         affiliation_name = request.json.get("affiliation_name")
         affiliation_idp_url = request.json.get("affiliation_idp_url")
-        affiliation_id_info = Affiliation_Id_manager().get_affiliation_id_by_idp_url(affiliation_idp_url)
+        affiliation_id_info = Affiliation_Id_manager.get_affiliation_id_by_idp_url(affiliation_idp_url)
         try:
             if not affiliation_id_info:
-                Affiliation_Id_manager().create_affiliation_id(affiliation_idp_url, affiliation_name)
+                Affiliation_Id_manager.create_affiliation_id(affiliation_idp_url, affiliation_name)
                 return jsonify(success=True),200
         except Exception as e:
             return current_app.logger.error(

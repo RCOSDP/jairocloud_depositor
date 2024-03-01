@@ -27,7 +27,8 @@ class User(db.Model, UserMixin, Timestamp):
 
 class User_manager(object):
     """operated on the user"""
-    def create_user(self, user):
+    @classmethod
+    def create_user(cls, user):
         """ create new user
         :param user:
         :return:
@@ -43,8 +44,9 @@ class User_manager(object):
             raise
         
         return user
-        
-    def upt_user(self, user):
+    
+    @classmethod
+    def upt_user(cls, user):
         assert user
         try:
             with db.session.begin_nested():
@@ -61,18 +63,21 @@ class User_manager(object):
             raise
         
         return _user
-        
-    def get_user_by_id(self, id):
+    
+    @classmethod
+    def get_user_by_id(cls, id):
         with db.session.no_autoflush:
             query = User.query.filter_by(id=id)
             return query.one_or_none()
 
-    def get_user_by_user_id(self, user_id):
+    @classmethod
+    def get_user_by_user_id(cls, user_id):
         with db.session.no_autoflush:
             query = User.query.filter_by(user_id=user_id)
             return query.one_or_none()
 
-    def get_users_by_affiliation_id(self, affiliation_id):
+    @classmethod
+    def get_users_by_affiliation_id(cls, affiliation_id):
         with db.session.no_autoflush:
             query = User.query.filter_by(affiliation_id=affiliation_id)
             return query.all()

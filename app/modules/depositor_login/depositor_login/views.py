@@ -45,14 +45,14 @@ def login():
             shib_data = MOCK_SHIB_DATA.get(form.email.data)
             if shib_data :
                 affiliation_idp_url = shib_data.get("affiliation_idp_url",None)
-                affiliation_id = Affiliation_Id_manager().get_affiliation_id_by_idp_url(affiliation_idp_url)
+                affiliation_id = Affiliation_Id_manager.get_affiliation_id_by_idp_url(affiliation_idp_url)
                 if not affiliation_id:
                     affiliation_name = shib_data.get("OrganizationName",None)
-                    affiliation_id = Affiliation_Id_manager().create_affiliation_id(affiliation_idp_url=affiliation_idp_url,
+                    affiliation_id = Affiliation_Id_manager.create_affiliation_id(affiliation_idp_url=affiliation_idp_url,
                                                                       affiliation_name=affiliation_name)
                 affiliation_id_id = affiliation_id.id
                 user_id = shib_data.get("eduPersonPrincipalName",None)
-                user=User_manager().get_user_by_user_id(user_id)
+                user=User_manager.get_user_by_user_id(user_id)
                 if not user :
                     user_orcid = shib_data.get("eduPersonOrcid",None)
                     role = shib_data.get("wekoSocietyAffiliation", None)
@@ -62,7 +62,7 @@ def login():
                         user_orcid = user_orcid,
                         role = role
                     )
-                    User_manager().create_user(user)
+                    User_manager.create_user(user)
                 login_user(user)
                 return redirect(url_for("item_register.index_item"))
     flash("Missing SHIB_ATTRs!", category='error')

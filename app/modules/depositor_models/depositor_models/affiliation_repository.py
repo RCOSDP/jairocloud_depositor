@@ -1,6 +1,7 @@
 from flask import current_app
 from sqlalchemy import Column, Integer, String, and_, asc, desc, func, or_, Sequence
 from .db_setting import db, Timestamp
+from .affiliation_id import Affiliation_Id_manager
 
 class Affiliation_Repository(db.Model, Timestamp):
     """Affiliationrepository data model"""
@@ -20,7 +21,8 @@ class Affiliation_Repository(db.Model, Timestamp):
     
 class Affiliation_Repository_manager(object):
     """operated on the Affiliation repository"""
-    def create_aff_repository(self, aff_repository):
+    @classmethod
+    def create_aff_repository(cls, aff_repository):
         """
         create new aff_repository
         :param aff_repository:
@@ -37,8 +39,9 @@ class Affiliation_Repository_manager(object):
             raise
         
         return aff_repository
-        
-    def upt_aff_repository(self, aff_repository):
+    
+    @classmethod
+    def upt_aff_repository(cls, aff_repository):
         assert aff_repository
         try:
             with db.session.begin_nested():
@@ -55,22 +58,25 @@ class Affiliation_Repository_manager(object):
             raise
         
         return _aff_repository
-
-    def get_aff_repository_by_affiliation_id(self, affiliation_id):
+    
+    @classmethod
+    def get_aff_repository_by_affiliation_id(cls, affiliation_id):
         with db.session.no_autoflush:
             query = Affiliation_Repository.query.filter_by(affiliation_id=affiliation_id)
             return query.one_or_none()
         
-    def get_aff_repository_by_affiliation_name(self, affiliation_name):
+    @classmethod
+    def get_aff_repository_by_affiliation_name(cls, affiliation_name):
         with db.session.no_autoflush:
-            affiliation_id = Affiliation_Id().get_affiliation_id_by_affiliation_name(affiliation_name)
+            affiliation_id = Affiliation_Id_manager.get_affiliation_id_by_affiliation_name(affiliation_name)
             if affiliation_id:
-                aff_repository = self.get_aff_repository_by_affiliation_id(affiliation_id.id)
+                aff_repository = cls.get_aff_repository_by_affiliation_id(affiliation_id.id)
             else :
                 return None
             return aff_repository
-
-    def get_affiliation_repository_list(self):
+        
+    @classmethod
+    def get_affiliation_repository_list(cls):
         """Get affiliation_repository list info.
 
         :return:

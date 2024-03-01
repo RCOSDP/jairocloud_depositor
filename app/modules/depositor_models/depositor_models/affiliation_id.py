@@ -20,8 +20,8 @@ class Affiliation_Id_manager(object):
     """
     operated on the Affiliation ID
     """
-
-    def create_affiliation_id(self, affiliation_idp_url, affiliation_name):
+    @classmethod
+    def create_affiliation_id(cls, affiliation_idp_url, affiliation_name):
         """
         create new affiliation_id
         :param affiliation_id: class Affiliation_Id
@@ -41,7 +41,8 @@ class Affiliation_Id_manager(object):
         
         return affiliation_id
 
-    def upt_affiliation_id(self, affiliation_id):
+    @classmethod
+    def upt_affiliation_id(cls, affiliation_id):
         assert affiliation_id
         try:
             with db.session.begin_nested():
@@ -57,23 +58,27 @@ class Affiliation_Id_manager(object):
             raise
         
         return _affliation_id
-        
-    def get_affiliation_id_by_id(self, affiliation_id):
+
+    @classmethod
+    def get_affiliation_id_by_id(cls, affiliation_id):
         # with db.session.no_autoflush():
         query = Affiliation_Id.query.filter_by(id = affiliation_id)
         return query.one_or_none()
-        
-    def get_affiliation_id_by_idp_url(self, affiliation_idp_url):
+
+    @classmethod  
+    def get_affiliation_id_by_idp_url(cls, affiliation_idp_url):
         # with db.session.no_autoflush():
         query = Affiliation_Id.query.filter_by(affiliation_idp_url = affiliation_idp_url)
         return query.one_or_none()
-    
-    def get_affiliation_id_by_affiliation_name(self, affiliation_name):
+
+    @classmethod
+    def get_affiliation_id_by_affiliation_name(cls, affiliation_name):
         # with db.session.no_autoflush():
         query = Affiliation_Id.query.filter_by(affiliation_name = affiliation_name)
         return query.one_or_none()
     
-    def get_affiliation_id_list(self):
+    @classmethod
+    def get_affiliation_id_list(cls):
         """Get affiliation_name list info.
 
         :return:
