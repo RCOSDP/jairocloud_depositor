@@ -12,10 +12,25 @@
         "file_label": "jpcoar:file[].jpcoar:URI[0].label",
         "file_format": "jpcoar:file[].jpcoar:mimeType",
         "file_size": "jpcoar:file[].jpcoar:extent[0].jpcoar:extent",
-        "file_type":"jpcoar:file[].jpcoar:URI[0].objectType"
+        "file_type": "jpcoar:file[].jpcoar:URI[0].objectType"
     },
     "pdf_info": {
-        "title": "dc:title[].dc:title"
+        "title": "dc:title[].dc:title",
+        "author": {
+            "familyName": "jpcoar:creator[].jpcoar:familyName[0].jpcoar:familyName",
+            "givenName": "jpcoar:creator[].jpcoar:givenName[0].jpcoar:givenName",
+            "creatorName": "jpcoar:creator[].jpcoar:creatorName[0].jpcoar:creatorName"
+        },
+        "date": {
+            "type": "datacite:date[].dateType",
+            "value": "datacite:date[].datacite:date"
+        },
+        "lang": [
+            "dc:title[].xml:lang",
+            "jpcoar:creator[].jpcoar:familyName[0].xml:lang",
+            "jpcoar:creator[].jpcoar:givenName[0].xml:lang",
+            "jpcoar:creator[].jpcoar:creatorName[0].xml:lang"
+        ]
     },
     "properties": {
         "system_file": {

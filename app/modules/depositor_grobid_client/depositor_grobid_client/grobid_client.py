@@ -32,7 +32,7 @@ class ServerUnavailableException(Exception):
 
 class GrobidClient(ApiClient):
 
-    def __init__(self, grobid_server='localhost', 
+    def __init__(self, grobid_server='http://grobid:8070', 
                  batch_size=1000, 
                  coordinates=["persName", "figure", "ref", "biblStruct", "formula", "s", "note", "title"], 
                  sleep_time=5,
