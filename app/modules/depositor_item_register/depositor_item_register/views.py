@@ -10,12 +10,9 @@ import xml.etree.ElementTree as ET
 from flask import Flask, render_template, redirect, url_for, request, flash, session ,current_app, jsonify, Blueprint
 from flask_login import login_user, current_user, logout_user
 from flask_wtf import FlaskForm
-from modules.config import MOCK_SHIB_DATA
-from modules.models.models.models import User as _User
-from modules.models.models.models import Affiliation_Id as _Affiliation_Id
-from modules.models.models.api import Affiliation_Repository, User
+from depositor_grobid_client.grobid_client import GrobidClient
+from depositor_models.affiliation_repository import Affiliation_Repository_manager
 from .utils import dicttoxmlforsword # zip_folder
-from modules.grobid_client.grobid_client.grobid_client import GrobidClient
 
 blueprint = Blueprint(
     "item_register",
@@ -67,13 +64,13 @@ def register():
             
     # current_userよりaffiliation_idをとってaffiliaiton_repositoryテーブルからリポジトリURLをとる処理
     current_affiliation_id = current_user.affiliation_id
-    aff_repository = Affiliation_Repository().get_aff_repository_by_affiliation_id(current_affiliation_id)
+    aff_repository = Affiliation_Repository_manager().get_aff_repository_by_affiliation_id(current_affiliation_id)
     #　設定されている場合
     if aff_repository and not(aff_repository.repository_url=="" or aff_repository.access_token==""):
         repository_url=aff_repository.repository_url
         access_token=aff_repository.access_token
     else:
-        aff_repository = Affiliation_Repository().get_aff_repository_by_affiliation_name("default")
+        aff_repository = Affiliation_Repository_manager().get_aff_repository_by_affiliation_name("default")
         repository_url=aff_repository.repository_url
         access_token=aff_repository.access_token
     

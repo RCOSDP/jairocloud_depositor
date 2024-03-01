@@ -8,9 +8,11 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker, scoped_session
 from sqlalchemy.pool import QueuePool
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import MetaData, event, util
+from sqlalchemy import MetaData, event, util, DateTime
 from werkzeug.local import LocalProxy
 from werkzeug.utils import import_string
+from datetime import datetime
+from sqlalchemy.dialects import mysql, postgresql
 
 HOST_NAME=os.environ.get("INVENIO_POSTGRESQL_HOST") #postgresql
 DBNAME=os.environ.get("INVENIO_POSTGRESQL_DBNAME") #invenio
@@ -39,9 +41,27 @@ NAMING_CONVENTION = util.immutabledict({
 metadata = MetaData(naming_convention=NAMING_CONVENTION)
 """Default database metadata object holding associated schema constructs."""
 
+    
 db = SQLAlchemy(metadata=metadata)
 
+class Timestamp(object):
+    """Timestamp model mix-in with fractional seconds support.
 
+    SQLAlchemy-Utils timestamp model does not have support for
+    fractional seconds.
+    """
+
+    created = db.Column(
+        DateTime().with_variant(mysql.DATETIME(fsp=6), 'mysql'),
+        default=datetime.utcnow,
+        nullable=False
+    )
+    updated = db.Column(
+        DateTime().with_variant(mysql.DATETIME(fsp=6), 'mysql'),
+        default=datetime.utcnow,
+        nullable=False
+    )
+    
 Base = declarative_base()
 Base.query = session.query_property()
 

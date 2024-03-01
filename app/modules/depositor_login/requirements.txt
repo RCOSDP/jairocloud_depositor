@@ -1,3 +1,9 @@
+
+-e ../depositor_admin_setting
+-e ../depositor_grobid_client
+-e ../depositor_item_register
+-e ../depositor_login
+-e ../depositor_models
 email-validator
 Flask==2.2.0
 Flask-Admin==1.6.1
@@ -28,5 +34,5 @@ sword3common==0.1.1
 uWSGI==2.0.24
 wtforms==3.1.2
 Werkzeug==2.3.7
-# -e ../
+-e ../depositor_login
 # -e ../../
