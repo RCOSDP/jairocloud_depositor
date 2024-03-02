@@ -15,22 +15,43 @@
         "file_type": "jpcoar:file[].jpcoar:URI[0].objectType"
     },
     "pdf_info": {
-        "title": "dc:title[].dc:title",
+        "properties": {
+            "title": "dc:title",
+            "author": "jpcoar:creator",
+            "date": "datacite:date",
+            "publisher": "dc:publisher",
+            "lang": "dc:language"
+        },
+        "title": {
+            "property_name": "dc:title",
+            "title": "dc:title[].dc:title"
+        },
         "author": {
+            "property_name": "jpcoar:creator",
             "familyName": "jpcoar:creator[].jpcoar:familyName[0].jpcoar:familyName",
             "givenName": "jpcoar:creator[].jpcoar:givenName[0].jpcoar:givenName",
             "creatorName": "jpcoar:creator[].jpcoar:creatorName[0].jpcoar:creatorName"
         },
         "date": {
+            "property_name": "datacite:date",
             "type": "datacite:date[].dateType",
             "value": "datacite:date[].datacite:date"
         },
-        "lang": [
-            "dc:title[].xml:lang",
-            "jpcoar:creator[].jpcoar:familyName[0].xml:lang",
-            "jpcoar:creator[].jpcoar:givenName[0].xml:lang",
-            "jpcoar:creator[].jpcoar:creatorName[0].xml:lang"
-        ]
+        "publisher": {
+            "property_name": "dc:publisher",
+            "publisher": "dc:publisher[].dc:publisher"
+        },
+        "lang": {
+            "property_name": "dc:language",
+            "lang": "dc:language[].dc:language",
+            "subproperties": [
+                "dc:title[].xml:lang",
+                "jpcoar:creator[].jpcoar:familyName[0].xml:lang",
+                "jpcoar:creator[].jpcoar:givenName[0].xml:lang",
+                "jpcoar:creator[].jpcoar:creatorName[0].xml:lang",
+                "dc:publisher[].xml:lang"
+            ]
+        }
     },
     "properties": {
         "system_file": {

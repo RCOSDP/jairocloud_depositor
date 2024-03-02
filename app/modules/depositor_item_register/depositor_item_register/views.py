@@ -38,6 +38,8 @@ def register():
     post_dataの例:
     {"item_metadata;{}, "contentfiles": [{"name":"file.png", "base64":"aaaaa"}, "thumbneil":[{"name":"thumb.png", "base64":"bbbb"}] ]}
     """
+    if current_user.is_anonymous:
+        return redirect(url_for('login.index_login'))
     tmp_file_path = os.environ.get("TMPORARY_FILE_PATH")
     
     post_data = request.get_json()
@@ -214,6 +216,7 @@ def pdf_reader():
     print(data)
     
     # remove tmp file
+    print(file_path)
     shutil.rmtree(file_path)
     
     return jsonify(data)

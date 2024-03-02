@@ -9,6 +9,8 @@ services:
     command: uwsgi --ini uwsgi.ini
     links:
       - postgresql
+      - grobid
+
     volumes:
       - ./app:/code
 

@@ -9,8 +9,8 @@ const thumbnailContext = createContext([]);
 const setThumbnailContext = createContext(null);
 const metadataContext = createContext({});
 const setMetadataContext = createContext(null);
-const getMetadataContext = createContext(null);
 const changeMetadataContext = createContext(null);
+const editMetadataContext = createContext(null);
 const addFileContext = createContext(null);
 
 const modalIsOpenContext = createContext(false);
@@ -28,25 +28,6 @@ const FileProvider = ({ children }) => {
     const setmodalcontent = useModalContentSetValue();
     const setmodalheader = useModalHeaderSetValue();
 
-    function getmetadata(key) {
-        let keylist = key.split(".")
-        let tmpmeta = metadata
-        try {
-            for (let i = 0; i < keylist.length; i++) {
-                // リスト最後の場合
-                if (i === keylist.length - 1) {
-                    return tmpmeta[keylist[i]]
-                } else {
-                    let [tmp_id, tmpid_index] = keylist[i].split("[")
-                    tmpid_index = tmpid_index.replace("]", "")
-                    tmpmeta = tmpmeta[tmp_id][tmpid_index]
-                }
-            }
-        } catch (error) {
-            return undefined
-        }
-        return tmpmeta
-    }
 
     function changemetadata(key, value) {
 
@@ -150,13 +131,13 @@ const FileProvider = ({ children }) => {
                     <setThumbnailContext.Provider value={setthumbnail}>
                         <metadataContext.Provider value={metadata}>
                             <setMetadataContext.Provider value={setmetadata}>
-                                <getMetadataContext.Provider value={getmetadata}>
-                                    <changeMetadataContext.Provider value={changemetadata}>
+                                <changeMetadataContext.Provider value={changemetadata}>
+                                    <editMetadataContext.Provider value={edit_metadata}>
                                         <addFileContext.Provider value={addfiles}>
                                             {children}
                                         </addFileContext.Provider>
-                                    </changeMetadataContext.Provider>
-                                </getMetadataContext.Provider>
+                                    </editMetadataContext.Provider>
+                                </changeMetadataContext.Provider>
                             </setMetadataContext.Provider>
                         </metadataContext.Provider>
                     </setThumbnailContext.Provider>
@@ -173,9 +154,8 @@ const useThumbnailSetValue = () => useContext(setThumbnailContext);
 const useMetadataValue = () => useContext(metadataContext);
 const useMetadataSetValue = () => useContext(setMetadataContext);
 const useMetadataChangeValue = () => useContext(changeMetadataContext);
+const useMetadataEditValue = () => useContext(editMetadataContext);
 const useAddFileValue = () => useContext(addFileContext);
-const useMetadataGetValue = () => useContext(getMetadataContext);
-
 const ModalProvider = ({ children }) => {
     const [modalIsOpen, setModalIsOpen] = useState(false);
     const [content, setContent] = useState(""); //HTML
@@ -240,7 +220,7 @@ function MyModal() {
     const setContent = useModalContentSetValue(); //HTML
     const header = useModalHeaderValue();
     const setHeader = useModalHeaderSetValue();
-    
+
     const customStyles = {
         content: {
             top: '50%',
@@ -304,14 +284,14 @@ function PDFform({ }) {
     const setcontentfiles = useFilesSetValue();
     const thumbnail = useThumbnailValue();
     const [disabled, setdisabled] = useState(false);
-    const contentfilenames = contentfiles.map(contentfile => contentfile.name);
-    const fileproperty = schema.pdf_info
+    const pdfproperty = schema.pdf_info
     const metadata = useMetadataValue();
     const setmetadata = useMetadataSetValue();
     const setmodalisopen = useModalIsOpenSetValue();
     const setmodalcontent = useModalContentSetValue();
     const setmodalheader = useModalHeaderSetValue();
-    
+    const edit_metadata = useMetadataEditValue();
+
 
     function addfilesforpdf(files) {
         if (files.length > 0) {
@@ -348,18 +328,18 @@ function PDFform({ }) {
 
     // ファイルをBase64にエンコードする関数
     function encodeFileToBase64(file) {
-      return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = function (event) {
-              const base64Data = event.target.result.split(",")[1];
-              console.log(file.name+":"+base64Data.length)
-              resolve({ "name": file.name, "base64": base64Data });
-          };
-          reader.onerror = function (error) {
-              reject(error);
-          };
-          reader.readAsDataURL(file);
-      });
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const base64Data = event.target.result.split(",")[1];
+                console.log(file.name + ":" + base64Data.length)
+                resolve({ "name": file.name, "base64": base64Data });
+            };
+            reader.onerror = function (error) {
+                reject(error);
+            };
+            reader.readAsDataURL(file);
+        });
     }
 
     // 複数のファイルをBase64にエンコードする関数
@@ -371,55 +351,93 @@ function PDFform({ }) {
     }
 
     function pdf_reader() {
-      let metadata = load_metadata()
-      console.log(metadata)
-      let files = [];
-      let thumb = null;
-      encodeFilesToBase64(contentfiles).then(base64files => {
-              files = base64files.map(base64file => base64file) // 全てのファイルのBase64データの配列が表示される
-              console.log("nnnnn")
-              console.log(files)
-              return encodeFilesToBase64(thumbnail)
-          }).then(thumbnail => {
-              console.log("thumb")
-              thumb = thumbnail.map(base64thumbnail => base64thumbnail)
-              return request_python(metadata, files, thumb)
-          }).catch(error => {
-              console.error('Error encoding files:', error);
-          }).finally(
-              console.log("finally")
-          );
+        let files = [];
+        setdisabled(true);
+        encodeFilesToBase64(pdffile).then(base64files => {
+            files = base64files.map(base64file => base64file)
+            return request_python(files)
+        }).catch(error => {
+            console.error('Error encoding files:', error);
+        }).finally(
+            console.log("finally")
+        );
     }
 
-    function request_python(metadata, files, thumb) {
-      const dataforrequest = { "item_metadata": metadata, "contentfiles": files, "thumbnail": thumb }
-      // const dataforrequest = { "item_metadata": metadata, "contentfiles": [], "thumbnail": thumb }
-      console.log("request_python")
-      console.log(dataforrequest)
+    function request_python(files) {
+        const dataforrequest = { "contentfiles": files }
+        console.log("request_python")
+        console.log(dataforrequest)
 
-      return $.ajax({
-          url: "/item_register/pdf_reader",
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          data: JSON.stringify(dataforrequest),
-          success: function (response) {
-              // リクエストが成功した場合の処理
-              console.log('Success!', response);
-              let tmpmetadata = structuredClone(metadata)
-              tmpmetadata["dc:title[0].dc:title"] = response["title"]
-              setmetadata(tmpmetadata)
-              setmodalisopen(true);
-              setmodalheader("登録成功");
-              setmodalcontent(<>
-              </>) //現在は仮の辞書でやってる
-              setdisabled(false);
-          },
-          error: function (status) {
-              // リクエストが失敗した場合の処理
-              console.log(status)
-              setdisabled(false);
-          }
-      })
+        return $.ajax({
+            url: "/item_register/pdf_reader",
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            data: JSON.stringify(dataforrequest),
+            success: function (response) {
+                // リクエストが成功した場合の処理
+                console.log('Success!', response);
+
+                let tmpmetadata = structuredClone(metadata)
+                let file_info = structuredClone(tmpmetadata[schema.file_info.property_name])
+                let PDFresult = []
+                // コンテントファイル情報以外metadataを初期化
+                tmpmetadata = {}
+                tmpmetadata[schema.file_info.property_name] = file_info
+
+                // title
+                edit_metadata(tmpmetadata, pdfproperty.title.title.replace("[]", "[0]"), response.title)
+                PDFresult.push(<h4 key={pdfproperty.properties.title}>{"・" +
+                    document.getElementById(pdfproperty.properties.title).querySelector('a.panel-toggle').textContent + "：" + response.title.replaceAll("\"","")}</h4>)
+
+                // author
+                let authorList=[]
+                response["author"].forEach((val, index) => {
+                    Object.entries(val).forEach(([k, v]) => {
+                        edit_metadata(tmpmetadata, pdfproperty.author[k].replace("[]", "[" + String(index) + "]"), v)
+                    })
+                    authorList.push(val.creatorName)
+                })
+                PDFresult.push(<h4 key={pdfproperty.properties.author}>{"・" +
+                    document.getElementById(pdfproperty.properties.author).querySelector('a.panel-toggle').textContent + "：" + authorList.join(", ").replaceAll("\"","")}</h4>)
+
+                // date
+                edit_metadata(tmpmetadata, pdfproperty.date.type.replace("[]", "[0]"), response.date.type)
+                edit_metadata(tmpmetadata, pdfproperty.date.value.replace("[]", "[0]"), response.date.value)
+                PDFresult.push(<h4 key={pdfproperty.properties.date}>{"・" +
+                document.getElementById(pdfproperty.properties.date).querySelector('a.panel-toggle').textContent + "：" + response.date.value.replaceAll("\"","")}</h4>)
+
+
+                // publisher
+                edit_metadata(tmpmetadata, pdfproperty.publisher.publisher.replace("[]", "[0]"), response.publisher)
+                PDFresult.push(<h4 key={pdfproperty.properties.publisher}>{"・" +
+                document.getElementById(pdfproperty.properties.publisher).querySelector('a.panel-toggle').textContent + "：" + response.publisher.replaceAll("\"","")}</h4>)
+
+                // lang
+                edit_metadata(tmpmetadata, pdfproperty.lang.lang.replace("[]", "[0]"), response.lang)
+                pdfproperty.lang.subproperties.forEach((k) => {
+                    console.log(k)
+                    for (let i = 0; i < tmpmetadata[k.split(".")[0].replace("[]", "")].length; i++) {
+                        edit_metadata(tmpmetadata, k.replace("[]", "[" + i + "]"), response.lang)
+                    }
+                })
+                PDFresult.push(<h4 key={pdfproperty.properties.lang}>{"・" +
+                document.getElementById(pdfproperty.properties.lang).querySelector('a.panel-toggle').textContent + "：" + response.lang.replaceAll("\"","")}</h4>)
+
+                console.log(tmpmetadata)
+                setmetadata(tmpmetadata)
+                setmodalisopen(true);
+                setmodalheader("自動入力完了");
+                setmodalcontent(<>
+                    {PDFresult}
+                </>)
+                setdisabled(false);
+            },
+            error: function (status) {
+                // リクエストが失敗した場合の処理
+                console.log(status)
+                setdisabled(false);
+            }
+        })
     }
 
     return (
@@ -433,7 +451,7 @@ function PDFform({ }) {
                 </div>
                 <p className="text-center">登録可能なファイルは「pdf」のみ</p>
                 <p className="text-center">
-                    <button className="btn btn-success" onClick={pdf_reader}>
+                    <button className="btn btn-success" onClick={pdf_reader} disabled={disabled}>
                         <span className="glyphicon glyphicon-plus"></span>&nbsp;
                         PDFからメタデータの自動入力
                     </button>
@@ -512,7 +530,7 @@ function SubmitButton() {
             setmodalheader("必須項目が入力されていません。")
             setmodalcontent(<>
                 {required_but_no_value.map((e) => (
-                    <h4>{"・" + document.getElementById(e).querySelector('a.panel-toggle').textContent}</h4>
+                    <h4 key={e}>{"・" + document.getElementById(e).querySelector('a.panel-toggle').textContent}</h4>
                 ))}</>
             )
             return 0
@@ -765,6 +783,7 @@ function Panelform({ parent_id, form }) {
                 }
             }
             if (tmpmeta.length > inputlists.length) {
+                deletearray()
                 let default_inputlists = []
                 for (let i = 0; i < tmpmeta.length; i++) {
                     if (tmpmeta[i] !== undefined) {
@@ -773,6 +792,16 @@ function Panelform({ parent_id, form }) {
                 }
                 setInputlists(default_inputlists)
                 setcount(tmpmeta.length)
+            } else if (tmpmeta.length < inputlists.length) {
+                let default_inputlists = []
+                for (let i = 0; i < tmpmeta.length; i++) {
+                    if (tmpmeta[i] !== undefined) {
+                        default_inputlists.push(<Inputlist form={form} count={i} child_id={child_id} key={form.key + "[" + String(i) + "]"} />)
+                    }
+                }
+                setInputlists(default_inputlists)
+                setcount(tmpmeta.length)
+
             }
         } catch (error) {
         }
@@ -944,8 +973,8 @@ function Metadatatitle({ item }) {
 }
 
 function Textform({ item, parent_id }) {
+    const metadata = useMetadataValue();
     const changemetadata = useMetadataChangeValue();
-    const getmetadata = useMetadataGetValue();
     const form_id = parent_id + "." + item.key.split(".")[item.key.split(".").length - 1]
     let readonly = false;
 
@@ -963,7 +992,7 @@ function Textform({ item, parent_id }) {
                     name={item.key.split(".")[item.key.split(".").length - 1]}
                     schema-validate="form"
                     disabled={readonly}
-                    defaultValue={getmetadata(form_id)}
+                    defaultValue={getmetadata(form_id, metadata)}
                     onBlur={(e) => changemetadata(form_id, e.target.value)}
                 ></input>
             </div>
@@ -973,18 +1002,21 @@ function Textform({ item, parent_id }) {
 
 
 function Selectform({ parent_id, map, item }) {
-    const changemetadata = useMetadataChangeValue();
-    const getmetadata = useMetadataGetValue();
+    const metadata = useMetadataValue();
+    const edit_metadata = useMetadataEditValue();
+    const setmetadata = useMetadataSetValue();
     const titlemap = [];
     const form_id = parent_id + "." + item.key.split(".")[item.key.split(".").length - 1]
     function selectonchange(form_id, value) {
         // change select value
-        changemetadata(form_id, value);
+        let tmpmetadata = structuredClone(metadata)
+        edit_metadata(tmpmetadata, form_id, value)
         // use onchange
         if (item.hasOwnProperty("onChange")) {
             const onchange = item.onChange
-            changemetadata(parent_id + "." + onchange.changekey, onchange.keyvalue[value])
+            edit_metadata(tmpmetadata, parent_id + "." + onchange.changekey, onchange.keyvalue[value])
         }
+        setmetadata(tmpmetadata)
     }
     map.forEach(element => {
         titlemap.push(
@@ -999,7 +1031,7 @@ function Selectform({ parent_id, map, item }) {
                     schema-validate="form"
                     id={form_id}
                     name={item.key.split(".")[item.key.split(".").length - 1]}
-                    defaultValue={getmetadata(form_id) || ""}
+                    value={getmetadata(form_id, metadata) || ""}
                     onChange={(e) => selectonchange(form_id, e.target.value)}>
                     <option value=""></option>
                     {titlemap}
@@ -1011,9 +1043,9 @@ function Selectform({ parent_id, map, item }) {
 }
 
 // いまはとりあえず　input date型である。
-function Datepickerform({ parent_id, value, item }) {
+function Datepickerform({ parent_id, item }) {
     const changemetadata = useMetadataChangeValue();
-    const getmetadata = useMetadataGetValue();
+    const metadata = useMetadataValue();
     const form_id = parent_id + "." + item.key.split(".")[item.key.split(".").length - 1]
     return (
         <div className="form-group schema-form-datepicker">
@@ -1025,7 +1057,7 @@ function Datepickerform({ parent_id, value, item }) {
                     id={form_id}
                     name={item.key.split(".")[item.key.split(".").length - 1]}
                     schema-validate="form"
-                    defaultValue={getmetadata(form_id)}
+                    defaultValue={getmetadata(form_id, metadata)}
                     onBlur={(e) => changemetadata(form_id, e.target.value)}
                 ></input>
             </div>
@@ -1035,7 +1067,7 @@ function Datepickerform({ parent_id, value, item }) {
 
 function Textareaform({ parent_id, item }) {
     const changemetadata = useMetadataChangeValue();
-    const getmetadata = useMetadataGetValue();
+    const metadata = useMetadataValue();
     const form_id = parent_id + "." + item.key.split(".")[item.key.split(".").length - 1]
     return (
         <div className="form-group schema-form-textarea">
@@ -1045,7 +1077,7 @@ function Textareaform({ parent_id, item }) {
                     id={form_id}
                     name={item.key.split(".")[item.key.split(".").length - 1]}
                     schema-validate="form"
-                    defaultValue={getmetadata(form_id)}
+                    defaultValue={getmetadata(form_id, metadata)}
                     onBlur={(e) => changemetadata(form_id, e.target.value)}
                 ></textarea>
             </div>
@@ -1110,6 +1142,26 @@ function Checkboxesform({ parent_id, order, value, item }) {
             </div>
         </div>
     )
+}
+
+function getmetadata(key, metadata) {
+    let keylist = key.split(".")
+    let tmpmeta = metadata
+    try {
+        for (let i = 0; i < keylist.length; i++) {
+            // リスト最後の場合
+            if (i === keylist.length - 1) {
+                return tmpmeta[keylist[i]]
+            } else {
+                let [tmp_id, tmpid_index] = keylist[i].split("[")
+                tmpid_index = tmpid_index.replace("]", "")
+                tmpmeta = tmpmeta[tmp_id][tmpid_index]
+            }
+        }
+    } catch (error) {
+        return undefined
+    }
+    return tmpmeta
 }
 
 function load_panel(panel, property, nest) {
@@ -1188,7 +1240,11 @@ function check_required(required_list) {
         const required_panel = document.getElementById(element);
         required_panel.querySelectorAll('.input-form.form-control').forEach(function (ele) {
             if (ele.value === undefined || ele.value === "") {
+                console.log(ele)
+                ele.style.border = '1px solid red';
                 required_but_no_value_list.add(element);
+            }else{
+                ele.style.border = '';
             }
         })
     })
