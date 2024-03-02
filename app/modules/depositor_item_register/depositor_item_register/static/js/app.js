@@ -36,7 +36,6 @@ const FileProvider = ({ children }) => {
         let meta = tmpmetadata
         for (let i = 0; i < keylist.length; i++) {
             // リスト最後の場合
-            console.log(meta)
             if (i === keylist.length - 1) {
                 meta[keylist[i]] = value
                 // それ以外
@@ -65,7 +64,6 @@ const FileProvider = ({ children }) => {
         let meta = tmpmetadata
         for (let i = 0; i < keylist.length; i++) {
             // リスト最後の場合
-            console.log(meta)
             if (i === keylist.length - 1) {
                 meta[keylist[i]] = value
                 // それ以外
@@ -332,7 +330,6 @@ function PDFform({ }) {
             const reader = new FileReader();
             reader.onload = function (event) {
                 const base64Data = event.target.result.split(",")[1];
-                console.log(file.name + ":" + base64Data.length)
                 resolve({ "name": file.name, "base64": base64Data });
             };
             reader.onerror = function (error) {
@@ -358,15 +355,16 @@ function PDFform({ }) {
             return request_python(files)
         }).catch(error => {
             console.error('Error encoding files:', error);
+            setmodalisopen(true);
+            setmodalheader(error.status + " " + error.statusText);
+            setmodalcontent(<h4>{error.responseText}</h4>)
+            setdisabled(false);
         }).finally(
-            console.log("finally")
         );
     }
 
     function request_python(files) {
         const dataforrequest = { "contentfiles": files }
-        console.log("request_python")
-        console.log(dataforrequest)
 
         return $.ajax({
             url: "/item_register/pdf_reader",
@@ -375,7 +373,7 @@ function PDFform({ }) {
             data: JSON.stringify(dataforrequest),
             success: function (response) {
                 // リクエストが成功した場合の処理
-                console.log('Success!', response);
+                // console.log('Success!', response);
 
                 let tmpmetadata = structuredClone(metadata)
                 let file_info = structuredClone(tmpmetadata[schema.file_info.property_name])
@@ -415,7 +413,6 @@ function PDFform({ }) {
                 // lang
                 edit_metadata(tmpmetadata, pdfproperty.lang.lang.replace("[]", "[0]"), response.lang)
                 pdfproperty.lang.subproperties.forEach((k) => {
-                    console.log(k)
                     for (let i = 0; i < tmpmetadata[k.split(".")[0].replace("[]", "")].length; i++) {
                         edit_metadata(tmpmetadata, k.replace("[]", "[" + i + "]"), response.lang)
                     }
@@ -423,7 +420,6 @@ function PDFform({ }) {
                 PDFresult.push(<h4 key={pdfproperty.properties.lang}>{"・" +
                 document.getElementById(pdfproperty.properties.lang).querySelector('a.panel-toggle').textContent + "：" + response.lang.replaceAll("\"","")}</h4>)
 
-                console.log(tmpmetadata)
                 setmetadata(tmpmetadata)
                 setmodalisopen(true);
                 setmodalheader("自動入力完了");
@@ -498,8 +494,6 @@ function SubmitButton() {
 
     function request_python(metadata, files, thumb) {
         const dataforrequest = { "item_metadata": metadata, "contentfiles": files, "thumbnail": thumb }
-        console.log("request_python")
-        console.log(dataforrequest)
         return $.ajax({
             url: "/item_register/register",
             method: "POST",
@@ -507,7 +501,7 @@ function SubmitButton() {
             data: JSON.stringify(dataforrequest),
             success: function (response) {
                 // リクエストが成功した場合の処理
-                console.log('Success!', response);
+                // console.log('Success!', response);
                 setmodalisopen(true);
                 setmodalheader("登録成功");
                 setmodalcontent(<>
@@ -609,7 +603,6 @@ function ThumbnailUploadForm() {
     const thumbnail = useThumbnailValue();
     const setthumbnail = useThumbnailSetValue();
     const files = useFilesValue();
-    console.log(files)
     function addfiles(files) {
         if (files.length > 0) {
             const firstFile = files[0];
@@ -706,7 +699,6 @@ function DropFileArea({ addfiles }) {
             [...event.dataTransfer.items].forEach((item) => {
                 // ドロップしたものがファイルでない場合は拒否する
                 if (item.kind !== "file") {
-                    console.log("not file");
                     isfiles = false;
                 }
             })
@@ -790,6 +782,7 @@ function Panelform({ parent_id, form }) {
                         default_inputlists.push(<Inputlist form={form} count={i} child_id={child_id} key={form.key + "[" + String(i) + "]"} />)
                     }
                 }
+                settoggle("")
                 setInputlists(default_inputlists)
                 setcount(tmpmeta.length)
             } else if (tmpmeta.length < inputlists.length) {
@@ -802,6 +795,8 @@ function Panelform({ parent_id, form }) {
                 setInputlists(default_inputlists)
                 setcount(tmpmeta.length)
 
+            }else{
+                settoggle("")
             }
         } catch (error) {
         }
@@ -1240,7 +1235,6 @@ function check_required(required_list) {
         const required_panel = document.getElementById(element);
         required_panel.querySelectorAll('.input-form.form-control').forEach(function (ele) {
             if (ele.value === undefined || ele.value === "") {
-                console.log(ele)
                 ele.style.border = '1px solid red';
                 required_but_no_value_list.add(element);
             }else{

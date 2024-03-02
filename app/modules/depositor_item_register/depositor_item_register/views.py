@@ -179,44 +179,49 @@ def pdf_reader():
         return redirect(url_for('login.index_login'))
     current_app.logger.info(current_user.affiliation_id)
     # get and save PDF
-    post_data = request.get_json()
-    file_uuid = str(uuid.uuid4())
-    file_name = None
-    file_path = os.path.join("tmp", file_uuid)
-    output_path = os.path.join(file_path, "output")
-    
-    # seetup PDF from json
-    if not(os.path.exists(tmp_file_path)):
-        os.mkdir(tmp_file_path)
-    os.mkdir(file_path)
-    with zipfile.ZipFile(os.path.join(file_path, "contents.zip"), mode="w") as zipf:
-        for file in post_data.get("contentfiles"):
-            if file.get("name","").endswith(".pdf"):
-                file_name = file.get("name","").replace(".pdf", ".grobid.tei.xml")
-                binary_data = base64.b64decode(file.get("base64", ""))
-                zipf.writestr(f"{file.get("name","")}", binary_data)
-                break
-    with zipfile.ZipFile(os.path.join(file_path, "contents.zip")) as zf:
-        zf.extractall(f"{file_path}/data")
+    try:
+        post_data = request.get_json()
+        file_uuid = str(uuid.uuid4())
+        file_name = None
+        file_path = os.path.join("tmp", file_uuid)
+        output_path = os.path.join(file_path, "output")
         
-    # PDF to XML by Grobid
-    client = GrobidClient(config_path="./config.json")
-    client.process("processHeaderDocument", file_path, output=output_path, consolidate_citations=True, tei_coordinates=True, force=True)
+        # seetup PDF from json
+        if not(os.path.exists(tmp_file_path)):
+            os.mkdir(tmp_file_path)
+        os.mkdir(file_path)
+        with zipfile.ZipFile(os.path.join(file_path, "contents.zip"), mode="w") as zipf:
+            for file in post_data.get("contentfiles"):
+                if file.get("name","").endswith(".pdf"):
+                    file_name = file.get("name","").replace(".pdf", ".grobid.tei.xml")
+                    binary_data = base64.b64decode(file.get("base64", ""))
+                    zipf.writestr(f"{file.get("name","")}", binary_data)
+                    break
+        with zipfile.ZipFile(os.path.join(file_path, "contents.zip")) as zf:
+            zf.extractall(f"{file_path}/data")
+            
+        # PDF to XML by Grobid
+        client = GrobidClient(config_path="./config.json")
+        client.process("processHeaderDocument", file_path, output=output_path, consolidate_citations=True, tei_coordinates=True, force=True)
+        
+        # read XML
+        tree = ET.parse(f"{output_path}/data/{file_name}")
+        root = tree.getroot()
+        data = {}
+        data["author"] = []
+        read_title(data, root)
+        read_lang(data, root)
+        read_date(data, root)
+        read_publisher(data, root)
+        read_author(data, root)
+        print(data)
+        
+        return jsonify(data), 200
+    except Exception as ex:
+        current_app.logger.info(str(ex))
+        return jsonify({"error":str(ex)}), 500
+    finally:
+        # remove tmp file
+        print(file_path)
+        shutil.rmtree(file_path)
     
-    # read XML
-    tree = ET.parse(f"{output_path}/data/{file_name}")
-    root = tree.getroot()
-    data = {}
-    data["author"] = []
-    read_title(data, root)
-    read_lang(data, root)
-    read_date(data, root)
-    read_publisher(data, root)
-    read_author(data, root)
-    print(data)
-    
-    # remove tmp file
-    print(file_path)
-    shutil.rmtree(file_path)
-    
-    return jsonify(data)
