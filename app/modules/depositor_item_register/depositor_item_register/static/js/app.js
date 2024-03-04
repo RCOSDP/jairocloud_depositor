@@ -12,6 +12,8 @@ const setMetadataContext = createContext(null);
 const changeMetadataContext = createContext(null);
 const editMetadataContext = createContext(null);
 const addFileContext = createContext(null);
+const autoInfoEntryContext = createContext(null);
+const autoInfoEntrySetContext = createContext(null);
 
 const modalIsOpenContext = createContext(false);
 const setModalIsOpenContext = createContext();
@@ -24,6 +26,7 @@ const FileProvider = ({ children }) => {
     const [contentfiles, setcontentfiles] = useState([]);
     const [thumbnail, setthumbnail] = useState([]);
     const [metadata, setmetadata] = useState({})
+    const [autoinfoentry, setautoinfoentry] = useState(false)
     const setmodalisopen = useModalIsOpenSetValue();
     const setmodalcontent = useModalContentSetValue();
     const setmodalheader = useModalHeaderSetValue();
@@ -119,7 +122,8 @@ const FileProvider = ({ children }) => {
         }
         // 一時的なリストからレンダー
         setcontentfiles(tmpfiles);
-        setmetadata(tmpmetadata)
+        setmetadata(tmpmetadata);
+        setautoinfoentry(true);
     }
 
     return (
@@ -132,7 +136,11 @@ const FileProvider = ({ children }) => {
                                 <changeMetadataContext.Provider value={changemetadata}>
                                     <editMetadataContext.Provider value={edit_metadata}>
                                         <addFileContext.Provider value={addfiles}>
-                                            {children}
+                                            <autoInfoEntryContext.Provider value={autoinfoentry}>
+                                                <autoInfoEntrySetContext.Provider value={setautoinfoentry}>
+                                                    {children}
+                                                </autoInfoEntrySetContext.Provider>
+                                            </autoInfoEntryContext.Provider>
                                         </addFileContext.Provider>
                                     </editMetadataContext.Provider>
                                 </changeMetadataContext.Provider>
@@ -154,6 +162,9 @@ const useMetadataSetValue = () => useContext(setMetadataContext);
 const useMetadataChangeValue = () => useContext(changeMetadataContext);
 const useMetadataEditValue = () => useContext(editMetadataContext);
 const useAddFileValue = () => useContext(addFileContext);
+const useAutoInfoEntryValue = () => useContext(autoInfoEntryContext);
+const useAutoInfoEntrySetValue = () => useContext(autoInfoEntrySetContext);
+
 const ModalProvider = ({ children }) => {
     const [modalIsOpen, setModalIsOpen] = useState(false);
     const [content, setContent] = useState(""); //HTML
@@ -278,12 +289,10 @@ function MyModal() {
 function PDFform({ }) {
     const [pdffile, setpdffile] = useState([]);
     const addfiles = useAddFileValue();
-    const contentfiles = useFilesValue();
-    const setcontentfiles = useFilesSetValue();
-    const thumbnail = useThumbnailValue();
     const [disabled, setdisabled] = useState(false);
     const pdfproperty = schema.pdf_info
     const metadata = useMetadataValue();
+    const setautoinfoentry = useAutoInfoEntrySetValue();
     const setmetadata = useMetadataSetValue();
     const setmodalisopen = useModalIsOpenSetValue();
     const setmodalcontent = useModalContentSetValue();
@@ -357,8 +366,8 @@ function PDFform({ }) {
             setmodalisopen(true);
             setmodalheader("自動入力に失敗しました。")//error.status + " " + error.statusText
             setmodalcontent(<>
-            <h4>{error.status + " " + error.statusText}</h4>
-            <h4>{JSON.parse(error.responseText).error}</h4>
+                <h4>{error.status + " " + error.statusText}</h4>
+                <h4>{JSON.parse(error.responseText).error}</h4>
             </>)
             setdisabled(false);
         }).finally(
@@ -437,6 +446,7 @@ function PDFform({ }) {
                 }
 
                 setmetadata(tmpmetadata)
+                setautoinfoentry(true)
                 setmodalisopen(true);
                 setmodalheader("自動入力完了");
                 setmodalcontent(<>
@@ -569,7 +579,6 @@ function SubmitButton() {
             <div className="col-sm-12">
                 <div className="col-sm-offset-3 col-sm-6">
                     <div className="list-inline text-center">
-
                         <button id="submit_button" className="btn btn-info next-button" disabled={disabled} onClick={itemRegister}>
                             送信
                         </button>
@@ -763,6 +772,8 @@ function Panelform({ parent_id, form }) {
     const files = useFilesValue()
     const metadata = useMetadataValue();
     const setmetadata = useMetadataSetValue();
+    const autoinfoentry = useAutoInfoEntryValue();
+    const setautoinfoentry = useAutoInfoEntrySetValue();
     let isArray = false;
     useEffect(() => {
         if (form.type === "contentfile") {
@@ -775,48 +786,54 @@ function Panelform({ parent_id, form }) {
         }
     }, [])
     useEffect(() => {
-        let tmpmetadata = structuredClone(metadata)
-        let keylist = child_id.split(".")
-        let tmpmeta = tmpmetadata
-        try {
-            for (let i = 0; i < keylist.length; i++) {
-                // リスト最後の場合
-                if (i === keylist.length - 1) {
-                    tmpmeta = tmpmeta[keylist[i]]
+        if (autoinfoentry === true) {
+            deletearray()
+            setautoinfoentry(false)
+        }else{
+            let tmpmetadata = structuredClone(metadata)
+            let keylist = child_id.split(".")
+            let tmpmeta = tmpmetadata
+            try {
+                for (let i = 0; i < keylist.length; i++) {
+                    // リスト最後の場合
+                    if (i === keylist.length - 1) {
+                        tmpmeta = tmpmeta[keylist[i]]
+                    } else {
+                        let [tmp_id, tmpid_index] = keylist[i].split("[")
+                        tmpid_index = tmpid_index.replace("]", "")
+                        tmpmeta = tmpmeta[tmp_id][tmpid_index]
+                    }
+                }
+                if (tmpmeta.length===0) {
+                    let default_inputlists = []
+                    for (let i = 0; i < tmpmeta.length; i++) {
+                        if (tmpmeta[i] !== undefined) {
+                            default_inputlists.push(<Inputlist form={form} count={i} child_id={child_id} key={form.key + "[" + String(i) + "]"} />)
+                        }
+                    }
+                    settoggle("")
+                    setInputlists(default_inputlists)
+                    setcount(tmpmeta.length)
                 } else {
-                    let [tmp_id, tmpid_index] = keylist[i].split("[")
-                    tmpid_index = tmpid_index.replace("]", "")
-                    tmpmeta = tmpmeta[tmp_id][tmpid_index]
-                }
-            }
-            if (tmpmeta.length > inputlists.length) {
-                deletearray()
-                let default_inputlists = []
-                for (let i = 0; i < tmpmeta.length; i++) {
-                    if (tmpmeta[i] !== undefined) {
-                        default_inputlists.push(<Inputlist form={form} count={i} child_id={child_id} key={form.key + "[" + String(i) + "]"} />)
+                    let default_inputlists = []
+                    for (let i = 0; i < tmpmeta.length; i++) {
+                        if (tmpmeta[i] !== undefined) {
+                            default_inputlists.push(<Inputlist form={form} count={i} child_id={child_id} key={form.key + "[" + String(i) + "]"} />)
+                        }
                     }
+                    settoggle("")
+                    setInputlists(default_inputlists)
+                    setcount(tmpmeta.length)
                 }
-                settoggle("")
-                setInputlists(default_inputlists)
-                setcount(tmpmeta.length)
-            } else if (tmpmeta.length < inputlists.length) {
-                let default_inputlists = []
-                for (let i = 0; i < tmpmeta.length; i++) {
-                    if (tmpmeta[i] !== undefined) {
-                        default_inputlists.push(<Inputlist form={form} count={i} child_id={child_id} key={form.key + "[" + String(i) + "]"} />)
-                    }
-                }
-                setInputlists(default_inputlists)
-                setcount(tmpmeta.length)
 
-            } else {
-                settoggle("")
+            } catch (error) {
+                setcount(1)
+                setInputlists([<Inputlist form={form} count={0} child_id={child_id} key={form.key + "[" + String(0) + "]"} />])
+            }finally{
             }
-        } catch (error) {
         }
 
-    }, [metadata])
+    }, [autoinfoentry])
 
     if (form.add === "New") {
         isArray = true;
