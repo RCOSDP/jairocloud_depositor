@@ -2575,6 +2575,19 @@
         "key": "dc:publisher",
         "items": [
             {
+                "key": "dc:publisher[].dc:publisher",
+                "type": "text",
+                "title": "出版者",
+                "title_i18n": {
+                    "en": "Publisher",
+                    "ja": "出版者"
+                },
+                "title_i18n_temp": {
+                    "en": "Publisher",
+                    "ja": "出版者"
+                }
+            },
+            {
                 "key": "dc:publisher[].xml:lang",
                 "type": "select",
                 "title": "言語",
@@ -2651,19 +2664,6 @@
                 "title_i18n_temp": {
                     "en": "Language",
                     "ja": "言語"
-                }
-            },
-            {
-                "key": "dc:publisher[].dc:publisher",
-                "type": "text",
-                "title": "出版者",
-                "title_i18n": {
-                    "en": "Publisher",
-                    "ja": "出版者"
-                },
-                "title_i18n_temp": {
-                    "en": "Publisher",
-                    "ja": "出版者"
                 }
             }
         ],
