@@ -355,9 +355,13 @@ function PDFform({ }) {
             return request_python(files)
         }).catch(error => {
             console.error('Error encoding files:', error);
+            console.log(JSON.parse(error.responseText).error)
             setmodalisopen(true);
-            setmodalheader(error.status + " " + error.statusText);
-            setmodalcontent(<h4>{error.responseText}</h4>)
+            setmodalheader("自動入力に失敗しました。")//error.status + " " + error.statusText
+            setmodalcontent(<>
+            <h4>{error.status + " " + error.statusText}</h4>
+            <h4>{JSON.parse(error.responseText).error}</h4>
+            </>)
             setdisabled(false);
         }).finally(
         );
@@ -383,42 +387,57 @@ function PDFform({ }) {
                 tmpmetadata[schema.file_info.property_name] = file_info
 
                 // title
-                edit_metadata(tmpmetadata, pdfproperty.title.title.replace("[]", "[0]"), response.title)
-                PDFresult.push(<h4 key={pdfproperty.properties.title}>{"・" +
-                    document.getElementById(pdfproperty.properties.title).querySelector('a.panel-toggle').textContent + "：" + response.title.replaceAll("\"","")}</h4>)
+                if (response.title !== null && response.title !== undefined) {
+                    edit_metadata(tmpmetadata, pdfproperty.title.title.replace("[]", "[0]"), response.title)
+                    PDFresult.push(<h4 key={pdfproperty.properties.title}>{"・" +
+                        document.getElementById(pdfproperty.properties.title).querySelector('a.panel-toggle').textContent + "：" + response.title}</h4>)
+                }
 
                 // author
-                let authorList=[]
-                response["author"].forEach((val, index) => {
-                    Object.entries(val).forEach(([k, v]) => {
-                        edit_metadata(tmpmetadata, pdfproperty.author[k].replace("[]", "[" + String(index) + "]"), v)
+                if (Array.isArray(response.author) && response.author.length !== 0) {
+                    let authorList = []
+                    response.author.forEach((val, index) => {
+                        Object.entries(val).forEach(([k, v]) => {
+                            edit_metadata(tmpmetadata, pdfproperty.author[k].replace("[]", "[" + String(index) + "]"), v)
+                        })
+                        authorList.push(val.creatorName)
                     })
-                    authorList.push(val.creatorName)
-                })
-                PDFresult.push(<h4 key={pdfproperty.properties.author}>{"・" +
-                    document.getElementById(pdfproperty.properties.author).querySelector('a.panel-toggle').textContent + "：" + authorList.join(", ").replaceAll("\"","")}</h4>)
+                    PDFresult.push(<h4 key={pdfproperty.properties.author}>{"・" +
+                        document.getElementById(pdfproperty.properties.author).querySelector('a.panel-toggle').textContent + "：" + authorList.join(", ")}</h4>)
+                }
 
                 // date
-                edit_metadata(tmpmetadata, pdfproperty.date.type.replace("[]", "[0]"), response.date.type)
-                edit_metadata(tmpmetadata, pdfproperty.date.value.replace("[]", "[0]"), response.date.value)
-                PDFresult.push(<h4 key={pdfproperty.properties.date}>{"・" +
-                document.getElementById(pdfproperty.properties.date).querySelector('a.panel-toggle').textContent + "：" + response.date.value.replaceAll("\"","")}</h4>)
+                if (typeof response.date === "object" && Object.keys(response.date).length !== 0 && response.date.value !== null) {
+                    edit_metadata(tmpmetadata, pdfproperty.date.type.replace("[]", "[0]"), response.date.type)
+                    edit_metadata(tmpmetadata, pdfproperty.date.value.replace("[]", "[0]"), response.date.value)
+                    PDFresult.push(<h4 key={pdfproperty.properties.date}>{"・" +
+                        document.getElementById(pdfproperty.properties.date).querySelector('a.panel-toggle').textContent + "：" + response.date.value}</h4>)
+                }
 
 
                 // publisher
-                edit_metadata(tmpmetadata, pdfproperty.publisher.publisher.replace("[]", "[0]"), response.publisher)
-                PDFresult.push(<h4 key={pdfproperty.properties.publisher}>{"・" +
-                document.getElementById(pdfproperty.properties.publisher).querySelector('a.panel-toggle').textContent + "：" + response.publisher.replaceAll("\"","")}</h4>)
+                if (response.publisher !== null && response.publisher !== undefined) {
+                    edit_metadata(tmpmetadata, pdfproperty.publisher.publisher.replace("[]", "[0]"), response.publisher)
+                    PDFresult.push(<h4 key={pdfproperty.properties.publisher}>{"・" +
+                        document.getElementById(pdfproperty.properties.publisher).querySelector('a.panel-toggle').textContent + "：" + response.publisher}</h4>)
+                }
 
                 // lang
-                edit_metadata(tmpmetadata, pdfproperty.lang.lang.replace("[]", "[0]"), response.lang)
-                pdfproperty.lang.subproperties.forEach((k) => {
-                    for (let i = 0; i < tmpmetadata[k.split(".")[0].replace("[]", "")].length; i++) {
-                        edit_metadata(tmpmetadata, k.replace("[]", "[" + i + "]"), response.lang)
-                    }
-                })
-                PDFresult.push(<h4 key={pdfproperty.properties.lang}>{"・" +
-                document.getElementById(pdfproperty.properties.lang).querySelector('a.panel-toggle').textContent + "：" + response.lang.replaceAll("\"","")}</h4>)
+                if (response.lang !== null && response.lang !== undefined) {
+                    // 出力される文字コード(ISO-639-1)が違うためjpcoarのスキーマと違うためできない。ISO-639-3である必要がある。
+                    // edit_metadata(tmpmetadata, pdfproperty.lang.lang.replace("[]", "[0]"), response.lang)
+                    pdfproperty.lang.subproperties.forEach((k) => {
+                        console.log(k)
+                        if (tmpmetadata[k.split(".")[0].replace("[]", "")] !== undefined) {
+
+                            for (let i = 0; i < tmpmetadata[k.split(".")[0].replace("[]", "")].length; i++) {
+                                edit_metadata(tmpmetadata, k.replace("[]", "[" + i + "]"), response.lang)
+                            }
+                        }
+                    })
+                    PDFresult.push(<h4 key={pdfproperty.properties.lang}>{"・" +
+                        document.getElementById(pdfproperty.properties.lang).querySelector('a.panel-toggle').textContent + "：" + response.lang}</h4>)
+                }
 
                 setmetadata(tmpmetadata)
                 setmodalisopen(true);
@@ -795,7 +814,7 @@ function Panelform({ parent_id, form }) {
                 setInputlists(default_inputlists)
                 setcount(tmpmeta.length)
 
-            }else{
+            } else {
                 settoggle("")
             }
         } catch (error) {
@@ -1237,7 +1256,7 @@ function check_required(required_list) {
             if (ele.value === undefined || ele.value === "") {
                 ele.style.border = '1px solid red';
                 required_but_no_value_list.add(element);
-            }else{
+            } else {
                 ele.style.border = '';
             }
         })

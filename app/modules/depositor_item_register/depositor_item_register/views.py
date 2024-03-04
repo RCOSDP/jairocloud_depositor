@@ -10,7 +10,7 @@ import xml.etree.ElementTree as ET
 from flask import Flask, render_template, redirect, url_for, request, flash, session ,current_app, jsonify, Blueprint
 from flask_login import login_user, current_user, logout_user
 from flask_wtf import FlaskForm
-from depositor_grobid_client.grobid_client import GrobidClient
+from depositor_grobid_client.grobid_client import GrobidClient, ServerUnavailableException
 from depositor_models.affiliation_repository import Affiliation_Repository_manager
 from .utils import dicttoxmlforsword # zip_folder
 
@@ -217,6 +217,12 @@ def pdf_reader():
         print(data)
         
         return jsonify(data), 200
+    except OSError as ex:
+        current_app.logger.info(str(ex))
+        return jsonify({"error":"PDFが適切ではない、またはPDFファイルが存在しない可能性があります。"}), 500
+    except ServerUnavailableException as ex:
+        current_app.logger.info(str(ex))
+        return jsonify({"error":"PDF情報抽出機能との接続ができません。"}), 500
     except Exception as ex:
         current_app.logger.info(str(ex))
         return jsonify({"error":str(ex)}), 500
