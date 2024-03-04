@@ -2,17 +2,58 @@
     "type": "object",
     "$schema": "http://json-schema.org/draft-04/schema#",
     "required": [
-        "dc:title[].dc:title",
-        "dc:title[].xml:lang",
-        "dc:type.dc:type",
-        "dc:type.rdf:resource"
+        "dc:title",
+        "dc:type"
     ],
-    "properties": {
-        "pubdate": {
-            "type": "string",
-            "title": "PubDate",
-            "format": "datetime"
+    "file_info": {
+        "property_name": "jpcoar:file",
+        "file_name": "jpcoar:file[].filename",
+        "file_url": "jpcoar:file[].jpcoar:URI[0].jpcoar:URI",
+        "file_label": "jpcoar:file[].jpcoar:URI[0].label",
+        "file_format": "jpcoar:file[].jpcoar:mimeType",
+        "file_size": "jpcoar:file[].jpcoar:extent[0].jpcoar:extent",
+        "file_type": "jpcoar:file[].jpcoar:URI[0].objectType"
+    },
+    "pdf_info": {
+        "properties": {
+            "title": "dc:title",
+            "author": "jpcoar:creator",
+            "date": "datacite:date",
+            "publisher": "dc:publisher",
+            "lang": "dc:language"
         },
+        "title": {
+            "property_name": "dc:title",
+            "title": "dc:title[].dc:title"
+        },
+        "author": {
+            "property_name": "jpcoar:creator",
+            "familyName": "jpcoar:creator[].jpcoar:familyName[0].jpcoar:familyName",
+            "givenName": "jpcoar:creator[].jpcoar:givenName[0].jpcoar:givenName",
+            "creatorName": "jpcoar:creator[].jpcoar:creatorName[0].jpcoar:creatorName"
+        },
+        "date": {
+            "property_name": "datacite:date",
+            "type": "datacite:date[].dateType",
+            "value": "datacite:date[].datacite:date"
+        },
+        "publisher": {
+            "property_name": "dc:publisher",
+            "publisher": "dc:publisher[].dc:publisher"
+        },
+        "lang": {
+            "property_name": "dc:language",
+            "lang": "dc:language[].dc:language",
+            "subproperties": [
+                "dc:title[].xml:lang",
+                "jpcoar:creator[].jpcoar:familyName[0].xml:lang",
+                "jpcoar:creator[].jpcoar:givenName[0].xml:lang",
+                "jpcoar:creator[].jpcoar:creatorName[0].xml:lang",
+                "dc:publisher[].xml:lang"
+            ]
+        }
+    },
+    "properties": {
         "system_file": {
             "type": "object",
             "title": "File Information",
@@ -1868,47 +1909,47 @@
                         "title": "プログラム情報識別子",
                         "format": "object",
                         "properties": {
-                                "fundingStreamIdentifierType":{
-                                    "enum": [
-                                        null,
-                                        "Crossref Funder",
-                                        "JGN_fundingStream"
-                                    ],
-                                    "type": [
-                                        "null",
-                                        "string"
-                                    ],
-                                    "title": "プログラム情報識別子タイプ",
-                                    "format": "select",
-                                    "currentEnum": [
-                                        "Crossref Funder",
-                                        "JGN_fundingStream"
-                                    ]
-                                },
-                               "fundingStreamIdentifierTypeURI":{
-                                    "type": "string",
-                                    "format": "text",
-                                    "title": "プログラム情報識別子タイプURI",
-                                    "title_i18n": {
-                                        "en": "Funder Stream Identifier Type URI",
-                                        "ja": "プログラム情報識別子タイプURI"
-                                    }
-                               },
-                               "jpcoar:fundingStreamIdentifier":{
-                                    "type": "string",
-                                    "format": "text",
-                                    "title": "プログラム情報識別子",
-                                    "title_i18n": {
-                                        "en": "Funder Stream Identifier",
-                                        "ja": "プログラム情報識別子"
-                                    }
-                               }
+                            "fundingStreamIdentifierType": {
+                                "enum": [
+                                    null,
+                                    "Crossref Funder",
+                                    "JGN_fundingStream"
+                                ],
+                                "type": [
+                                    "null",
+                                    "string"
+                                ],
+                                "title": "プログラム情報識別子タイプ",
+                                "format": "select",
+                                "currentEnum": [
+                                    "Crossref Funder",
+                                    "JGN_fundingStream"
+                                ]
+                            },
+                            "fundingStreamIdentifierTypeURI": {
+                                "type": "string",
+                                "format": "text",
+                                "title": "プログラム情報識別子タイプURI",
+                                "title_i18n": {
+                                    "en": "Funder Stream Identifier Type URI",
+                                    "ja": "プログラム情報識別子タイプURI"
+                                }
+                            },
+                            "jpcoar:fundingStreamIdentifier": {
+                                "type": "string",
+                                "format": "text",
+                                "title": "プログラム情報識別子",
+                                "title_i18n": {
+                                    "en": "Funder Stream Identifier",
+                                    "ja": "プログラム情報識別子"
+                                }
+                            }
                         }
                     },
-                    "jpcoar:fundingStream":{
+                    "jpcoar:fundingStream": {
                         "type": "array",
-                        "title":"プログラム情報",
-                        "format":"array",
+                        "title": "プログラム情報",
+                        "format": "array",
                         "items": {
                             "type": "object",
                             "format": "object",
@@ -1975,7 +2016,7 @@
                         "title": "研究課題番号",
                         "format": "object",
                         "properties": {
-                            "awardNumberType":{
+                            "awardNumberType": {
                                 "enum": [
                                     null,
                                     "JGN"

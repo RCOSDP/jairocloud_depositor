@@ -1,19 +1,14 @@
 
-import random
-import string
 import logging
-import json
 import sys
 import os
-from flask import Flask, render_template, redirect, url_for, request, flash, session ,current_app, jsonify
-from flask_login import login_user, LoginManager
-from flask_wtf import FlaskForm
-from modules.config import MOCK_SHIB_DATA
-from db_setting import init_db
-from modules.login.ext import LoginApp
-from modules.admin_setting.ext import AdminSettingApp
-from modules.item_register.ext import ItemRegisterApp
-from modules.api import User
+from flask import Flask
+from flask_login import LoginManager
+from depositor_login.ext import LoginApp
+from depositor_admin_setting.ext import AdminSettingApp
+from depositor_item_register.ext import ItemRegisterApp
+from depositor_models.db_setting import init_db
+from depositor_models.user import User_manager
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = "secret"
@@ -43,5 +38,5 @@ itemregister.init_app(app)
 
 @login_manager.user_loader
 def load_user(user_id):
-    user=User().get_user_by_id(user_id)
+    user=User_manager.get_user_by_id(user_id)
     return user

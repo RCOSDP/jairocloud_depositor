@@ -27,6 +27,21 @@ var/
 *.manifest
 *.spec
 
+app/tmp/*
+
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.pytest_cache/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.db
+venv/
