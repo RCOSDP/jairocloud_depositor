@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='depositor_grobid_client',
+    name='grobid_client',
     version='1.0.0',
     author='Your Name',
     author_email='your.email@example.com',

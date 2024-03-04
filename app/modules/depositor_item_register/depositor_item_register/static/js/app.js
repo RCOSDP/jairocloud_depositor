@@ -354,8 +354,6 @@ function PDFform({ }) {
             files = base64files.map(base64file => base64file)
             return request_python(files)
         }).catch(error => {
-            console.error('Error encoding files:', error);
-            console.log(JSON.parse(error.responseText).error)
             setmodalisopen(true);
             setmodalheader("自動入力に失敗しました。")//error.status + " " + error.statusText
             setmodalcontent(<>
@@ -427,7 +425,6 @@ function PDFform({ }) {
                     // 出力される文字コード(ISO-639-1)が違うためjpcoarのスキーマと違うためできない。ISO-639-3である必要がある。
                     // edit_metadata(tmpmetadata, pdfproperty.lang.lang.replace("[]", "[0]"), response.lang)
                     pdfproperty.lang.subproperties.forEach((k) => {
-                        console.log(k)
                         if (tmpmetadata[k.split(".")[0].replace("[]", "")] !== undefined) {
 
                             for (let i = 0; i < tmpmetadata[k.split(".")[0].replace("[]", "")].length; i++) {
@@ -449,7 +446,6 @@ function PDFform({ }) {
             },
             error: function (status) {
                 // リクエストが失敗した場合の処理
-                console.log(status)
                 setdisabled(false);
             }
         })
