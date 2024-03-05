@@ -18,13 +18,12 @@ HOST_NAME=os.environ.get("INVENIO_POSTGRESQL_HOST") #postgresql
 DBNAME=os.environ.get("INVENIO_POSTGRESQL_DBNAME") #invenio
 DBPASS=os.environ.get("INVENIO_POSTGRESQL_DBPASS") #dbpass123
 DBUSER=os.environ.get("INVENIO_POSTGRESQL_DBUSER") #invenio
-
 # 接続先DBの設定
-DATABASE = HOST_NAME+"://"+DBUSER+":"+DBPASS+"@"+HOST_NAME+":5432/"+ DBNAME 
+DATABASE_URI = HOST_NAME+"://"+DBUSER+":"+DBPASS+"@"+HOST_NAME+":5432/"+ DBNAME 
 # DATABASE = 'postgresql://invenio:dbpass123@postgresql:5432/invenio'
 
 Engine = create_engine(
-  DATABASE,
+  DATABASE_URI,
   echo=False
 )
 

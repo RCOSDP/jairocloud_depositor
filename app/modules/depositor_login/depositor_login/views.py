@@ -8,7 +8,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField ,PasswordField
 from .config import MOCK_SHIB_DATA
 from depositor_models.user import User, User_manager
-from depositor_models.affiliation_id import Affiliation_Id_manager
+from depositor_models.affiliation_id import Affiliation_Id, Affiliation_Id_manager
 
 blueprint = Blueprint(
     "login",
@@ -48,8 +48,8 @@ def login():
                 affiliation_id = Affiliation_Id_manager.get_affiliation_id_by_idp_url(affiliation_idp_url)
                 if not affiliation_id:
                     affiliation_name = shib_data.get("OrganizationName",None)
-                    affiliation_id = Affiliation_Id_manager.create_affiliation_id(affiliation_idp_url=affiliation_idp_url,
-                                                                      affiliation_name=affiliation_name)
+                    aff_id = Affiliation_Id(affiliation_idp_url=affiliation_idp_url, affiliation_name=affiliation_name)
+                    affiliation_id = Affiliation_Id_manager.create_affiliation_id(aff_id)
                 affiliation_id_id = affiliation_id.id
                 user_id = shib_data.get("eduPersonPrincipalName",None)
                 user=User_manager.get_user_by_user_id(user_id)

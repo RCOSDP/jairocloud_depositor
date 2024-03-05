@@ -12,6 +12,8 @@ const setMetadataContext = createContext(null);
 const changeMetadataContext = createContext(null);
 const editMetadataContext = createContext(null);
 const addFileContext = createContext(null);
+const autoInfoEntryContext = createContext(null);
+const autoInfoEntrySetContext = createContext(null);
 
 const modalIsOpenContext = createContext(false);
 const setModalIsOpenContext = createContext();
@@ -24,6 +26,7 @@ const FileProvider = ({ children }) => {
     const [contentfiles, setcontentfiles] = useState([]);
     const [thumbnail, setthumbnail] = useState([]);
     const [metadata, setmetadata] = useState({})
+    const [autoinfoentry, setautoinfoentry] = useState(false)
     const setmodalisopen = useModalIsOpenSetValue();
     const setmodalcontent = useModalContentSetValue();
     const setmodalheader = useModalHeaderSetValue();
@@ -119,7 +122,8 @@ const FileProvider = ({ children }) => {
         }
         // 一時的なリストからレンダー
         setcontentfiles(tmpfiles);
-        setmetadata(tmpmetadata)
+        setmetadata(tmpmetadata);
+        setautoinfoentry(true);
     }
 
     return (
@@ -132,7 +136,11 @@ const FileProvider = ({ children }) => {
                                 <changeMetadataContext.Provider value={changemetadata}>
                                     <editMetadataContext.Provider value={edit_metadata}>
                                         <addFileContext.Provider value={addfiles}>
-                                            {children}
+                                            <autoInfoEntryContext.Provider value={autoinfoentry}>
+                                                <autoInfoEntrySetContext.Provider value={setautoinfoentry}>
+                                                    {children}
+                                                </autoInfoEntrySetContext.Provider>
+                                            </autoInfoEntryContext.Provider>
                                         </addFileContext.Provider>
                                     </editMetadataContext.Provider>
                                 </changeMetadataContext.Provider>
@@ -154,6 +162,9 @@ const useMetadataSetValue = () => useContext(setMetadataContext);
 const useMetadataChangeValue = () => useContext(changeMetadataContext);
 const useMetadataEditValue = () => useContext(editMetadataContext);
 const useAddFileValue = () => useContext(addFileContext);
+const useAutoInfoEntryValue = () => useContext(autoInfoEntryContext);
+const useAutoInfoEntrySetValue = () => useContext(autoInfoEntrySetContext);
+
 const ModalProvider = ({ children }) => {
     const [modalIsOpen, setModalIsOpen] = useState(false);
     const [content, setContent] = useState(""); //HTML
@@ -278,12 +289,10 @@ function MyModal() {
 function PDFform({ }) {
     const [pdffile, setpdffile] = useState([]);
     const addfiles = useAddFileValue();
-    const contentfiles = useFilesValue();
-    const setcontentfiles = useFilesSetValue();
-    const thumbnail = useThumbnailValue();
     const [disabled, setdisabled] = useState(false);
     const pdfproperty = schema.pdf_info
     const metadata = useMetadataValue();
+    const setautoinfoentry = useAutoInfoEntrySetValue();
     const setmetadata = useMetadataSetValue();
     const setmodalisopen = useModalIsOpenSetValue();
     const setmodalcontent = useModalContentSetValue();
@@ -354,13 +363,11 @@ function PDFform({ }) {
             files = base64files.map(base64file => base64file)
             return request_python(files)
         }).catch(error => {
-            console.error('Error encoding files:', error);
-            console.log(JSON.parse(error.responseText).error)
             setmodalisopen(true);
             setmodalheader("自動入力に失敗しました。")//error.status + " " + error.statusText
             setmodalcontent(<>
-            <h4>{error.status + " " + error.statusText}</h4>
-            <h4>{JSON.parse(error.responseText).error}</h4>
+                <h4>{error.status + " " + error.statusText}</h4>
+                <h4>{JSON.parse(error.responseText).error}</h4>
             </>)
             setdisabled(false);
         }).finally(
@@ -383,7 +390,12 @@ function PDFform({ }) {
                 let file_info = structuredClone(tmpmetadata[schema.file_info.property_name])
                 let PDFresult = []
                 // コンテントファイル情報以外metadataを初期化
-                tmpmetadata = {}
+                // tmpmetadata = {}
+                Object.keys(pdfproperty.properties).forEach((key)=>{
+                    console.log(pdfproperty.properties[key])
+                    delete tmpmetadata[pdfproperty.properties[key]]
+                })
+                console.log(tmpmetadata)
                 tmpmetadata[schema.file_info.property_name] = file_info
 
                 // title
@@ -427,7 +439,6 @@ function PDFform({ }) {
                     // 出力される文字コード(ISO-639-1)が違うためjpcoarのスキーマと違うためできない。ISO-639-3である必要がある。
                     // edit_metadata(tmpmetadata, pdfproperty.lang.lang.replace("[]", "[0]"), response.lang)
                     pdfproperty.lang.subproperties.forEach((k) => {
-                        console.log(k)
                         if (tmpmetadata[k.split(".")[0].replace("[]", "")] !== undefined) {
 
                             for (let i = 0; i < tmpmetadata[k.split(".")[0].replace("[]", "")].length; i++) {
@@ -440,6 +451,7 @@ function PDFform({ }) {
                 }
 
                 setmetadata(tmpmetadata)
+                setautoinfoentry(true)
                 setmodalisopen(true);
                 setmodalheader("自動入力完了");
                 setmodalcontent(<>
@@ -449,7 +461,6 @@ function PDFform({ }) {
             },
             error: function (status) {
                 // リクエストが失敗した場合の処理
-                console.log(status)
                 setdisabled(false);
             }
         })
@@ -573,7 +584,6 @@ function SubmitButton() {
             <div className="col-sm-12">
                 <div className="col-sm-offset-3 col-sm-6">
                     <div className="list-inline text-center">
-
                         <button id="submit_button" className="btn btn-info next-button" disabled={disabled} onClick={itemRegister}>
                             送信
                         </button>
@@ -589,6 +599,7 @@ function FileUploadForm({ addarray, deletearray }) {
     const metadata = useMetadataValue();
     const setmetadata = useMetadataSetValue();
     const addfiles = useAddFileValue();
+    const setautoinfoentry = useAutoInfoEntrySetValue();
 
 
     function deleteFile(filename, index) {
@@ -598,6 +609,7 @@ function FileUploadForm({ addarray, deletearray }) {
         tmpmetadata[fileproperty.property_name].splice(index, 1)
         deletearray()
         // 一時的なリストからレンダー
+        setautoinfoentry(true)
         setcontentfiles(tmpfiles);
         setmetadata(tmpmetadata)
     }
@@ -767,6 +779,8 @@ function Panelform({ parent_id, form }) {
     const files = useFilesValue()
     const metadata = useMetadataValue();
     const setmetadata = useMetadataSetValue();
+    const autoinfoentry = useAutoInfoEntryValue();
+    const setautoinfoentry = useAutoInfoEntrySetValue();
     let isArray = false;
     useEffect(() => {
         if (form.type === "contentfile") {
@@ -779,22 +793,25 @@ function Panelform({ parent_id, form }) {
         }
     }, [])
     useEffect(() => {
-        let tmpmetadata = structuredClone(metadata)
-        let keylist = child_id.split(".")
-        let tmpmeta = tmpmetadata
-        try {
-            for (let i = 0; i < keylist.length; i++) {
-                // リスト最後の場合
-                if (i === keylist.length - 1) {
-                    tmpmeta = tmpmeta[keylist[i]]
-                } else {
-                    let [tmp_id, tmpid_index] = keylist[i].split("[")
-                    tmpid_index = tmpid_index.replace("]", "")
-                    tmpmeta = tmpmeta[tmp_id][tmpid_index]
+        if (autoinfoentry === true) {
+            deletearray()
+            setautoinfoentry(false)
+        }else{
+            let tmpmetadata = structuredClone(metadata)
+            let keylist = child_id.split(".")
+            let tmpmeta = tmpmetadata
+            try {
+                for (let i = 0; i < keylist.length; i++) {
+                    // リスト最後の場合
+                    if (i === keylist.length - 1) {
+                        tmpmeta = tmpmeta[keylist[i]]
+                    } else {
+                        let [tmp_id, tmpid_index] = keylist[i].split("[")
+                        tmpid_index = tmpid_index.replace("]", "")
+                        tmpmeta = tmpmeta[tmp_id][tmpid_index]
+                    }
                 }
-            }
-            if (tmpmeta.length > inputlists.length) {
-                deletearray()
+                
                 let default_inputlists = []
                 for (let i = 0; i < tmpmeta.length; i++) {
                     if (tmpmeta[i] !== undefined) {
@@ -804,23 +821,16 @@ function Panelform({ parent_id, form }) {
                 settoggle("")
                 setInputlists(default_inputlists)
                 setcount(tmpmeta.length)
-            } else if (tmpmeta.length < inputlists.length) {
-                let default_inputlists = []
-                for (let i = 0; i < tmpmeta.length; i++) {
-                    if (tmpmeta[i] !== undefined) {
-                        default_inputlists.push(<Inputlist form={form} count={i} child_id={child_id} key={form.key + "[" + String(i) + "]"} />)
-                    }
-                }
-                setInputlists(default_inputlists)
-                setcount(tmpmeta.length)
+                
 
-            } else {
-                settoggle("")
+            } catch (error) {
+                setcount(1)
+                setInputlists([<Inputlist form={form} count={0} child_id={child_id} key={form.key + "[" + String(0) + "]"} />])
+            }finally{
             }
-        } catch (error) {
         }
 
-    }, [metadata])
+    }, [autoinfoentry])
 
     if (form.add === "New") {
         isArray = true;
@@ -876,7 +886,7 @@ function Panelform({ parent_id, form }) {
     return (
         <fieldset className="schema-form-fieldset flexbox" id={child_id} name={form.key.split(".")[form.key.split(".").length - 1]}>
             <div className="panel panel-default deposit-panel">
-                <div className="panel-heading"><a className="panel-toggle" onClick={() => togglepanel()}>
+                <div className="panel-heading" onClick={() => togglepanel()}><a className="panel-toggle" onClick={() => togglepanel()}>
                     {("title_i18n" in form) && ("ja" in form.title_i18n) ? form.title_i18n.ja : form.title}
                 </a><div className="pull-right">{isrequired ? "Required" : "Optional"}</div>
                 </div>

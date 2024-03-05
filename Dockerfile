@@ -9,11 +9,11 @@ COPY /app/requirements.txt ./
 
 ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/code/app
 
-ENV PYTHONPATH=$PYTHONPATH:/code/modules/depositor_admin_setting
-ENV PYTHONPATH=$PYTHONPATH:/code/modules/depositor_grobid_client
-ENV PYTHONPATH=$PYTHONPATH:/code/modules/depositor_item_register
-ENV PYTHONPATH=$PYTHONPATH:/code/modules/depositor_login
-ENV PYTHONPATH=$PYTHONPATH:/code/modules/depositor_models
+ENV PYTHONPATH=$PYTHONPATH:/code/app/modules/depositor_admin_setting
+ENV PYTHONPATH=$PYTHONPATH:/code/app/modules/depositor_item_register
+ENV PYTHONPATH=$PYTHONPATH:/code/app/modules/depositor_login
+ENV PYTHONPATH=$PYTHONPATH:/code/app/modules/depositor_models
+ENV PYTHONPATH=$PYTHONPATH:/code/src/grobid_client
 
 ENV INVENIO_WEB_HOST=127.0.0.1
 ENV INVENIO_WEB_INSTANCE=invenio

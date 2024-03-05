@@ -33,7 +33,7 @@ alter sequence public.affiliation_id_id_seq owned by public.affiliation_id.id;
 
 -- 「default」レコードの追加
 insert into affiliation_id(created,updated,id,affiliation_idp_url,affiliation_name)
-values(CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1,'-','default');
+values(CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,0,'-','default');
 
 
 -- 新テーブルの作成 (user)

@@ -1,9 +1,9 @@
 
 -e ../depositor_admin_setting
--e ../depositor_grobid_client
 -e ../depositor_item_register
 -e ../depositor_login
 -e ../depositor_models
+-e ../../../src/grobid_client
 email-validator
 Flask==2.2.0
 Flask-Admin==1.6.1
@@ -22,6 +22,8 @@ Flask-SQLAlchemy==3.0.2
 flask-marshmallow==0.14.0
 github3.py==1.1.0
 itsdangerous==2.1.2
+mock == 5.1.0
+pytest-mock == 3.12.0
 psycopg2==2.9.9
 pytz
 requests==2.31.0
@@ -34,5 +36,3 @@ sword3common==0.1.1
 uWSGI==2.0.24
 wtforms==3.1.2
 Werkzeug==2.3.7
--e ../depositor_login
-# -e ../../
