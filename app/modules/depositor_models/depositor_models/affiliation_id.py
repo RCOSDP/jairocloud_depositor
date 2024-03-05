@@ -21,15 +21,13 @@ class Affiliation_Id_manager(object):
     operated on the Affiliation ID
     """
     @classmethod
-    def create_affiliation_id(cls, affiliation_idp_url, affiliation_name):
+    def create_affiliation_id(cls, affiliation_id):
         """
         create new affiliation_id
         :param affiliation_id: class Affiliation_Id
         :return:
         """
-        assert affiliation_idp_url
-        assert affiliation_name
-        affiliation_id = Affiliation_Id(affiliation_idp_url=affiliation_idp_url, affiliation_name=affiliation_name)
+        assert affiliation_id
         try:
             with db.session.begin_nested():
                 db.session.add(affiliation_id)
@@ -37,27 +35,9 @@ class Affiliation_Id_manager(object):
         except Exception as ex:
             db.session.rollback()
             current_app.logger.error(ex)
-            raise
+            raise ex
         
         return affiliation_id
-
-    @classmethod
-    def upt_affiliation_id(cls, affiliation_id):
-        assert affiliation_id
-        try:
-            with db.session.begin_nested():
-                _affliation_id = Affiliation_Id.query.filter_by(id=affiliation_id.get('id')).one_or_none()
-                if _affliation_id:
-                    _affliation_id.affiliation_idp_url = affiliation_id.get('affiliation_idp_url')
-                    _affliation_id.affiliation_name = affiliation_id.get('affiliation_name')
-                    db.session.merge(_affliation_id)
-            db.session.commit()
-        except Exception as ex:
-            db.session.rollback()
-            current_app.logger.error(ex)
-            raise
-        
-        return _affliation_id
 
     @classmethod
     def get_affiliation_id_by_id(cls, affiliation_id):

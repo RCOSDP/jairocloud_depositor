@@ -66,13 +66,13 @@ def register():
             
     # current_userよりaffiliation_idをとってaffiliaiton_repositoryテーブルからリポジトリURLをとる処理
     current_affiliation_id = current_user.affiliation_id
-    aff_repository = Affiliation_Repository_manager().get_aff_repository_by_affiliation_id(current_affiliation_id)
+    aff_repository = Affiliation_Repository_manager.get_aff_repository_by_affiliation_id(current_affiliation_id)
     #　設定されている場合
     if aff_repository and not(aff_repository.repository_url=="" or aff_repository.access_token==""):
         repository_url=aff_repository.repository_url
         access_token=aff_repository.access_token
     else:
-        aff_repository = Affiliation_Repository_manager().get_aff_repository_by_affiliation_name("default")
+        aff_repository = Affiliation_Repository_manager.get_aff_repository_by_affiliation_name("default")
         repository_url=aff_repository.repository_url
         access_token=aff_repository.access_token
     

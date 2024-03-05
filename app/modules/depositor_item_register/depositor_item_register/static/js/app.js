@@ -390,7 +390,12 @@ function PDFform({ }) {
                 let file_info = structuredClone(tmpmetadata[schema.file_info.property_name])
                 let PDFresult = []
                 // コンテントファイル情報以外metadataを初期化
-                tmpmetadata = {}
+                // tmpmetadata = {}
+                Object.keys(pdfproperty.properties).forEach((key)=>{
+                    console.log(pdfproperty.properties[key])
+                    delete tmpmetadata[pdfproperty.properties[key]]
+                })
+                console.log(tmpmetadata)
                 tmpmetadata[schema.file_info.property_name] = file_info
 
                 // title
@@ -594,6 +599,7 @@ function FileUploadForm({ addarray, deletearray }) {
     const metadata = useMetadataValue();
     const setmetadata = useMetadataSetValue();
     const addfiles = useAddFileValue();
+    const setautoinfoentry = useAutoInfoEntrySetValue();
 
 
     function deleteFile(filename, index) {
@@ -603,6 +609,7 @@ function FileUploadForm({ addarray, deletearray }) {
         tmpmetadata[fileproperty.property_name].splice(index, 1)
         deletearray()
         // 一時的なリストからレンダー
+        setautoinfoentry(true)
         setcontentfiles(tmpfiles);
         setmetadata(tmpmetadata)
     }
@@ -804,27 +811,17 @@ function Panelform({ parent_id, form }) {
                         tmpmeta = tmpmeta[tmp_id][tmpid_index]
                     }
                 }
-                if (tmpmeta.length===0) {
-                    let default_inputlists = []
-                    for (let i = 0; i < tmpmeta.length; i++) {
-                        if (tmpmeta[i] !== undefined) {
-                            default_inputlists.push(<Inputlist form={form} count={i} child_id={child_id} key={form.key + "[" + String(i) + "]"} />)
-                        }
+                
+                let default_inputlists = []
+                for (let i = 0; i < tmpmeta.length; i++) {
+                    if (tmpmeta[i] !== undefined) {
+                        default_inputlists.push(<Inputlist form={form} count={i} child_id={child_id} key={form.key + "[" + String(i) + "]"} />)
                     }
-                    settoggle("")
-                    setInputlists(default_inputlists)
-                    setcount(tmpmeta.length)
-                } else {
-                    let default_inputlists = []
-                    for (let i = 0; i < tmpmeta.length; i++) {
-                        if (tmpmeta[i] !== undefined) {
-                            default_inputlists.push(<Inputlist form={form} count={i} child_id={child_id} key={form.key + "[" + String(i) + "]"} />)
-                        }
-                    }
-                    settoggle("")
-                    setInputlists(default_inputlists)
-                    setcount(tmpmeta.length)
                 }
+                settoggle("")
+                setInputlists(default_inputlists)
+                setcount(tmpmeta.length)
+                
 
             } catch (error) {
                 setcount(1)
@@ -889,7 +886,7 @@ function Panelform({ parent_id, form }) {
     return (
         <fieldset className="schema-form-fieldset flexbox" id={child_id} name={form.key.split(".")[form.key.split(".").length - 1]}>
             <div className="panel panel-default deposit-panel">
-                <div className="panel-heading"><a className="panel-toggle" onClick={() => togglepanel()}>
+                <div className="panel-heading" onClick={() => togglepanel()}><a className="panel-toggle" onClick={() => togglepanel()}>
                     {("title_i18n" in form) && ("ja" in form.title_i18n) ? form.title_i18n.ja : form.title}
                 </a><div className="pull-right">{isrequired ? "Required" : "Optional"}</div>
                 </div>
