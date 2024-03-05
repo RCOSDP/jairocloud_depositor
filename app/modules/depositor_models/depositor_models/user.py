@@ -41,28 +41,9 @@ class User_manager(object):
         except Exception as ex:
             db.session.rollback()
             current_app.logger.error(ex)
-            raise
+            raise ex
         
         return user
-    
-    @classmethod
-    def upt_user(cls, user):
-        assert user
-        try:
-            with db.session.begin_nested():
-                _user = User.query.filter_by(id=user.get('id')).one_or_none()
-                if _user:
-                    _user.affiliation_id = user.get('affiliation_id')
-                    _user.user_orcid = user.get('user_orcid')
-                    _user.role = user.get('role')
-                    db.session.merge(_user)
-            db.session.commit()
-        except Exception as ex:
-            db.session.rollback()
-            current_app.logger.error(ex)
-            raise
-        
-        return _user
     
     @classmethod
     def get_user_by_id(cls, id):

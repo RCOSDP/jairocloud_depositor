@@ -31,12 +31,12 @@ class Affiliation_Repository_manager(object):
         assert aff_repository
         try:
             with db.session.begin_nested():
-                db.session.execute(Affiliation_Repository.__table__.insert(), aff_repository)
+                db.session.add(aff_repository)
             db.session.commit()
         except Exception as ex:
             db.session.rollback()
             current_app.logger.error(ex)
-            raise
+            raise ex
         
         return aff_repository
     

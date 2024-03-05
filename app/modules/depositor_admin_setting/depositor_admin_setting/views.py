@@ -1,8 +1,8 @@
 from flask import Flask, render_template, redirect, url_for, request, flash, session ,current_app, jsonify, Blueprint, json
 from flask_login import login_user, current_user, logout_user, login_required
 from flask_wtf import FlaskForm
-from depositor_models.affiliation_id import Affiliation_Id_manager
-from depositor_models.affiliation_repository import Affiliation_Repository_manager
+from depositor_models.affiliation_id import Affiliation_Id, Affiliation_Id_manager
+from depositor_models.affiliation_repository import Affiliation_Repository, Affiliation_Repository_manager
 from depositor_login.views import index_login
 
 blueprint = Blueprint(
@@ -25,19 +25,22 @@ def index_affili():
         else:
             affiliation_id_info = Affiliation_Id_manager.get_affiliation_id_by_affiliation_name(affiliation_name)
         if affiliation_id_info:
-            affiliation_repository_info = Affiliation_Repository_manager().get_aff_repository_by_affiliation_id(affiliation_id_info.id)
+            affiliation_repository_info = Affiliation_Repository_manager.get_aff_repository_by_affiliation_id(affiliation_id_info.id)
             if affiliation_repository_info:
                 try:
-                    aff_repository = {"id":affiliation_repository_info.id, "affiliation_id":affiliation_id_info.id, "repository_url":repository_url,"access_token":access_token}
-                    Affiliation_Repository_manager().upt_aff_repository(aff_repository)
+                    aff_repository = {"id":affiliation_repository_info.id,
+                                      "affiliation_id":affiliation_id_info.id,
+                                      "repository_url":repository_url,
+                                      "access_token":access_token}
+                    Affiliation_Repository_manager.upt_aff_repository(aff_repository)
                     return jsonify(success=True),200
                 except Exception as e:
                     return current_app.logger.error(
                 'ERROR affliation settings: {}'.format(e)) 
             else:
                 try:
-                    aff_repository = {"affiliation_id":affiliation_id_info.id, "repository_url":repository_url,"access_token":access_token}
-                    Affiliation_Repository_manager().create_aff_repository(aff_repository)
+                    aff_repository = Affiliation_Repository(affiliation_id=affiliation_id_info.id, repository_url=repository_url, access_token=access_token)
+                    Affiliation_Repository_manager.create_aff_repository(aff_repository)
                     return jsonify(success=True),200
                 except Exception as e:
                     return current_app.logger.error(
@@ -53,19 +56,19 @@ def index_affili():
             if role == "管理者":
                 affiliation_name = "default"
                 affiliation_id_info = Affiliation_Id_manager.get_affiliation_id_by_affiliation_name(affiliation_name)
-                affiliation_repository_info = Affiliation_Repository_manager().get_aff_repository_by_affiliation_id(affiliation_id_info.id)
+                affiliation_repository_info = Affiliation_Repository_manager.get_aff_repository_by_affiliation_id(affiliation_id_info.id)
                 if affiliation_repository_info:
                     repository_url = affiliation_repository_info.repository_url
                     access_token = affiliation_repository_info.access_token
             else:
                 affiliation_id_info = Affiliation_Id_manager.get_affiliation_id_by_id(current_user.affiliation_id)
                 affiliation_name = affiliation_id_info.affiliation_name
-                affiliation_repository_info = Affiliation_Repository_manager().get_aff_repository_by_affiliation_id(affiliation_id_info.id)
+                affiliation_repository_info = Affiliation_Repository_manager.get_aff_repository_by_affiliation_id(affiliation_id_info.id)
                 if affiliation_repository_info:
                     repository_url = affiliation_repository_info.repository_url
                     access_token = affiliation_repository_info.access_token
             affiliation_id_list = Affiliation_Id_manager.get_affiliation_id_list()
-            affiliation_repository_list = Affiliation_Repository_manager().get_affiliation_repository_list()
+            affiliation_repository_list = Affiliation_Repository_manager.get_affiliation_repository_list()
             aff_repository_dict = {}
             for affiliation_repository in affiliation_repository_list:
                 aff_repository_dict[affiliation_repository.affiliation_id] = {"repository_url":affiliation_repository.repository_url, "access_token":affiliation_repository.access_token}
@@ -91,7 +94,8 @@ def add_affili():
         affiliation_id_info = Affiliation_Id_manager.get_affiliation_id_by_idp_url(affiliation_idp_url)
         try:
             if not affiliation_id_info:
-                Affiliation_Id_manager.create_affiliation_id(affiliation_idp_url, affiliation_name)
+                aff_id = Affiliation_Id(affiliation_idp_url=affiliation_idp_url, affiliation_name=affiliation_name)
+                Affiliation_Id_manager.create_affiliation_id(aff_id)
                 return jsonify(success=True),200
         except Exception as e:
             return current_app.logger.error(
