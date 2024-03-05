@@ -10,6 +10,7 @@ from depositor_login.views import generate_random_str,login
 from depositor_models.user import User, User_manager
 from depositor_models.affiliation_id import Affiliation_Id, Affiliation_Id_manager
 from depositor_models.affiliation_repository import Affiliation_Repository, Affiliation_Repository_manager
+from grobid_client.grobid_client import ServerUnavailableException
 
 
 def test_index_item(app, db, users):
@@ -122,6 +123,14 @@ def test_register(app, db, users, affiliation_ids, affiliation_repositories):
                     response = app.test_client().post("/item_register/register")
                     get_aff_by_name.assert_not_called()
                     assert response.status_code == 404
+                    
+        # 異常系　Exception
+        with patch("flask.Request.get_json", return_value= data):
+            with patch("depositor_item_register.views.Affiliation_Repository_manager.get_aff_repository_by_affiliation_name") as get_aff_by_name:
+                with patch("requests.post", side_effect=Exception()):
+                    response = app.test_client().post("/item_register/register")
+                    get_aff_by_name.assert_not_called()
+                    assert response.status_code == 500
     
         
 def test_pdf_reader(app, users):
@@ -135,7 +144,7 @@ def test_pdf_reader(app, users):
             return None
         
     class MockGrobidClass(MagicMock):
-        def process(self, *args):
+        def process(a, b, c, **args):
             return 1
     user = users[0]
     with app.test_request_context("/item_register/pdf_reader"):
@@ -145,14 +154,44 @@ def test_pdf_reader(app, users):
         assert response.location == url_for('login.index_login')
         
         login_user(user)
+        # ログインしている。正常系
         folder_path="./tmp"
-        if os.path.exists(folder_path):
-            shutil.rmtree(folder_path)
+        os.makedirs("./tmp/test/output/data")
+        shutil.copy("./tests/data/test.grobid.tei.xml", "./tmp/test/output/data")
+        os.makedirs("./tmp/test/data", exist_ok=True)
+        shutil.copy("./tests/data/test.pdf", "./tmp/test/data")
         data = {"item_metadata":{}, 
                 "contentfiles":[{"name":"test.pdf", "base64":encode_to_base64("./tests/data/test.pdf")}]}
         with patch("flask.Request.get_json", return_value= data):
-            with patch("uuid.uuid4", return_value="testtesttesttest"):
+            with patch("uuid.uuid4", return_value="test"):
                 with patch("depositor_item_register.views.GrobidClient", return_value = MockGrobidClass()):
-                    # with patch("grobid_client.grobid_client.GrobidClient.process"):
+                    with patch("os.mkdir"):
+                        response = app.test_client().post("/item_register/pdf_reader")
+                        assert response.status_code == 200
+        
+        # 異常系　OSError   
+        if os.path.exists(folder_path):
+            shutil.rmtree(folder_path)
+        data = {"item_metadata":{}, 
+                "contentfiles":[{"name":"test.png", "base64":encode_to_base64("./tests/data/test.pdf")}]}
+        with patch("flask.Request.get_json", return_value= data):
+            with patch("uuid.uuid4", return_value="test"):
+                with patch("depositor_item_register.views.GrobidClient", side_effect = MockGrobidClass()):
                     response = app.test_client().post("/item_register/pdf_reader")
-                    print(response)
+                    assert response.status_code == 500
+                    assert response.data.decode('unicode_escape') == '{"error":"PDFが適切ではない、またはPDFファイルが存在しない可能性があります。"}\n'
+
+        # 異常系　ServerUnavailableException
+        with patch("flask.Request.get_json", return_value= data):
+            with patch("uuid.uuid4", return_value="test"):
+                with patch("depositor_item_register.views.GrobidClient", side_effect = ServerUnavailableException()):
+                    response = app.test_client().post("/item_register/pdf_reader")
+                    assert response.status_code == 500
+                    assert response.data.decode('unicode_escape') == '{"error":"PDF情報抽出機能との接続ができません。"}\n'
+        
+        # 異常系　Exception
+        with patch("flask.Request.get_json", return_value= data):
+            with patch("uuid.uuid4", return_value="test"):
+                with patch("depositor_item_register.views.GrobidClient", side_effect = Exception()):
+                    response = app.test_client().post("/item_register/pdf_reader")
+                    assert response.status_code == 500
