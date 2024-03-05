@@ -3,7 +3,6 @@ import random
 import string
 from flask import Flask, render_template, redirect, url_for, request, flash, session ,current_app, jsonify, Blueprint
 from flask_login import login_user, current_user, logout_user
-from flask_security import LoginForm, url_for_security
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField ,PasswordField
 from .config import MOCK_SHIB_DATA
