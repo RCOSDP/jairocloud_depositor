@@ -225,6 +225,7 @@ def pdf_reader():
         return jsonify({"error":"PDF情報抽出機能との接続ができません。"}), 500
     except Exception as ex:
         current_app.logger.info(str(ex))
+        print(str(ex))
         return jsonify({"error":str(ex)}), 500
     finally:
         # remove tmp file
