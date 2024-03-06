@@ -1,6 +1,7 @@
 
 import random
 import string
+import os
 from flask import Flask, render_template, redirect, url_for, request, flash, session ,current_app, jsonify, Blueprint
 from flask_login import login_user, current_user, logout_user
 from flask_wtf import FlaskForm
@@ -37,10 +38,11 @@ def index_login():
 
 @blueprint.route("/login", methods=['POST'])
 def login():
+    mock_password = os.environ.get("MOCK_PASSWORD")
     form=LoginForm()
     if form.validate_on_submit():
-        # shibbolethで返ってくる値を固定値とする。パスワードはtestpass固定
-        if form.password.data == "testpass":
+        # shibbolethで返ってくる値を固定値とする。パスワードは環境変数で固定
+        if form.password.data == mock_password:
             shib_data = MOCK_SHIB_DATA.get(form.email.data)
             if shib_data :
                 affiliation_idp_url = shib_data.get("affiliation_idp_url",None)
