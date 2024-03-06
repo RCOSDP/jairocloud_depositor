@@ -30,6 +30,15 @@ def base_app():
         return user
     return app_
     
+    
+@pytest.fixture()
+def base_app_none():
+    app_=None
+    AdminSettingApp(app_)
+    ItemRegisterApp(app_)
+    LoginApp(app_)
+    return app_
+
 @pytest.yield_fixture()    
 def app(base_app):
     with base_app.app_context():
