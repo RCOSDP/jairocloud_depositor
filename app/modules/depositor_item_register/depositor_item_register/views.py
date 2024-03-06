@@ -179,7 +179,7 @@ def pdf_reader():
         post_data = request.get_json()
         file_uuid = str(uuid.uuid4())
         file_name = None
-        file_path = os.path.join("tmp", file_uuid)
+        file_path = os.path.join(tmp_file_path, file_uuid)
         output_path = os.path.join(file_path, "output")
         
         # seetup PDF from json

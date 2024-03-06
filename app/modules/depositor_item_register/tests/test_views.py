@@ -50,7 +50,7 @@ def test_register(app, db, users, affiliation_ids, affiliation_repositories):
         assert response.location == url_for('login.index_login')
         
         login_user(beta_user)
-        folder_path="./tmp"
+        folder_path="./tests/tmp"
         if os.path.exists(folder_path):
             shutil.rmtree(folder_path)
         data = {"item_metadata":{}, 
@@ -155,11 +155,11 @@ def test_pdf_reader(app, users):
         
         login_user(user)
         # ログインしている。正常系
-        folder_path="./tmp"
-        os.makedirs("./tmp/test/output/data")
-        shutil.copy("./tests/data/test.grobid.tei.xml", "./tmp/test/output/data")
-        os.makedirs("./tmp/test/data", exist_ok=True)
-        shutil.copy("./tests/data/test.pdf", "./tmp/test/data")
+        folder_path="./tests/tmp"
+        os.makedirs("./tests/tmp/test/output/data")
+        shutil.copy("./tests/data/test.grobid.tei.xml", "./tests/tmp/test/output/data")
+        os.makedirs("./tests/tmp/test/data", exist_ok=True)
+        shutil.copy("./tests/data/test.pdf", "./tests/tmp/test/data")
         data = {"item_metadata":{}, 
                 "contentfiles":[{"name":"test.pdf", "base64":encode_to_base64("./tests/data/test.pdf")}]}
         with patch("flask.Request.get_json", return_value= data):
@@ -168,7 +168,8 @@ def test_pdf_reader(app, users):
                     with patch("os.mkdir"):
                         response = app.test_client().post("/item_register/pdf_reader")
                         assert response.status_code == 200
-        
+                        assert response.data.decode('unicode_escape') == '{"author":[{"creatorName":"De Marchis Cristiano","familyName":"De Marchis","givenName":"Cristiano"},{"creatorName":"Santos Monteiro Thiago","familyName":"Santos Monteiro","givenName":"Thiago"},{"creatorName":"Simon-Martinez Cristina","familyName":"Simon-Martinez","givenName":"Cristina"},{"creatorName":"Conforto Silvia","familyName":"Conforto","givenName":"Silvia"},{"creatorName":"Gharabaghi Alireza","familyName":"Gharabaghi","givenName":"Alireza"}],"date":{"type":"Available","value":"2016-03-08"},"lang":"en","publisher":"Springer Science and Business Media LLC","title":"Multi-contact functional electrical stimulation for hand opening: electrophysiologically driven identification of the optimal stimulation site"}\n'
+
         # 異常系　OSError   
         if os.path.exists(folder_path):
             shutil.rmtree(folder_path)
