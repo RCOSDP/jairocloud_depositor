@@ -9578,7 +9578,6 @@
             },
             {
                 "key": "jpcoar:catalog.jpcoar:file",
-                "type": "thumbnail",
                 "items": [
                     {
                         "key": "jpcoar:catalog.jpcoar:file.jpcoar:URI",

@@ -392,10 +392,8 @@ function PDFform({ }) {
                 // コンテントファイル情報以外metadataを初期化
                 // tmpmetadata = {}
                 Object.keys(pdfproperty.properties).forEach((key)=>{
-                    console.log(pdfproperty.properties[key])
                     delete tmpmetadata[pdfproperty.properties[key]]
                 })
-                console.log(tmpmetadata)
                 tmpmetadata[schema.file_info.property_name] = file_info
 
                 // title
@@ -1264,7 +1262,7 @@ function check_required(required_list) {
         const required_panel = document.getElementById(element);
         required_panel.querySelectorAll('.input-form.form-control').forEach(function (ele) {
             if (ele.value === undefined || ele.value === "") {
-                ele.style.border = '1px solid red';
+                ele.style.border = '1px solid #a94442';
                 required_but_no_value_list.add(element);
             } else {
                 ele.style.border = '';
