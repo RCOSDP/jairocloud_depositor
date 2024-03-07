@@ -4482,6 +4482,10 @@
                                 "value": "Crossref Funder"
                             },
                             {
+                                "name":"e-Rad_funder",
+                                "value":"e-Rad_funder"
+                            },
+                            {
                                 "name": "GRID",
                                 "value": "GRID"
                             },
@@ -8567,7 +8571,17 @@
             },
             {
                 "key": "jpcoar:file[].jpcoar:mimeType",
-                "type": "text",
+                "items":[
+                    {
+                        "key":"jpcoar:file[].jpcoar:mimeType[].jpcoar:mimeType",
+                        "type": "text",
+                        "title": "フォーマット",
+                        "title_i18n": {
+                            "en": "Format",
+                            "ja": "フォーマット"
+                        }
+                    }
+                ],
                 "title": "フォーマット",
                 "title_i18n": {
                     "en": "Format",
