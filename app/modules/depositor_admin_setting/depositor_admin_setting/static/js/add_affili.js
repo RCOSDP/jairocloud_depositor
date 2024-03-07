@@ -20,28 +20,51 @@ async function componentDidMount() {
     }
 }
 
+function isEmpty(value){
+  if (!value){
+    return true;
+  }else{
+    return false;
+  }
+}
+
 function handleAddSubmit(){
-    closeError();
-    const form ={
-        'affiliation_name': document.getElementById("affiliation_name").value,
-        'affiliation_idp_url': document.getElementById("affiliation_idp_url").value,
-    }
-      let pattern = /^(https?|ftp)(:\/\/[\w\/:%#\$&\?\(\)~\.=\+\-]+)/
-      if(pattern.test(form.affiliation_idp_url)){
-        fetch("/admin_setting/add" ,{method:'POST' ,headers:{'Content-Type':'application/json'} ,credentials:"include", body: JSON.stringify(form)})
-        .then(res => {
-          if(!res.ok){
-            console.log(etext);
-        }
-          console.log("ok");
-          showMsg("Successfully Registered Settings." , true);
-        })
-        .catch(error => {
-          console.log(error);
-          showMsg("Failed To Register Settings" , false);
-        });
-      }else{
-        showMsg("Idp URL: Please input in URL format." , false);
+  closeError();
+  const affiliation_name = document.getElementById("affiliation_name");
+  const affiliation_idp_url = document.getElementById("affiliation_idp_url");
+  //Validate 
+  // required check
+  NGList = [];
+  if(isEmpty(affiliation_name.value)){
+    NGList.push('機関名');
+  }
+  if(isEmpty(affiliation_idp_url.value)){
+    NGList.push('認証機関先URL');
+  }
+  if(NGList.length){
+    return showMsg("The following items is required. Please recheck and input." + NGList , false);
+  }
+
+  const form ={
+      'affiliation_name': document.getElementById("affiliation_name").value,
+      'affiliation_idp_url': document.getElementById("affiliation_idp_url").value,
+  }
+    let pattern = /^(https?|ftp)(:\/\/[\w\/:%#\$&\?\(\)~\.=\+\-]+)/
+    if(pattern.test(form.affiliation_idp_url)){
+      fetch("/admin_setting/add" ,{method:'POST' ,headers:{'Content-Type':'application/json'} ,credentials:"include", body: JSON.stringify(form)})
+      .then(res => {
+        if(!res.ok){
+          console.log(etext);
       }
+        console.log("ok");
+        showMsg("Successfully Registered Settings." , true);
+      })
+      .catch(error => {
+        console.log(error);
+        showMsg("Failed To Register Settings" , false);
+      });
+    }else{
+      showMsg("Idp URL: Please input in URL format." , false);
+    }
 }
 componentDidMount();
