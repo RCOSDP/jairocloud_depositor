@@ -107,16 +107,12 @@ def register():
     except requests.exceptions.RequestException as ex:
         current_app.logger.info(str(ex))
         return jsonify({"error":str(ex)}), 504
+    except Exception as ex:
+        current_app.logger.info(str(ex))
+        return jsonify({"error":str(ex)}), 500
     finally:
         current_app.logger.info("一時zipファイル削除:"+tmp_zip_name)
         os.remove(tmp_file_path+tmp_zip_name)
-    # レスポンスを処理
-    
-    # ここまでエラーなしだった場合、successfullyを返す。
-    # エラーが起きたら、failedを返す。
-    
-
-    return jsonify(response.json())
 
 @blueprint.route("/pdf_reader", methods=['POST'])
 def pdf_reader():
@@ -183,7 +179,7 @@ def pdf_reader():
         post_data = request.get_json()
         file_uuid = str(uuid.uuid4())
         file_name = None
-        file_path = os.path.join("tmp", file_uuid)
+        file_path = os.path.join(tmp_file_path, file_uuid)
         output_path = os.path.join(file_path, "output")
         
         # seetup PDF from json
@@ -228,6 +224,4 @@ def pdf_reader():
         return jsonify({"error":str(ex)}), 500
     finally:
         # remove tmp file
-        print(file_path)
         shutil.rmtree(file_path)
-    

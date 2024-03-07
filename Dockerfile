@@ -28,6 +28,8 @@ ENV INVENIO_POSTGRESQL_DBPASS=dbpass123
 ENV INVENIO_WORKER_HOST=127.0.0.1
 ENV INVENIO_DB_POOL_CLASS=QueuePool
 
+# shibbolethログインがモックの為、パスワードは固定値
+ENV MOCK_PASSWORD=testpass
 # 一時ファイルを置くフォルダのパス、コンテナ内のフォルダを参照しているため絶対パスで指定するとコンテナ内でのみ一時フォルダが生成される。
 # マウントされている位置のパスを指定するとローカルにも保存される。
 ENV TMPORARY_FILE_PATH=./tmp/

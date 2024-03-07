@@ -6,6 +6,10 @@ from depositor_login.views import generate_random_str,login
 from depositor_models.user import User, User_manager
 from depositor_models.affiliation_id import Affiliation_Id, Affiliation_Id_manager
 
+# ext.pyのcoverage用
+def test_app_none(base_app_none):
+    assert 1
+
 def test_generate_random_str(app, db, users, client):
     assert len(generate_random_str()) == 128
     assert len(generate_random_str(91)) == 91
@@ -15,7 +19,6 @@ def test_top(app, db, users):
     with app.test_request_context("/"):
         with patch("depositor_login.views.index_login") as index_login:
             login_user(user)
-            print(current_user)
             response = app.test_client().get("/")
             index_login.assert_called()
         

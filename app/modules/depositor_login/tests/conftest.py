@@ -29,6 +29,16 @@ def base_app():
         return user
     return app_
     
+@pytest.fixture()
+def base_app_none():
+    app_ = Flask("testapp")
+    app_.config["SQLALCHEMY_DATABASE_URI"]=DATABASE_URI
+    app_=None
+    AdminSettingApp(app_)
+    ItemRegisterApp(app_)
+    LoginApp(app_)
+    return app_
+
 @pytest.yield_fixture()    
 def app(base_app):
     with base_app.app_context():

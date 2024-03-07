@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TEI xml:space="preserve" xmlns="http://www.tei-c.org/ns/1.0" 
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+xsi:schemaLocation="http://www.tei-c.org/ns/1.0 https://raw.githubusercontent.com/kermitt2/grobid/master/grobid-home/schemas/xsd/Grobid.xsd"
+ xmlns:xlink="http://www.w3.org/1999/xlink">
+	<teiHeader xml:lang="en">
+		<fileDesc>
+			<titleStmt>
+				<title level="a" type="main">Multi-contact functional electrical stimulation for hand opening: electrophysiologically driven identification of the optimal stimulation site</title>
+			</titleStmt>
+			<publicationStmt>
+				<publisher>Springer Science and Business Media LLC</publisher>
+				<availability status="unknown"><p>Copyright Springer Science and Business Media LLC</p>
+				</availability>
+				<date type="published" when="2016-03-08">2016-03-08</date>
+			</publicationStmt>
+			<sourceDesc>
+				<biblStruct>
+					<analytic>
+						<author>
+							<persName><forename type="first">Cristiano</forename><surname>De Marchis</surname></persName>
+							<email>cristiano.demarchis@uniroma3.it</email>
+							<affiliation key="aff0">
+								<orgName type="department" key="dep1">Division of Functional and Restorative Neurosurgery</orgName>
+								<orgName type="department" key="dep2">Department of Neurosurgery</orgName>
+								<orgName type="institution">Eberhard Karls University</orgName>
+								<address>
+									<addrLine>Otfried-Mueller-Str.45</addrLine>
+									<postCode>72076</postCode>
+									<settlement>Tübingen</settlement>
+									<country key="DE">Germany</country>
+								</address>
+							</affiliation>
+						</author>
+						<author>
+						</author>
+						<author>
+							<persName><forename type="first">Cristina</forename><surname>Simon-Martinez</surname></persName>
+							<affiliation key="aff0">
+								<orgName type="department" key="dep1">Division of Functional and Restorative Neurosurgery</orgName>
+								<orgName type="department" key="dep2">Department of Neurosurgery</orgName>
+								<orgName type="institution">Eberhard Karls University</orgName>
+								<address>
+									<addrLine>Otfried-Mueller-Str.45</addrLine>
+									<postCode>72076</postCode>
+									<settlement>Tübingen</settlement>
+									<country key="DE">Germany</country>
+								</address>
+							</affiliation>
+						</author>
+						<author>
+							<persName><forename type="first">Silvia</forename><surname>Conforto</surname></persName>
+							<affiliation key="aff0">
+								<orgName type="department" key="dep1">Division of Functional and Restorative Neurosurgery</orgName>
+								<orgName type="department" key="dep2">Department of Neurosurgery</orgName>
+								<orgName type="institution">Eberhard Karls University</orgName>
+								<address>
+									<addrLine>Otfried-Mueller-Str.45</addrLine>
+									<postCode>72076</postCode>
+									<settlement>Tübingen</settlement>
+									<country key="DE">Germany</country>
+								</address>
+							</affiliation>
+						</author>
+						<author>
+							<persName><forename type="first">Alireza</forename><surname>Gharabaghi</surname></persName>
+							<email>alireza.gharabaghi@uni-tuebingen.de</email>
+							<affiliation key="aff0">
+								<orgName type="department" key="dep1">Division of Functional and Restorative Neurosurgery</orgName>
+								<orgName type="department" key="dep2">Department of Neurosurgery</orgName>
+								<orgName type="institution">Eberhard Karls University</orgName>
+								<address>
+									<addrLine>Otfried-Mueller-Str.45</addrLine>
+									<postCode>72076</postCode>
+									<settlement>Tübingen</settlement>
+									<country key="DE">Germany</country>
+								</address>
+							</affiliation>
+						</author>
+						<title level="a" type="main">Multi-contact functional electrical stimulation for hand opening: electrophysiologically driven identification of the optimal stimulation site</title>
+					</analytic>
+					<monogr>
+						<title level="j" type="main">Journal of NeuroEngineering and Rehabilitation</title>
+						<title level="j" type="abbrev">J NeuroEngineering Rehabil</title>
+						<idno type="eISSN">1743-0003</idno>
+						<imprint>
+							<publisher>Springer Science and Business Media LLC</publisher>
+							<biblScope unit="volume">13</biblScope>
+							<biblScope unit="issue">1</biblScope>
+							<date type="published" when="2016-03-08" />
+						</imprint>
+					</monogr>
+					<idno type="MD5">ADF9B2C06A6F99930D17D335369ECA4F</idno>
+					<idno type="DOI">10.1186/s12984-016-0129-6</idno>
+				</biblStruct>
+			</sourceDesc>
+		</fileDesc>
+		<encodingDesc>
+			<appInfo>
+				<application version="0.8.0" ident="GROBID" when="2024-03-05T12:08+0000">
+					<desc>GROBID - A machine learning software for extracting information from scholarly documents</desc>
+					<ref target="https://github.com/kermitt2/grobid"/>
+				</application>
+			</appInfo>
+		</encodingDesc>
+		<profileDesc>
+			<textClass>
+				<keywords>
+					<term>Neuromuscular electrical stimulation</term>
+					<term>Multi-contact stimulation</term>
+					<term>EMG</term>
+					<term>M-wave</term>
+					<term>Hand function</term>
+					<term>Neurorehabilitation</term>
+				</keywords>
+			</textClass>
+			<abstract>
+				<p>Background: Functional Electrical Stimulation (FES) is increasingly applied in neurorehabilitation. Particularly, the use of electrode arrays may allow for selective muscle recruitment. However, detecting the best electrode configuration constitutes still a challenge. Methods: A multi-contact setup with thirty electrodes was applied for combined FES and electromyography (EMG) recording of the forearm. A search procedure scanned all electrode configurations by applying single, sub-threshold stimulation pulses while recording M-waves of the extensor digitorum communis (EDC), extensor carpi radialis (ECR) and extensor carpi ulnaris (ECU) muscles. The electrode contacts with the best electrophysiological response were then selected for stimulation with FES bursts while capturing finger/wrist extension and radial/ulnar deviation with a kinematic glove. Results: The stimulation electrodes chosen on the basis of M-waves of the EDC/ECR/ECU muscles were able to effectively elicit the respective finger/wrist movements for the targeted extension and/or deviation with high specificity in two different hand postures. Conclusions: A subset of functionally relevant stimulation electrodes could be selected fast, automatic and nonpainful from a multi-contact array on the basis of muscle responses to subthreshold stimulation pulses. The selectivity of muscle recruitment predicted the kinematic pattern. This electrophysiologically driven approach would thus allow for an operator-independent positioning of the electrode array in neurorehabilitation.</p>
+			</abstract>
+		</profileDesc>
+	</teiHeader>
+	<text xml:lang="en">
+	</text>
+	<text type="test">
+	</text>
+</TEI>
