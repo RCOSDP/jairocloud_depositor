@@ -33,7 +33,6 @@ xsi:schemaLocation="http://www.tei-c.org/ns/1.0 https://raw.githubusercontent.co
 							</affiliation>
 						</author>
 						<author>
-							<persName><forename type="first">Thiago</forename><surname>Santos Monteiro</surname></persName>
 						</author>
 						<author>
 							<persName><forename type="first">Cristina</forename><surname>Simon-Martinez</surname></persName>
@@ -121,5 +120,7 @@ xsi:schemaLocation="http://www.tei-c.org/ns/1.0 https://raw.githubusercontent.co
 		</profileDesc>
 	</teiHeader>
 	<text xml:lang="en">
+	</text>
+	<text type="test">
 	</text>
 </TEI>
