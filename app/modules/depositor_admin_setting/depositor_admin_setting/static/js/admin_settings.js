@@ -37,29 +37,59 @@ function handleSelect(){
   }
 }
 
+function isEmpty(value){
+  if (!value){
+    return true;
+  }else{
+    return false;
+  }
+}
+
 function handleAffiliSubmit(){
-    closeError();
-    const form ={
-        'affiliation_name': document.getElementById("affiliation_name").value,
-        'repository_url': document.getElementById("repository_url").value,
-        'access_token': document.getElementById("access_token").value
-    }
-      let pattern = /^(https?|ftp)(:\/\/[\w\/:%#\$&\?\(\)~\.=\+\-]+)/
-      if(pattern.test(form.repository_url)){
-        fetch("/admin_setting/" ,{method:'POST' ,headers:{'Content-Type':'application/json'} ,credentials:"include", body: JSON.stringify(form)})
-        .then(res => {
-          if(!res.ok){
-            console.log(etext);
-        }
-          console.log("ok");
-          showMsg("Successfully Changed Settings." , true);
-        })
-        .catch(error => {
-          console.log(error);
-          showMsg("Failed To Change Settings" , false);
-        });
-      }else{
-        showMsg("登録先URL: Please input in URL format." , false);
+
+  const affiliation_name = document.getElementById("affiliation_name");
+  const repository_url = document.getElementById("repository_url");
+  const access_token = document.getElementById("access_token");
+
+  closeError();
+
+  //Validate 
+  // required check
+  NGList = [];
+  if(isEmpty(affiliation_name.value)){
+    NGList.push('機関名');
+  }
+  if(isEmpty(repository_url.value)){
+    NGList.push('登録先URL');
+  }
+  if(isEmpty(access_token.value)){
+    NGList.push('アクセストークン');
+  }
+  if(NGList.length){
+    return showMsg("The following items is required. Please recheck and input." + NGList , false);
+  }
+
+  const form ={
+      'affiliation_name': document.getElementById("affiliation_name").value,
+      'repository_url': document.getElementById("repository_url").value,
+      'access_token': document.getElementById("access_token").value
+  }
+    let pattern = /^(https?|ftp)(:\/\/[\w\/:%#\$&\?\(\)~\.=\+\-]+)/
+    if(pattern.test(form.repository_url)){
+      fetch("/admin_setting/" ,{method:'POST' ,headers:{'Content-Type':'application/json'} ,credentials:"include", body: JSON.stringify(form)})
+      .then(res => {
+        if(!res.ok){
+          console.log(etext);
       }
+        console.log("ok");
+        showMsg("Successfully Changed Settings." , true);
+      })
+      .catch(error => {
+        console.log(error);
+        showMsg("Failed To Change Settings" , false);
+      });
+    }else{
+      showMsg("登録先URL: Please input in URL format." , false);
+    }
 }
 componentDidMount();
