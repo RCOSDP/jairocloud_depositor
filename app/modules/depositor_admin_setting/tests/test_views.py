@@ -15,6 +15,9 @@ from depositor_models.affiliation_id import Affiliation_Id, Affiliation_Id_manag
 from depositor_models.affiliation_repository import Affiliation_Repository, Affiliation_Repository_manager
 from depositor_login.views import index_login
 
+# ext.pyのcoverage用
+def test_app_none(base_app_none):
+    assert 1
 
 def test_index_affili(app, db, users, client,mocker,Affiliation_Id_settings,Affiliation_Repository_settings):
     url = "/admin_setting/"

@@ -29,6 +29,14 @@ def base_app():
         user=User_manager.get_user_by_id(user_id)
         return user
     return app_
+
+@pytest.fixture()
+def base_app_none():
+    app_=None
+    AdminSettingApp(app_)
+    ItemRegisterApp(app_)
+    LoginApp(app_)
+    return app_
  
     
 @pytest.yield_fixture()    
