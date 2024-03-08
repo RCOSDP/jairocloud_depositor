@@ -41,6 +41,7 @@ def test_index_affili(app, db, users, client,mocker,Affiliation_Id_settings,Affi
     #get
 
     #管理者
+            
     user = User_manager.get_user_by_id(0)
     repository_list = Affiliation_Id_manager.get_affiliation_id_list()
     aff_repository = {"-1": {"access_token": "default_token", "repository_url": "https://example/repository_url/default"}, "101": {"access_token": "test_token", "repository_url": "https://example/repository_url/test"}}
@@ -59,6 +60,23 @@ def test_index_affili(app, db, users, client,mocker,Affiliation_Id_settings,Affi
 
 
     #図書館員
+        
+    user = User_manager.get_user_by_id(5)
+    repository_list = Affiliation_Id_manager.get_affiliation_id_list()
+    aff_repository = {"-1": {"access_token": "default_token", "repository_url": "https://example/repository_url/default"}, "101": {"access_token": "test_token", "repository_url": "https://example/repository_url/test"}}
+    mock_render = mocker.patch("depositor_admin_setting.views.render_template", return_value=make_response())
+    with app.test_request_context(url):
+        login_user(user)
+        res = app.test_client().get(url)
+        assert res.status_code == 200
+        args, kwargs = mock_render.call_args
+        assert args[0] == "admin_setting/affi_index.html"
+        assert kwargs["affiliation_id_list"] == repository_list
+        assert kwargs["aff_repository_dict"] == json.dumps(aff_repository)
+        assert kwargs["affiliation_name"] == "affiliation_test3"
+        assert kwargs["repository_url"] == ""
+        assert kwargs["access_token"] == ""
+
     user = User_manager.get_user_by_id(1)
     repository_list = Affiliation_Id_manager.get_affiliation_id_list()
     aff_repository = {"-1": {"access_token": "default_token", "repository_url": "https://example/repository_url/default"}, "101": {"access_token": "test_token", "repository_url": "https://example/repository_url/test"}}
