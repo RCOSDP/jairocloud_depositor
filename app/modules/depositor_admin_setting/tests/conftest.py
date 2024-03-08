@@ -69,18 +69,21 @@ def users(app, db):
     test_user_1 = User(id=2, user_id="test_user1A", affiliation_id=101, user_orcid = "test_user1", role = "")
     test_user_2 = User(id=3, user_id="test_user2A", affiliation_id=102, user_orcid = "test_user2", role = "")
     test_user_3 = User(id=4, user_id="test_user3A", affiliation_id=102, user_orcid = "test_user2", role = "図書館員")
+    test_user_4 = User(id=5, user_id="test_user4A", affiliation_id=103, user_orcid = "test_user3", role = "図書館員")
     
     User_manager.create_user(test_admin)
     User_manager.create_user(test_cont)
     User_manager.create_user(test_user_1)
     User_manager.create_user(test_user_2)
     User_manager.create_user(test_user_3)
+    User_manager.create_user(test_user_4)
     
     return [test_admin,
             test_cont,
             test_user_1,
             test_user_2,
-            test_user_3]
+            test_user_3,
+            test_user_4]
 
 @pytest.fixture()
 def Affiliation_Id_settings(db):

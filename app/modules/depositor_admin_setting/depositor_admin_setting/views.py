@@ -60,8 +60,9 @@ def index_affili():
                     affiliation_id_info = Affiliation_Id_manager.get_affiliation_id_by_id(current_user.affiliation_id)
                     affiliation_name = affiliation_id_info.affiliation_name
                     affiliation_repository_info = Affiliation_Repository_manager.get_aff_repository_by_affiliation_id(affiliation_id_info.id)
-                repository_url = affiliation_repository_info.repository_url
-                access_token = affiliation_repository_info.access_token
+                if affiliation_repository_info:
+                    repository_url = affiliation_repository_info.repository_url
+                    access_token = affiliation_repository_info.access_token
                 affiliation_id_list = Affiliation_Id_manager.get_affiliation_id_list()
                 affiliation_repository_list = Affiliation_Repository_manager.get_affiliation_repository_list()
                 aff_repository_dict = {}
