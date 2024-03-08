@@ -2219,7 +2219,7 @@
                         }
                     },
                     {
-                        "key": "jpcoar:rightsHolder[].rightHolderNames[].rightHolderName",
+                        "key": "jpcoar:rightsHolder[].jpcoar:rightsHolderName[].jpcoar:rightsHolderName",
                         "type": "text",
                         "title": "権利者名",
                         "title_i18n": {
