@@ -64,6 +64,16 @@ namespace_list={"jpcoar2.0":{
     "xsi:schemaLocation":"https://github.com/JPCOAR/schema/blob/master/2.0/ jpcoar_scm.xsd"
 }}
 
+# xml用タグ判別用
+tag_list = {"jpcoar2.0":[
+    "jpcoar",
+    "datacite",
+    "dc",
+    "dcterms"
+    ]
+}
+
+
 # xml用roottag設定用
 root_tag={"jpcoar2.0":"jpcoar:jpcoar"}
 
@@ -77,6 +87,10 @@ def dicttoxmlforsword(kindofproperty, item_metadata):
                     # リストに対応するキーとキーが一致するならそれは値
                     if proper_key==property_key:
                         child.text = proper_value
+                    # キーとキーが一致しないが、taglistと合致するならこれも値
+                    elif proper_key.split(":")[0] in tag_list.get(kindofproperty,"") :
+                        grandchild = ET.SubElement(child, proper_key)
+                        grandchild.text = proper_value
                     # リストに対応するキーでないならそれは属性
                     else:
                         child.set(proper_key, proper_value)

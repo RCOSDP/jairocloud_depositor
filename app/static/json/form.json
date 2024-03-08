@@ -4403,7 +4403,7 @@
                         }
                     },
                     {
-                        "key": "datacite:geoLocation[].datacite:geoLocationBox.datacite:southBoundLongitude",
+                        "key": "datacite:geoLocation[].datacite:geoLocationBox.datacite:southBoundLatitude",
                         "type": "text",
                         "title": "南部緯度",
                         "title_i18n": {
@@ -4412,7 +4412,7 @@
                         }
                     },
                     {
-                        "key": "datacite:geoLocation[].datacite:geoLocationBox.datacite:northBoundLongitude",
+                        "key": "datacite:geoLocation[].datacite:geoLocationBox.datacite:northBoundLatitude",
                         "type": "text",
                         "title": "北部緯度",
                         "title_i18n": {
