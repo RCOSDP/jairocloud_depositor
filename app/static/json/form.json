@@ -2219,7 +2219,7 @@
                         }
                     },
                     {
-                        "key": "jpcoar:rightsHolder[].rightHolderNames[].rightHolderName",
+                        "key": "jpcoar:rightsHolder[].jpcoar:rightsHolderName[].jpcoar:rightsHolderName",
                         "type": "text",
                         "title": "権利者名",
                         "title_i18n": {
@@ -4403,7 +4403,7 @@
                         }
                     },
                     {
-                        "key": "datacite:geoLocation[].datacite:geoLocationBox.datacite:southBoundLongitude",
+                        "key": "datacite:geoLocation[].datacite:geoLocationBox.datacite:southBoundLatitude",
                         "type": "text",
                         "title": "南部緯度",
                         "title_i18n": {
@@ -4412,7 +4412,7 @@
                         }
                     },
                     {
-                        "key": "datacite:geoLocation[].datacite:geoLocationBox.datacite:northBoundLongitude",
+                        "key": "datacite:geoLocation[].datacite:geoLocationBox.datacite:northBoundLatitude",
                         "type": "text",
                         "title": "北部緯度",
                         "title_i18n": {
@@ -4480,6 +4480,10 @@
                             {
                                 "name": "Crossref Funder",
                                 "value": "Crossref Funder"
+                            },
+                            {
+                                "name":"e-Rad_funder",
+                                "value":"e-Rad_funder"
                             },
                             {
                                 "name": "GRID",
@@ -8567,7 +8571,17 @@
             },
             {
                 "key": "jpcoar:file[].jpcoar:mimeType",
-                "type": "text",
+                "items":[
+                    {
+                        "key":"jpcoar:file[].jpcoar:mimeType[].jpcoar:mimeType",
+                        "type": "text",
+                        "title": "フォーマット",
+                        "title_i18n": {
+                            "en": "Format",
+                            "ja": "フォーマット"
+                        }
+                    }
+                ],
                 "title": "フォーマット",
                 "title_i18n": {
                     "en": "Format",
