@@ -9,6 +9,7 @@ metadata_list ={
         "dc:title",
         "dcterms:alternative",
         "jpcoar:creator",
+        "jpcoar:contributor",
         "dcterms:accessRights",
         "dc:rights",
         "jpcoar:rightsHolder",
