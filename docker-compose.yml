@@ -56,5 +56,4 @@ services:
     restart: always
     
 volumes:
-  static_data:
   pgsql-data:
