@@ -16,6 +16,7 @@ metadata_list ={
         "jpcoar:subject",
         "datacite:description",
         "dc:publisher",
+        "jpcoar:publisher",
         "datacite:date",
         "dcterms:date",
         "dc:language",
