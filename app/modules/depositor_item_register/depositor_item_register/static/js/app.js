@@ -2,6 +2,9 @@ import React, { useState, useRef, createContext, useContext, useEffect } from 'r
 import { createRoot } from 'react-dom/client';
 import Modal from 'react-modal';
 // import { DatePicker } from 'react-datepicker';
+const OVER_100MB_MESSAGE = "ファイルサイズが100MBを超えています。";
+const FETCH_ERROR_MESSAGE = "There was a problem with the fetch operation";
+const NETWORK_ERROR_MESSAGE = "'Network response was not ok'";
 
 const contentFilesContext = createContext([]);
 const setContentFilesContext = createContext(null);
@@ -33,6 +36,11 @@ const FileProvider = ({ children }) => {
 
 
     function changeMetadata(key, value) {
+        /*
+        この関数はkeyが表す位置の辞書metadataの値を変更します。
+        また、keyが表す位置の辞書のキーがない場合、キーを作成します。
+        その後、再レンダリングをおこないます。
+        */
 
         let tmpMetadata = structuredClone(metadata)
         let keyList = key.split(".")
@@ -63,6 +71,11 @@ const FileProvider = ({ children }) => {
     }
 
     function editMetadata(tmpMetadata, key, value) {
+        /*
+        引数の例：tmpMetadata = {}, key = dc:title[0].dc:title, value = "タイトル"
+        このメソッドは渡された辞書tmpMetadataをkey,valueに沿って編集します。
+        このメソッドでは再レンダリングを行いません。
+        */
         let keyList = key.split(".")
         let meta = tmpMetadata
         for (let i = 0; i < keyList.length; i++) {
@@ -99,7 +112,7 @@ const FileProvider = ({ children }) => {
         Array.from(files).forEach(file => {
             if (checkFilesizeOver100MB(file)) {
                 setModalIsOpen(true);
-                setModalHeader("ファイルサイズが100MBを超えています。");
+                setModalHeader(OVER_100MB_MESSAGE);
                 setModalContent(<h4>
                     ファイル名：{file.name}
                 </h4>)
@@ -191,19 +204,17 @@ const useModalHeaderSetValue = () => useContext(setModalHeaderContext);
 const useModalContentValue = () => useContext(modalContentContext);
 const useModalContentSetValue = () => useContext(setModalContentContext);
 
-function ItemRegisterPanel({ }) {
+function ItemRegisterTabPage({ }) {
     let count = 0;
     const inputForms = [];
     const SYSTEM_PROP = "system_prop"
-    forms.forEach(form => {
-        if (!(SYSTEM_PROP in schema.properties[form.key] && schema.properties[form.key][SYSTEM_PROP] === true)) {
-            inputForms.push(
-                <div className="form_metadata_property" key={form.key}>
-                    <Panelform form={form} />
-                </div>
-            )
-            count++;
-        }
+    forms.filter((form) => !(SYSTEM_PROP in schema.properties[form.key] && schema.properties[form.key][SYSTEM_PROP] === true)).forEach(form => {
+        inputForms.push(
+            <div className="form_metadata_property" key={form.key}>
+                <Panelform form={form} />
+            </div>
+        )
+        count++;
     });
     return (
         <ModalProvider>
@@ -224,7 +235,7 @@ function ItemRegisterPanel({ }) {
 
 function WrappedModal() {
     const modalIsOpen = useModalIsOpenValue();
-    const setModalIsOpen = useModalContentSetValue();
+    const setModalIsOpen = useModalIsOpenSetValue();
     const content = useModalContentValue();
     const setContent = useModalContentSetValue(); //HTML
     const header = useModalHeaderValue();
@@ -305,7 +316,7 @@ function PDFform({ }) {
             const firstFile = files[0];
             if (checkFilesizeOver100MB(firstFile)) {
                 setModalIsOpen(true);
-                setModalHeader("ファイルサイズが100MBを超えています。");
+                setModalHeader(OVER_100MB_MESSAGE);
                 setModalContent(<h4>
                     ファイル名：{firstFile.name}
                 </h4>)
@@ -361,9 +372,9 @@ function PDFform({ }) {
             return requestPython(files)
         }).catch(error => {
             setModalIsOpen(true);
-            setModalHeader("自動入力に失敗しました。")//error.status + " " + error.statusText
+            setModalHeader("自動入力に失敗しました。")
             setModalContent(<>
-                <h4>{error.status + ":" + error.statusText}</h4>
+                <h4>{error.status + " " + error.statusText}</h4>
                 <h4>{JSON.parse(error.responseText).error}</h4>
             </>)
             setDisabled(false);
@@ -380,14 +391,12 @@ function PDFform({ }) {
             headers: { "Content-Type": "application/json" },
             data: JSON.stringify(dataForRequest),
             success: function (response) {
-                // リクエストが成功した場合の処理
-                // console.log('Success!', response);
 
                 let tmpMetadata = structuredClone(metadata)
                 let fileInfo = structuredClone(tmpMetadata[schema.file_info.property_name])
                 let PDFresult = []
-                // コンテントファイル情報以外metadataを初期化
-                // tmpMetadata = {}
+
+                // pdf自動入力される可能性があるmetadataを初期化
                 Object.keys(pdfProperty.properties).forEach((key) => {
                     delete tmpMetadata[pdfProperty.properties[key]]
                 })
@@ -455,7 +464,6 @@ function PDFform({ }) {
                 setDisabled(false);
             },
             error: function (status) {
-                // リクエストが失敗した場合の処理
                 setDisabled(false);
             }
         })
@@ -498,7 +506,6 @@ function SubmitButton() {
             const reader = new FileReader();
             reader.onload = function (event) {
                 const base64Data = event.target.result.split(",")[1];
-                // console.log(file.name + ":" + base64Data.length)
                 resolve({ "name": file.name, "base64": base64Data });
             };
             reader.onerror = function (error) {
@@ -525,8 +532,6 @@ function SubmitButton() {
             headers: { "Content-Type": "application/json" },
             data: JSON.stringify(dataForRequest),
             success: function (response) {
-                // リクエストが成功した場合の処理
-                // console.log('Success!', response);
                 setModalIsOpen(true);
                 setModalHeader("登録成功");
                 setModalContent(<>
@@ -535,7 +540,6 @@ function SubmitButton() {
                 setDisabled(false);
             },
             error: function (status) {
-                // リクエストが失敗した場合の処理
                 console.log(status)
                 setDisabled(false);
             }
@@ -634,9 +638,9 @@ function ThumbnailUploadForm() {
         if (files.length > 0) {
             const firstFile = files[0];
             if (checkFilesizeOver100MB(firstFile)) {
-                console.log("ファイルサイズが100MBを超えています。")
+                console.log(OVER_100MB_MESSAGE)
                 setModalIsOpen(true);
-                setModalHeader("ファイルサイズが100MBを超えています。");
+                setModalHeader(OVER_100MB_MESSAGE);
                 setModalContent(<h4>
                     ファイル名：{firstFile.name}
                 </h4>)
@@ -691,11 +695,12 @@ function Datalist({ contentFiles, deleteFile }) {
                 </div>
             </div>
             <table className="table">
-                <tbody><tr>
-                    <th>Filename</th>
-                    <th>Size</th>
-                    <th className="text-center">Actions</th>
-                </tr>
+                <tbody>
+                    <tr>
+                        <th>Filename</th>
+                        <th>Size</th>
+                        <th className="text-center">Actions</th>
+                    </tr>
                     {contentFiles.map((file, index) => (
                         (<tr key={file.name}>
                             <td>{file.name}</td>
@@ -707,7 +712,8 @@ function Datalist({ contentFiles, deleteFile }) {
                             </td>
                         </tr>)
                     ))}
-                </tbody></table>
+                </tbody>
+            </table>
             <div className="panel-footer"></div>
         </div>
     )
@@ -860,7 +866,6 @@ function Panelform({ parentId, form }) {
         } catch (error) {
             //pass ここに入る場合、削除する値がありません。
         } finally {
-            // setTimeout(setInputlists(prevItems => prevItems.filter(inputlist => inputlist.key !== key)),0)
             setInputlists(prevItems => prevItems.filter(inputlist => inputlist.key !== key))
         }
     }
@@ -1000,7 +1005,7 @@ function Textform({ item, parentId }) {
     const formId = parentId + "." + item.key.split(".")[item.key.split(".").length - 1]
     let readOnly = false;
 
-    if ("readOnly" in item && item.readOnly === true) {
+    if ("readonly" in item && item.readonly === true) {
         readOnly = true;
     }
     return (
@@ -1063,7 +1068,7 @@ function Selectform({ parentId, map, item }) {
     )
 }
 
-// いまはとりあえず　input date型である。
+
 function Datepickerform({ parentId, item }) {
     const changeMetadata = useMetadataChangeValue();
     const metadata = useMetadataValue();
@@ -1231,7 +1236,6 @@ function readMetadata() {
         metadataProperty.querySelectorAll('li.list-group-item.ui-sortable').forEach(function (elemen) {
             if (elemen.id.split(".").length === 1) {
                 let property = {}
-                //
                 elemen.querySelectorAll('.input-form.form-control').forEach(function (e) {
                     if (e.id.split('.').length <= 2) {
                         if (e.value != "") {
@@ -1287,26 +1291,26 @@ let schema = null;
 fetch('/static/json/form.json')
     .then(response => {
         if (!response.ok) {
-            throw new Error('Network response was not ok');
+            throw new Error(NETWORK_ERROR_MESSAGE);
         }
-        return response.text(); // JSONデータを取得して解析する
+        return response.text();
     })
     .then(data => {
         forms = JSON.parse(data);
         return fetch('/static/json/jsonschema.json')
     }).then(response => {
         if (!response.ok) {
-            throw new Error('Network response was not ok');
+            throw new Error(NETWORK_ERROR_MESSAGE);
         }
-        return response.text(); // JSONデータを取得して解析する
+        return response.text();
     })
     .then(data => {
         schema = JSON.parse(data);
-        root.render(<ItemRegisterPanel />);
+        root.render(<ItemRegisterTabPage />);
     })
     .catch(error => {
-        console.error('There was a problem with the fetch operation:', error);
-        alert("There was a problem with the fetch operation")
+        console.error(FETCH_ERROR_MESSAGE + ':', error);
+        alert(FETCH_ERROR_MESSAGE)
     });
 
 
