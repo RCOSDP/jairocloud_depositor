@@ -34,12 +34,16 @@ const FileProvider = ({ children }) => {
     const setModalContent = useModalContentSetValue();
     const setModalHeader = useModalHeaderSetValue();
 
-
+    /**
+    この関数はkeyが表す位置の辞書metadataの値を変更します。
+    また、keyが表す位置の辞書のキーがない場合、キーを作成します。
+    その後、再レンダリングをおこないます。
+    @param {string} key 追加するkeyです。 例："dc:title[0].dc:title"
+    @param {string} value keyに対応するvalueです。　例 "タイトル"
+    @return なし
+    */
     function changeMetadata(key, value) {
         /*
-        この関数はkeyが表す位置の辞書metadataの値を変更します。
-        また、keyが表す位置の辞書のキーがない場合、キーを作成します。
-        その後、再レンダリングをおこないます。
         */
 
         let tmpMetadata = structuredClone(metadata)
@@ -70,12 +74,17 @@ const FileProvider = ({ children }) => {
         setMetadata(tmpMetadata)
     }
 
+    /**
+    * このメソッドは渡された辞書tmpMetadataにkey,valueを追加、または上書きします。
+    * 参照渡しされた辞書を編集するので返り値はありません。
+    * このメソッドでは再レンダリングを行いません。
+    * メソッド後のtmpMetadata：tmpMetadata = {"dc:title":[{"dc:title":"タイトル"},null,{}]}
+    * @param {dict} tmpMetadata 編集する辞書を想定しています。
+    * @param {string} key 追加するkeyです。 例："dc:title[0].dc:title"
+    * @param {string} value keyに対応するvalueです。　例 "タイトル"
+    * @return なし
+    */
     function editMetadata(tmpMetadata, key, value) {
-        /*
-        引数の例：tmpMetadata = {}, key = dc:title[0].dc:title, value = "タイトル"
-        このメソッドは渡された辞書tmpMetadataをkey,valueに沿って編集します。
-        このメソッドでは再レンダリングを行いません。
-        */
         let keyList = key.split(".")
         let meta = tmpMetadata
         for (let i = 0; i < keyList.length; i++) {
@@ -94,7 +103,7 @@ const FileProvider = ({ children }) => {
                 meta = meta[tmpId]
 
                 // tmpIdIndex番目の配列がないなら作る
-                if (meta.length < tmpIdIndex - 1 || meta[tmpIdIndex] === undefined) {
+                if (meta.length < tmpIdIndex - 1 || !meta[tmpIdIndex]) {
                     meta[tmpIdIndex] = {}
                 }
                 meta = meta[tmpIdIndex]
@@ -102,6 +111,13 @@ const FileProvider = ({ children }) => {
         }
     }
 
+    /**
+     * このメソッドは受け取ったFileListオブジェクトをFileオブジェクトに分割し、
+     * contentFilesに入れることを目的にしています。
+     * また、contentFilesに入ったFileオブジェクトから各情報を取り出し、ファイル情報に自動入力します。
+     * @param {FileList} files 
+     * @return なし
+     */
     function addFiles(files) {
         const fileProperty = schema.file_info
         const contentFileNames = contentFiles.map(contentfile => contentfile.name)
@@ -208,14 +224,15 @@ function ItemRegisterTabPage({ }) {
     let count = 0;
     const inputForms = [];
     const SYSTEM_PROP = "system_prop"
-    forms.filter((form) => !(SYSTEM_PROP in schema.properties[form.key] && schema.properties[form.key][SYSTEM_PROP] === true)).forEach(form => {
-        inputForms.push(
-            <div className="form_metadata_property" key={form.key}>
-                <Panelform form={form} />
-            </div>
-        )
-        count++;
-    });
+    forms.filter((form) => !(SYSTEM_PROP in schema.properties[form.key] && schema.properties[form.key][SYSTEM_PROP] === true))
+        .forEach(form => {
+            inputForms.push(
+                <div className="form_metadata_property" key={form.key}>
+                    <Panelform form={form} />
+                </div>
+            )
+            count++;
+        });
     return (
         <ModalProvider>
             <FileProvider>
@@ -310,7 +327,11 @@ function PDFform({ }) {
     const setModalHeader = useModalHeaderSetValue();
     const editMetadata = useMetadataEditValue();
 
-
+    /**
+     * このメソッドは引数filesから一番目のPDFファイルをFileオブジェクトとして取り出すことを目的にしています。
+     * 取り出されたFileオブジェクトはpdfFile、contentFilesに追加、上書きされます。
+     * @param {FileList} files 
+     */
     function addFilesForPdf(files) {
         if (files.length > 0) {
             const firstFile = files[0];
@@ -336,12 +357,19 @@ function PDFform({ }) {
             console.log("ドロップされたファイルはありません");
         }
     }
-
+    /**
+     * このメソッドはpdfFileのFileオブジェクトを削除することを目的にしています。
+     */
     function deleteFile() {
         setPdfFile([]);
     }
 
-    // ファイルをBase64にエンコードする関数
+    /**
+     * このメソッドはFileオブジェクトをBase64にエンコードすることを目的にしています。
+     * ただ、返り値はPromiseです。
+     * @param {File} file 
+     * @returns {Promise}
+     */
     function encodeFileToBase64(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -356,7 +384,12 @@ function PDFform({ }) {
         });
     }
 
-    // 複数のファイルをBase64にエンコードする関数
+    /**
+     * このメソッドはFileオブジェクトのリストをまとめてBase64にエンコードすることを目的にしています。
+     * encodeFileToBase64は返り値がPromiseなのでPromise.allをして返り値を返しています。
+     * @param {Array} files 
+     * @returns {result}
+     */
     function encodeFilesToBase64(files) {
         const promises = files.map(file => {
             return encodeFileToBase64(file)
@@ -364,6 +397,10 @@ function PDFform({ }) {
         return Promise.all(promises);
     }
 
+    /**
+     * このメソッドはpdfFileにあるPDFをエンコードし、pythonに送ることを目的にしています。
+     * @return 
+     */
     function readPdf() {
         let files = [];
         setDisabled(true);
@@ -382,6 +419,13 @@ function PDFform({ }) {
         );
     }
 
+    /**
+     * このメソッドはbase64エンコードされたPDFファイルから抽出した情報を自動入力することを目的にしています。
+     * POSTrequest送信後responseとしてはPDFファイルから抽出した情報が返ってきます。
+     * {"title":"タイトル", "author":[], "date":{"object":"", "value":""}}などが考えられます。
+     * @param {Array} files 
+     * @returns 
+     */
     function requestPython(files) {
         const dataForRequest = { "contentfiles": files }
 
@@ -500,7 +544,13 @@ function SubmitButton() {
     const setModalIsOpen = useModalIsOpenSetValue();
     const setModalContent = useModalContentSetValue();
     const setModalHeader = useModalHeaderSetValue();
-    // ファイルをBase64にエンコードする関数
+
+    /**
+     * このメソッドはFileオブジェクトをBase64にエンコードすることを目的にしています。
+     * ただ、返り値はPromiseです。
+     * @param {File} file 
+     * @returns {Promise}
+     */
     function encodeFileToBase64(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -515,7 +565,12 @@ function SubmitButton() {
         });
     }
 
-    // 複数のファイルをBase64にエンコードする関数
+    /**
+     * このメソッドはFileオブジェクトのリストをまとめてBase64にエンコードすることを目的にしています。
+     * encodeFileToBase64は返り値がPromiseなのでPromise.allをして返り値を返しています。
+     * @param {Array} files 
+     * @returns {result}
+     */
     function encodeFilesToBase64(files) {
         const promises = files.map(file => {
             return encodeFileToBase64(file)
@@ -523,7 +578,14 @@ function SubmitButton() {
         return Promise.all(promises);
     }
 
-
+    /**
+     * 入力されたmetadata、files、thumbをpythonに送ることを目的にしています。
+     * POSTrequest送信後ステータスコード200の場合responseとしては登録したリポジトリのURLが返ってきます。
+     * @param {dict} metadata 画面に入力された情報を辞書型で成形したものです。
+     * @param {Array} files contentFilesに入っていたFileオブジェクトをlistにいれたものです。
+     * @param {Array} thumb thumbnailに入っていたFileオブジェクトをlistにいれたものです。
+     * @returns 
+     */
     function requestPython(metadata, files, thumb) {
         const dataForRequest = { "item_metadata": metadata, "contentfiles": files, "thumbnail": thumb }
         return $.ajax({
@@ -546,6 +608,11 @@ function SubmitButton() {
         })
     }
 
+    /**
+     * このメソッドは入力された情報をreadMetadataメソッドであつめ、pythonに送ることを目的にしています。
+     * なお、必須事項のチェックがcheckRequiredで入ります。
+     * @returns 
+     */
     function itemRegister() {
         const requiredButNoValue = checkRequired(schema.required)
         if (requiredButNoValue.length !== 0) {
@@ -1170,6 +1237,12 @@ function Checkboxesform({ parentId, order, value, item }) {
     )
 }
 
+/**
+ * このメソッドは引数metadataから引数keyの値を取り出すことを目的にしています。
+ * @param {string} key 
+ * @param {dict} metadata 
+ * @returns 
+ */
 function getMetadata(key, metadata) {
     let keyList = key.split(".")
     let tmpMeta = metadata
@@ -1190,6 +1263,12 @@ function getMetadata(key, metadata) {
     return tmpMeta
 }
 
+/**
+ * 引数のHTMLごとに辞書を作成していくことを目的にしているメソッドです。
+ * @param {HTMLElement} panel 
+ * @param {dict} property 
+ * @param {int} nest 
+ */
 function readPanel(panel, property, nest) {
     panel.querySelectorAll('.schema-form-fieldset').forEach(function (element) {
         if (element.id.split(".").length === nest) {
@@ -1220,6 +1299,10 @@ function readPanel(panel, property, nest) {
     })
 }
 
+/**
+ * このメソッドは画面に入力された情報を取り出し、想定されている形の辞書型に成形することを目的にしています。
+ * @returns {dict} 
+ */
 function readMetadata() {
     let itemMetadata = {}
     // 項目ごとにHTMLを取得
@@ -1259,6 +1342,13 @@ function readMetadata() {
     return itemMetadata
 }
 
+/**
+ * このメソッドは引数required_listに入っている項目の値が入力されているかどうかを確認することを目的にしています。
+ * 入力されていなかった場合、その項目の入力欄を赤くハイライトさせます。
+ * また、その項目を返り値のarrayにいれます。
+ * @param {Array} required_list 
+ * @returns {Array}
+ */
 function checkRequired(required_list) {
     let requiredButNoValueList = new Set();
     required_list.forEach(function (element) {
@@ -1275,6 +1365,12 @@ function checkRequired(required_list) {
     return Array.from(requiredButNoValueList);
 }
 
+/**
+ * このメソッドは引数Fileオブジェクトが100MBを超えているかどうかを確認することを目的にしています。
+ * 超えていた場合Trueを超えていない場合Falseを返します。
+ * @param {File} file 
+ * @returns 
+ */
 function checkFilesizeOver100MB(file) {
     /// ファイルサイズ取得
     const fileSize = file.size;
@@ -1287,25 +1383,26 @@ const root = createRoot(document.getElementById('input_form_container'));
 Modal.setAppElement(document.getElementById('input_form_container'));
 let forms = null;
 let schema = null;
+const urls = ['/static/json/form.json', '/static/json/jsonschema.json']
 
-fetch('/static/json/form.json')
+const promises = urls.map(url =>
+    fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(NETWORK_ERROR_MESSAGE);
+            }
+            return response.json();
+        })
+        .catch(error => {
+            console.error(FETCH_ERROR_MESSAGE + ':', error);
+            alert(FETCH_ERROR_MESSAGE)
+        })
+);
+
+Promise.all(promises)
     .then(response => {
-        if (!response.ok) {
-            throw new Error(NETWORK_ERROR_MESSAGE);
-        }
-        return response.text();
-    })
-    .then(data => {
-        forms = JSON.parse(data);
-        return fetch('/static/json/jsonschema.json')
-    }).then(response => {
-        if (!response.ok) {
-            throw new Error(NETWORK_ERROR_MESSAGE);
-        }
-        return response.text();
-    })
-    .then(data => {
-        schema = JSON.parse(data);
+        forms = response[0]
+        schema = response[1]
         root.render(<ItemRegisterTabPage />);
     })
     .catch(error => {
