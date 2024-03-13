@@ -2,7 +2,7 @@ FROM python:3.12-slim-bookworm
 WORKDIR /code
 ENV FLASK_APP=app
 ENV FLASK_DEBUG=1
-RUN adduser --uid 1000 --disabled-password --gecos '' invenio
+RUN adduser --uid 1000 --disabled-password --gecos '' depositor
 
 COPY /app/requirements.txt ./
 # COPY /app/requirements-depositor-modules.txt ./
@@ -15,18 +15,11 @@ ENV PYTHONPATH=$PYTHONPATH:/code/app/modules/depositor_login
 ENV PYTHONPATH=$PYTHONPATH:/code/app/modules/depositor_models
 ENV PYTHONPATH=$PYTHONPATH:/code/src/grobid_client
 
-ENV INVENIO_WEB_HOST=127.0.0.1
-ENV INVENIO_WEB_INSTANCE=invenio
-ENV INVENIO_WEB_VENV=invenio
-ENV INVENIO_WEB_HOST_NAME=invenio
-ENV INVENIO_USER_EMAIL=wekosoftware@nii.ac.jp
-ENV INVENIO_USER_PASS=uspass123
-ENV INVENIO_POSTGRESQL_HOST=postgresql
-ENV INVENIO_POSTGRESQL_DBNAME=invenio
-ENV INVENIO_POSTGRESQL_DBUSER=invenio
-ENV INVENIO_POSTGRESQL_DBPASS=dbpass123
-ENV INVENIO_WORKER_HOST=127.0.0.1
-ENV INVENIO_DB_POOL_CLASS=QueuePool
+ENV DEPOSITOR_WEB_HOST=127.0.0.1
+ENV DEPOSITOR_POSTGRESQL_HOST=postgresql
+ENV DEPOSITOR_POSTGRESQL_DBNAME=depositor
+ENV DEPOSITOR_POSTGRESQL_DBUSER=depositor
+ENV DEPOSITOR_POSTGRESQL_DBPASS=dbpass123
 
 # shibbolethログインがモックの為、パスワードは固定値
 ENV MOCK_PASSWORD=testpass
