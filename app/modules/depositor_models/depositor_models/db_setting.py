@@ -14,13 +14,13 @@ from werkzeug.utils import import_string
 from datetime import datetime
 from sqlalchemy.dialects import mysql, postgresql
 
-HOST_NAME=os.environ.get("INVENIO_POSTGRESQL_HOST") #postgresql
-DBNAME=os.environ.get("INVENIO_POSTGRESQL_DBNAME") #invenio
-DBPASS=os.environ.get("INVENIO_POSTGRESQL_DBPASS") #dbpass123
-DBUSER=os.environ.get("INVENIO_POSTGRESQL_DBUSER") #invenio
+HOST_NAME=os.environ.get("DEPOSITOR_POSTGRESQL_HOST") #postgresql
+DBNAME=os.environ.get("DEPOSITOR_POSTGRESQL_DBNAME") #depositor
+DBPASS=os.environ.get("DEPOSITOR_POSTGRESQL_DBPASS") #dbpass123
+DBUSER=os.environ.get("DEPOSITOR_POSTGRESQL_DBUSER") #depositor
 # 接続先DBの設定
 DATABASE_URI = HOST_NAME+"://"+DBUSER+":"+DBPASS+"@"+HOST_NAME+":5432/"+ DBNAME 
-# DATABASE = 'postgresql://invenio:dbpass123@postgresql:5432/invenio'
+# DATABASE = 'postgresql://depositor:dbpass123@postgresql:5432/depositor'
 
 Engine = create_engine(
   DATABASE_URI,
