@@ -1,0 +1,88 @@
+{% extends "base.html"  %}
+
+{%- block body %}
+{% include "header.html" %}
+<div id="main_contents">
+  <div class="container-fluid container-fluid2">
+    <div class="row row-4">
+      <div class="col-sm-12 col-md-12 col-md-12">
+        <div class="panel panel-default" id="panel-main-content">
+          <div class="panel-heading no-padding-side" id="panel-heading-main-contents">
+            <div class="pull-right">
+            </div>
+            <strong>
+              <p id="title-main-content">Overlay</p>
+            </strong>
+          </div>
+            <div class="panel-body panel-body2" id="background-color-main-content">
+              <ul class="nav nav-tabs">
+                {%- block page_body_tabs %}
+                {% from "admin_setting/_macros.html" import tabs_selector with context %}
+                {{ tabs_selector('setting') }}
+                {%- endblock page_body_tabs %}
+                  <div class="row row-4" style="height: 100%">
+                    <div class="col-sm-12 col-md-12" style="height: 100%">
+                      <div id="myTabContent" class="tab-content" style="height: 100%">
+                        <div class="panel panel-default hide" id="hide-res-check">0</div>
+                        <div class="panel panel-default">
+                            <div class="panel-body">
+                              <section class="content-header"></section>
+                              <div class="row row-4">
+                                <input type="hidden" id="user_role" value="{{current_user.role}}">
+                                <input type="hidden" id="aff_repository_dict" value="{{aff_repository_dict}}">
+                                <div class="row" style="margin-bottom: 15px;">
+                                  <div class="col-sm-1 text-right">
+                                    <label>機関名</label>
+                                  </div>
+                                  <div class="col-sm-5">
+                                    {%- if current_user.role == "図書館員" -%}
+                                    <input type="text" class="form-control" name="affiliation_name"  id="affiliation_name"
+                                      value={{affiliation_name}} readonly>
+                                    {%- endif -%}
+                                    {%- if current_user.role == "管理者" -%}
+                                    <select class="form-control" name="affiliation_name"  id="affiliation_name" onchange="handleSelect()">
+                                      {%- for affiliation_id in affiliation_id_list -%}
+                                      <option value="{{affiliation_id.id}}">{{ affiliation_id.affiliation_name }}</option>
+                                      {%- endfor -%}
+                                    </select>
+                                    {%- endif -%}
+                                  </div>
+                                </div>
+                                <div class="row" style="margin-bottom: 15px;">
+                                  <div class="col-sm-1 text-right">
+                                    <label>登録先URL</label>
+                                  </div>
+                                  <div class="col-sm-5">
+                                    <input type="url" class="form-control" name="repository_url" id="repository_url"
+                                    value = {{repository_url}}>
+                                  </div>
+                                </div>
+                                <div class="row" style="margin-bottom: 15px;">
+                                  <div class="col-sm-1 text-right">
+                                    <label>アクセストークン</label>
+                                  </div>
+                                  <div class="col-sm-5">
+                                    <input type="text" class="form-control" name="access_token" id="access_token" value={{access_token}} >
+                                  </div>
+                                </div>
+                                <div class="row row-4">
+                                  <div class="col-sm-12 text-center">
+                                    <button class="btn btn-primary" id="affili_save_btn" onclick="handleAffiliSubmit()">
+                                      Save
+                                    </button>
+                                  </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                  </div>
+              </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% include "footer.html" %}
+<script type="text/javascript" src="static/js/admin_settings.js"></script>
+{%- endblock body %}

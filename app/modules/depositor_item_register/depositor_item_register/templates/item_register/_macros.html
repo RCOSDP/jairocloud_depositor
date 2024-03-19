@@ -1,0 +1,9 @@
+{% macro tabs_selector(tab_value='top') %}
+{%- if current_user.role == "管理者" %}
+<li role="presentation" {% if tab_value=='add' %}class="active"{% endif %}><a href="{{url_for('admin_setting.add_affili')}}">{{ ('登録先追加') }}</a></li>
+{%- endif %}
+{%- if current_user.role == "管理者" or current_user.role == "図書館員" %}
+<li role="presentation" {% if tab_value=='setting' %}class="active"{% endif %}><a href="{{url_for('admin_setting.index_affili')}}">{{ ('登録先設定') }}</a></li>
+{%- endif %}
+<li role="presentation" {% if tab_value=='item_index' %}class="active"{% endif %}><a href="{{ url_for('item_register.index_item') }}">{{ ('アイテム登録') }}</a></li>
+{% endmacro %}
