@@ -1,0 +1,59 @@
+version: "3"
+services:
+  app:
+    restart: "always"
+    build: .
+    ports:
+      - "5001:5000"
+    container_name: app
+    command: uwsgi --ini app/uwsgi.ini
+    links:
+      - postgresql
+      - grobid
+
+    volumes:
+      - ./:/code
+
+
+  postgresql:
+    restart: "always"
+    image: postgres:12
+#    command: postgres -c log_destination=stderr -c log_statement=all -c log_connections=on -c log_disconnections=on
+    environment:
+      - POSTGRES_USER=depositor
+      - POSTGRES_DB=depositor
+      - POSTGRES_PASSWORD=dbpass123
+    volumes:
+      - pgsql-data:/var/lib/postgresql/data
+      - ./postgresql:/docker-entrypoint-initdb.d
+    ports:
+      - "25401:5432"
+
+
+  nginx:
+    restart: "always"
+    build: ./nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./:/code
+    links:
+      - app
+    deploy:
+      resources:
+        limits:
+          memory: 300m
+
+
+  grobid:
+    image: lfoppiano/grobid:0.8.0
+    ports:
+      - "8070:8070"
+    ulimits:
+      core: 0
+    init: true
+    restart: always
+    
+volumes:
+  pgsql-data:
